@@ -193,7 +193,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 padding: '8px 16px', // Slightly more padding
                 transition: 'all 0.2s ease', // Smooth transitions
                 position: 'relative', // For pseudo-elements
-                backgroundColor: mode === 'light' ? '#ffffff' : '#000000', // White bg for light theme, black for dark
+                backgroundColor: mode === 'light' ? '#ffffff' : '#151515', // White bg for light theme, dark gray for dark
                 
                 // Subtle shadow for depth
                 boxShadow: mode === 'light' 
@@ -204,7 +204,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 '&:hover': {
                   backgroundColor: mode === 'light' 
                     ? '#f8f8f8' 
-                    : '#111111',
+                    : '#202020',
                   transform: 'translateX(4px)',
                   boxShadow: mode === 'light' 
                     ? '0 2px 5px rgba(0, 0, 0, 0.1)' 
@@ -283,6 +283,20 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                       : 'rgba(255, 255, 255, 0.06)',
                   }
                 }
+              },
+            },
+          },
+          MuiLink: {
+            styleOverrides: {
+              root: {
+                color: mode === 'light' ? '#0066cc' : '#4394e5', // Blue for light theme, lighter blue for dark
+                textDecoration: 'none',
+                '&:visited': {
+                  color: mode === 'light' ? '#0066cc' : '#4394e5', // Same color as unvisited links
+                },
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
               },
             },
           },

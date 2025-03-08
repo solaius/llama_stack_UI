@@ -245,7 +245,7 @@ const HomePage: React.FC = () => {
         
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'primary.main' : '#ee0000' }}>
               Quick Start Guide
             </Typography>
             <List>
@@ -257,7 +257,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(238, 0, 0, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(238, 0, 0, 0.08)' 
+                      : 'rgba(238, 0, 0, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -266,8 +268,8 @@ const HomePage: React.FC = () => {
                   <ChatIcon color="primary" sx={{ fontSize: '1.75rem' }} />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Start a conversation</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Chat with Llama models using a simple interface</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Start a conversation</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Chat with Llama models using a simple interface</Typography>} 
                 />
               </ListItem>
               
@@ -279,7 +281,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(0, 102, 204, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(0, 102, 204, 0.08)' 
+                      : 'rgba(0, 102, 204, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -288,8 +292,8 @@ const HomePage: React.FC = () => {
                   <CodeIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Explore available tools</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Discover and test tools that enhance model capabilities</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Explore available tools</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Discover and test tools that enhance model capabilities</Typography>} 
                 />
               </ListItem>
               
@@ -301,7 +305,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(55, 163, 163, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(55, 163, 163, 0.08)' 
+                      : 'rgba(55, 163, 163, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -310,15 +316,15 @@ const HomePage: React.FC = () => {
                   <StorageIcon color="info" sx={{ fontSize: '1.75rem' }} />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>View available models</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Browse the models available in your Llama Stack deployment</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>View available models</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Browse the models available in your Llama Stack deployment</Typography>} 
                 />
               </ListItem>
             </List>
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'secondary.main' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'secondary.main' : '#4394e5' }}>
               Advanced Features
             </Typography>
             <List>
@@ -330,7 +336,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(99, 153, 61, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(99, 153, 61, 0.08)' 
+                      : 'rgba(99, 153, 61, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -349,8 +357,8 @@ const HomePage: React.FC = () => {
                   </Box>
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Configure agents</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Create and manage specialized agents for different tasks</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Configure agents</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Create and manage specialized agents for different tasks</Typography>} 
                 />
               </ListItem>
               
@@ -362,7 +370,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(240, 86, 29, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(240, 86, 29, 0.08)' 
+                      : 'rgba(240, 86, 29, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -381,8 +391,8 @@ const HomePage: React.FC = () => {
                   </Box>
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Run evaluations</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Evaluate model performance on specific tasks and datasets</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Run evaluations</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Evaluate model performance on specific tasks and datasets</Typography>} 
                 />
               </ListItem>
               
@@ -394,7 +404,9 @@ const HomePage: React.FC = () => {
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(245, 146, 27, 0.08)',
+                    backgroundColor: theme => theme.palette.mode === 'light' 
+                      ? 'rgba(245, 146, 27, 0.08)' 
+                      : 'rgba(245, 146, 27, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
@@ -413,8 +425,8 @@ const HomePage: React.FC = () => {
                   </Box>
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Configure settings</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Customize your Llama Stack UI experience</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Configure settings</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Customize your Llama Stack UI experience</Typography>} 
                 />
               </ListItem>
             </List>
@@ -422,7 +434,10 @@ const HomePage: React.FC = () => {
         </Grid>
         
         <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+          <Typography variant="body2" sx={{ 
+            fontStyle: 'italic',
+            color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.6)'
+          }}>
             Tip: Use the theme toggle in the top-right corner to switch between light and dark modes.
           </Typography>
         </Box>
