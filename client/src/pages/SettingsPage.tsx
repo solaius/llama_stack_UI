@@ -55,6 +55,7 @@ const SettingsPage: React.FC = () => {
   const fetchServerInfo = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching server info from:', apiService.getCurrentBaseUrl());
       
       // Get version and health in parallel
       const [version, health] = await Promise.allSettled([
@@ -62,10 +63,18 @@ const SettingsPage: React.FC = () => {
         apiService.getHealth()
       ]);
       
+      console.log('Version response:', version);
+      console.log('Health response:', health);
+      
       // Check if both requests failed
       if (version.status === 'rejected' && health.status === 'rejected') {
         console.error('Both version and health checks failed');
         setServerInfo(null);
+        setSnackbar({
+          open: true,
+          message: 'Could not connect to the server. Please check your connection settings.',
+          severity: 'error',
+        });
         setIsLoading(false);
         return;
       }
@@ -74,9 +83,12 @@ const SettingsPage: React.FC = () => {
       const serverInfoData: any = {
         version: version.status === 'fulfilled' ? version.value.version : 'Unknown',
         health: health.status === 'fulfilled' ? health.value.status : 'Unknown',
-        timestamp: health.status === 'fulfilled' ? health.value.timestamp : new Date().toISOString(),
+        timestamp: health.status === 'fulfilled' && health.value.timestamp 
+          ? health.value.timestamp 
+          : new Date().toISOString(),
       };
       
+      console.log('Server info data:', serverInfoData);
       setServerInfo(serverInfoData);
       
       // Show a notification if we got partial data
@@ -86,10 +98,22 @@ const SettingsPage: React.FC = () => {
           message: 'Partial server information retrieved. Some endpoints may be unavailable.',
           severity: 'warning',
         });
+      } else {
+        // Show success notification
+        setSnackbar({
+          open: true,
+          message: 'Server connection successful!',
+          severity: 'success',
+        });
       }
     } catch (error) {
       console.error('Error fetching server info:', error);
       setServerInfo(null);
+      setSnackbar({
+        open: true,
+        message: 'Error connecting to server. See console for details.',
+        severity: 'error',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -214,35 +238,60 @@ const SettingsPage: React.FC = () => {
                   <CircularProgress />
                 </Box>
               ) : serverInfo ? (
-                <List>
-                  <ListItem>
-                    <ListItemIcon>
-                      <ApiIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Llama Stack Version"
-                      secondary={serverInfo.version}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <ApiIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Server Health"
-                      secondary={serverInfo.health}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <ApiIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Last Check"
-                      secondary={new Date(serverInfo.timestamp).toLocaleString()}
-                    />
-                  </ListItem>
-                </List>
+                <>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Connected to: <strong>{apiService.getCurrentBaseUrl()}</strong>
+                    </Typography>
+                  </Box>
+                  
+                  <List>
+                    <ListItem>
+                      <ListItemIcon>
+                        <ApiIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Llama Stack Version"
+                        secondary={
+                          <Typography 
+                            component="span" 
+                            variant="body2"
+                            color={serverInfo.version === 'Unknown' ? 'error.main' : 'text.primary'}
+                          >
+                            {serverInfo.version}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <ApiIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Server Health"
+                        secondary={
+                          <Typography 
+                            component="span" 
+                            variant="body2"
+                            color={serverInfo.health === 'Unknown' ? 'error.main' : 
+                                  serverInfo.health === 'OK' ? 'success.main' : 'warning.main'}
+                          >
+                            {serverInfo.health}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <ApiIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Last Check"
+                        secondary={new Date(serverInfo.timestamp).toLocaleString()}
+                      />
+                    </ListItem>
+                  </List>
+                </>
               ) : (
                 <Alert severity="error">
                   Could not connect to the server. Please check your connection settings.

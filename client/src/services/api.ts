@@ -362,6 +362,11 @@ export const apiService = {
     return response.data;
   },
 
+  // Get the current base URL
+  getCurrentBaseUrl: () => {
+    return api.defaults.baseURL;
+  },
+  
   // Update the base URL of the API
   updateBaseUrl: (newUrl: string) => {
     if (newUrl && newUrl.trim() !== '') {
@@ -376,17 +381,38 @@ export const apiService = {
   // Server Health
   getHealth: async () => {
     try {
-      const response = await api.get('/health');
+      // Try the v1 endpoint first (more likely to exist in newer versions)
+      const response = await api.get('/v1/health');
+      console.log('Health check v1 response:', response.data);
+      
+      // Add timestamp if not present
+      if (!response.data.timestamp) {
+        response.data.timestamp = new Date().toISOString();
+      }
+      
       return response.data;
     } catch (error) {
-      console.error('Health check failed:', error);
-      // Try alternative endpoint if the first one fails
+      console.error('Health check v1 failed:', error);
+      
+      // Try the root health endpoint as fallback
       try {
-        const response = await api.get('/v1/health');
+        const response = await api.get('/health');
+        console.log('Health check root response:', response.data);
+        
+        // Add timestamp if not present
+        if (!response.data.timestamp) {
+          response.data.timestamp = new Date().toISOString();
+        }
+        
         return response.data;
       } catch (secondError) {
-        console.error('Alternative health check failed:', secondError);
-        throw secondError;
+        console.error('All health checks failed:', secondError);
+        
+        // Return a minimal valid response
+        return { 
+          status: 'Unknown',
+          timestamp: new Date().toISOString()
+        };
       }
     }
   },
@@ -395,11 +421,22 @@ export const apiService = {
   getVersion: async () => {
     try {
       const response = await api.get('/v1/version');
+      console.log('Version check response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Version check failed:', error);
-      // Return a default version if the endpoint fails
-      return { version: 'Unknown' };
+      
+      // Try alternative version endpoints
+      try {
+        const response = await api.get('/version');
+        console.log('Alternative version check response:', response.data);
+        return response.data;
+      } catch (secondError) {
+        console.error('All version checks failed');
+        
+        // Return a default version
+        return { version: 'Unknown' };
+      }
     }
   },
 
