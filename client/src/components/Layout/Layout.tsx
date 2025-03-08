@@ -151,7 +151,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               flexGrow: 1, 
               display: { xs: 'none', md: 'flex' },
               fontWeight: 600,
-              alignSelf: 'center'
+              alignSelf: 'center',
+              mt: '5px' // Move down 5px for better vertical centering
             }}
           >
             {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
@@ -164,7 +165,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               flexGrow: 1, 
               display: { xs: 'flex', md: 'none' },
               fontWeight: 600,
-              alignSelf: 'center'
+              alignSelf: 'center',
+              mt: '5px' // Move down 5px for better vertical centering
             }}
           >
             {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}

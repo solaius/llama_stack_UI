@@ -129,7 +129,7 @@ const HomePage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
                       <InfoIcon color="primary" sx={{ fontSize: '1.75rem' }} />
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Llama Stack Version</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Llama Stack Version</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                     {version}
@@ -163,7 +163,7 @@ const HomePage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
                       <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Available Models</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Available Models</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
                     {modelCount}
@@ -197,7 +197,7 @@ const HomePage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
                       <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Available Tools</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Available Tools</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
                     {toolCount}
