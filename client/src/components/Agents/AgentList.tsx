@@ -56,9 +56,9 @@ const AgentList: React.FC<AgentListProps> = ({
       setFilteredAgents(
         agents.filter(
           (agent) =>
-            agent.id.toLowerCase().includes(lowercasedSearch) ||
-            agent.config.instructions.toLowerCase().includes(lowercasedSearch) ||
-            agent.config.model.toLowerCase().includes(lowercasedSearch)
+            (agent.id || agent.agent_id || '').toLowerCase().includes(lowercasedSearch) ||
+            agent.instructions.toLowerCase().includes(lowercasedSearch) ||
+            agent.model.toLowerCase().includes(lowercasedSearch)
         )
       );
     }
@@ -139,13 +139,13 @@ const AgentList: React.FC<AgentListProps> = ({
               filteredAgents
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((agent) => (
-                  <TableRow key={agent.id}>
-                    <TableCell>{agent.id}</TableCell>
-                    <TableCell>{agent.config.model}</TableCell>
+                  <TableRow key={agent.agent_id || agent.id}>
+                    <TableCell>{agent.agent_id || agent.id}</TableCell>
+                    <TableCell>{agent.model}</TableCell>
                     <TableCell>
-                      {agent.config.instructions.length > 100
-                        ? `${agent.config.instructions.substring(0, 100)}...`
-                        : agent.config.instructions}
+                      {agent.instructions.length > 100
+                        ? `${agent.instructions.substring(0, 100)}...`
+                        : agent.instructions}
                     </TableCell>
                     <TableCell>
                       {new Date(agent.created_at).toLocaleDateString()}

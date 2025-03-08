@@ -34,21 +34,21 @@ const DeleteAgentModal: React.FC<DeleteAgentModalProps> = ({
       <DialogTitle>Delete Agent</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Are you sure you want to delete the agent <strong>{agent.id}</strong>? This action cannot be undone.
+          Are you sure you want to delete the agent <strong>{agent.agent_id || agent.id}</strong>? This action cannot be undone.
         </DialogContentText>
         <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1}>
           <Typography variant="subtitle2">Agent Details:</Typography>
           <Typography variant="body2">
-            <strong>Model:</strong> {agent.config.model}
+            <strong>Model:</strong> {agent.model}
           </Typography>
           <Typography variant="body2">
             <strong>Instructions:</strong>{' '}
-            {agent.config.instructions.length > 100
-              ? `${agent.config.instructions.substring(0, 100)}...`
-              : agent.config.instructions}
+            {agent.instructions.length > 100
+              ? `${agent.instructions.substring(0, 100)}...`
+              : agent.instructions}
           </Typography>
           <Typography variant="body2">
-            <strong>Created:</strong> {new Date(agent.created_at).toLocaleString()}
+            <strong>Created:</strong> {new Date(agent.created_at || Date.now()).toLocaleString()}
           </Typography>
         </Box>
       </DialogContent>

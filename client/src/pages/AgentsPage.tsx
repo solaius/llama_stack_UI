@@ -46,14 +46,17 @@ const AgentsPage: React.FC = () => {
       // For demo purposes, create some mock agents if the API fails
       setAgents([
         {
+          agent_id: 'meeting-minutes-agent',
           id: 'meeting-minutes-agent',
+          model: 'meta-llama/Llama-3.1-8B-Instruct',
+          instructions: 'You are a meeting minutes assistant. Help users create meeting minutes from notes or transcripts.',
           config: {
             model: 'meta-llama/Llama-3.1-8B-Instruct',
             instructions: 'You are a meeting minutes assistant. Help users create meeting minutes from notes or transcripts.',
             sampling_params: {
-              strategy: { type: 'greedy' },
-              max_tokens: 1000,
-              repetition_penalty: 1
+              temperature: 0.2,
+              top_p: 0.95,
+              max_tokens: 1000
             },
             toolgroups: ['summarization-tools'],
             max_infer_iters: 10,
@@ -63,14 +66,17 @@ const AgentsPage: React.FC = () => {
           updated_at: new Date().toISOString()
         },
         {
+          agent_id: 'customer-support-agent',
           id: 'customer-support-agent',
+          model: 'meta-llama/Llama-3.1-8B-Instruct',
+          instructions: 'You are a customer support assistant. Help users with their questions and issues.',
           config: {
             model: 'meta-llama/Llama-3.1-8B-Instruct',
             instructions: 'You are a customer support assistant. Help users with their questions and issues.',
             sampling_params: {
-              strategy: { type: 'top_p', p: 0.9 },
-              max_tokens: 500,
-              repetition_penalty: 1.1
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 500
             },
             toolgroups: ['knowledge-base-tools'],
             max_infer_iters: 5,
@@ -102,9 +108,11 @@ const AgentsPage: React.FC = () => {
   };
 
   const handleDuplicateAgent = (agent: Agent) => {
+    const newId = `${agent.id || agent.agent_id}-copy`;
     setCurrentAgent({
       ...agent,
-      id: `${agent.id}-copy`,
+      agent_id: newId,
+      id: newId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -121,10 +129,11 @@ const AgentsPage: React.FC = () => {
     try {
       if (isEditing && currentAgent) {
         // Update existing agent
-        const updatedAgent = await apiService.updateAgent(currentAgent.id, values);
+        const agentId = currentAgent.agent_id || currentAgent.id;
+        const updatedAgent = await apiService.updateAgent(agentId, values);
         setNotification({
           open: true,
-          message: `Agent "${updatedAgent.id}" updated successfully`,
+          message: `Agent "${updatedAgent.agent_id || updatedAgent.id}" updated successfully`,
           severity: 'success'
         });
       } else {
@@ -132,7 +141,7 @@ const AgentsPage: React.FC = () => {
         const newAgent = await apiService.createAgent(values);
         setNotification({
           open: true,
-          message: `Agent "${newAgent.id}" created successfully`,
+          message: `Agent "${newAgent.agent_id || newAgent.id}" created successfully`,
           severity: 'success'
         });
       }
@@ -153,10 +162,11 @@ const AgentsPage: React.FC = () => {
 
     try {
       setIsDeleting(true);
-      await apiService.deleteAgent(currentAgent.id);
+      const agentId = currentAgent.agent_id || currentAgent.id;
+      await apiService.deleteAgent(agentId);
       setNotification({
         open: true,
-        message: `Agent "${currentAgent.id}" deleted successfully`,
+        message: `Agent "${agentId}" deleted successfully`,
         severity: 'success'
       });
       setShowDeleteModal(false);

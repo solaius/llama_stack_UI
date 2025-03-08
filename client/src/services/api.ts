@@ -141,8 +141,9 @@ export interface AgentConfig {
 }
 
 export interface Agent extends AgentInfo {
-  config?: AgentConfig;
-  created_at?: string;
+  id: string; // For backward compatibility
+  config: AgentConfig; // Make this required for backward compatibility
+  created_at: string;
   updated_at?: string;
 }
 
@@ -529,7 +530,19 @@ export const apiService = {
         const apiAgents = response.data.agents.map((agentInfo: AgentInfo) => ({
           ...agentInfo,
           id: agentInfo.agent_id, // For backward compatibility
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          config: {
+            model: agentInfo.model,
+            instructions: agentInfo.instructions,
+            // Add default values for required fields
+            sampling_params: {
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 1024
+            },
+            max_infer_iters: 10,
+            enable_session_persistence: false
+          }
         }));
         
         // Also save to local storage as backup
@@ -614,12 +627,30 @@ export const apiService = {
         throw new Error(`Agent ${agentId} not found`);
       }
       
+      // Create a properly typed updated agent
+      const baseConfig = agents[agentIndex].config || {
+        model: '',
+        instructions: '',
+        sampling_params: {
+          temperature: 0.7,
+          top_p: 0.9,
+          max_tokens: 1024
+        },
+        max_infer_iters: 10,
+        enable_session_persistence: false
+      };
+      
       const updatedAgent: Agent = {
         ...agents[agentIndex],
+        agent_id: agents[agentIndex].agent_id || agents[agentIndex].id,
+        id: agents[agentIndex].id || agents[agentIndex].agent_id,
+        model: agentConfig.model || baseConfig.model,
+        instructions: agentConfig.instructions || baseConfig.instructions,
         config: {
-          ...agents[agentIndex].config,
+          ...baseConfig,
           ...agentConfig
         },
+        created_at: agents[agentIndex].created_at || new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
