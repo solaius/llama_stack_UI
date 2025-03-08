@@ -121,18 +121,18 @@ const AgentsPage: React.FC = () => {
     try {
       if (isEditing && currentAgent) {
         // Update existing agent
-        await apiService.updateAgent(currentAgent.id, values);
+        const updatedAgent = await apiService.updateAgent(currentAgent.id, values);
         setNotification({
           open: true,
-          message: `Agent "${currentAgent.id}" updated successfully`,
+          message: `Agent "${updatedAgent.id}" updated successfully`,
           severity: 'success'
         });
       } else {
         // Create new agent
-        await apiService.createAgent(values);
+        const newAgent = await apiService.createAgent(values);
         setNotification({
           open: true,
-          message: 'Agent created successfully',
+          message: `Agent "${newAgent.id}" created successfully`,
           severity: 'success'
         });
       }

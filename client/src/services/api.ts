@@ -186,6 +186,38 @@ export const apiService = {
     return response.data;
   },
 
+  createToolGroup: async (toolGroupData: {
+    toolgroup_id: string;
+    provider_id: string;
+    mcp_endpoint?: string;
+    args?: Record<string, any>;
+  }): Promise<ToolGroup> => {
+    const response = await api.post('/v1/toolgroups', toolGroupData);
+    return response.data;
+  },
+
+  deleteToolGroup: async (toolGroupId: string): Promise<void> => {
+    await api.delete(`/v1/toolgroups/${toolGroupId}`);
+  },
+
+  // Local storage for tools and tool groups (for UI state management)
+  _getToolGroupsFromStorage: (): ToolGroup[] => {
+    const storedToolGroups = localStorage.getItem('llamastack_toolgroups');
+    if (storedToolGroups) {
+      try {
+        return JSON.parse(storedToolGroups);
+      } catch (e) {
+        console.error('Error parsing stored tool groups:', e);
+        return [];
+      }
+    }
+    return [];
+  },
+
+  _saveToolGroupsToStorage: (toolGroups: ToolGroup[]): void => {
+    localStorage.setItem('llamastack_toolgroups', JSON.stringify(toolGroups));
+  },
+
   // Chat Completion
   createChatCompletion: async (request: ChatCompletionRequest): Promise<ChatCompletionResponse> => {
     const response = await api.post('/v1/inference/chat-completion', request);
@@ -226,37 +258,130 @@ export const apiService = {
     return response.data;
   },
 
-  // Agents
-  createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
-    const response = await api.post('/v1/agents', { agent_config: agentConfig });
-    return response.data;
+  // Agents - Local Storage Implementation
+  // Since the Llama Stack API doesn't have a GET endpoint to list all agents,
+  // we'll use localStorage to maintain our own list of agents
+  
+  // Helper function to get agents from localStorage
+  _getAgentsFromStorage: (): Agent[] => {
+    const storedAgents = localStorage.getItem('llamastack_agents');
+    if (storedAgents) {
+      try {
+        return JSON.parse(storedAgents);
+      } catch (e) {
+        console.error('Error parsing stored agents:', e);
+        return [];
+      }
+    }
+    return [];
   },
 
-  getAgents: async (): Promise<Agent[]> => {
+  // Helper function to save agents to localStorage
+  _saveAgentsToStorage: (agents: Agent[]): void => {
+    localStorage.setItem('llamastack_agents', JSON.stringify(agents));
+  },
+
+  createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
     try {
-      // This is a workaround since the API doesn't have a direct endpoint to list all agents
-      // In a real implementation, we would use a proper endpoint
-      const response = await api.get('/v1/agents/list');
-      return response.data.agents || [];
+      // Call the API to create the agent
+      const response = await api.post('/v1/agents', { agent_config: agentConfig });
+      
+      // Generate a new agent object with the response data
+      const newAgent: Agent = {
+        id: response.data.agent_id || `agent-${Date.now()}`,
+        config: agentConfig,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Add to our local storage
+      const currentAgents = apiService._getAgentsFromStorage();
+      apiService._saveAgentsToStorage([...currentAgents, newAgent]);
+      
+      return newAgent;
     } catch (error) {
-      console.error('Error fetching agents:', error);
-      // For now, return an empty array
-      return [];
+      console.error('Error creating agent:', error);
+      throw error;
     }
   },
 
+  getAgents: async (): Promise<Agent[]> => {
+    // Return agents from localStorage
+    return apiService._getAgentsFromStorage();
+  },
+
   getAgent: async (agentId: string): Promise<Agent> => {
-    const response = await api.get(`/v1/agents/${agentId}`);
-    return response.data;
+    // First try to get from localStorage
+    const agents = apiService._getAgentsFromStorage();
+    const agent = agents.find(a => a.id === agentId);
+    
+    if (agent) {
+      return agent;
+    }
+    
+    // If not found in localStorage, try the API (though this might not work)
+    try {
+      const response = await api.get(`/v1/agents/${agentId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching agent ${agentId}:`, error);
+      throw new Error(`Agent ${agentId} not found`);
+    }
   },
 
   updateAgent: async (agentId: string, agentConfig: Partial<AgentConfig>): Promise<Agent> => {
-    const response = await api.put(`/v1/agents/${agentId}`, { agent_config: agentConfig });
-    return response.data;
+    try {
+      // Try to update via API (this might not work if the endpoint doesn't exist)
+      try {
+        await api.put(`/v1/agents/${agentId}`, { agent_config: agentConfig });
+      } catch (error) {
+        console.warn(`API update failed for agent ${agentId}, updating local storage only:`, error);
+      }
+      
+      // Update in localStorage regardless of API success
+      const agents = apiService._getAgentsFromStorage();
+      const agentIndex = agents.findIndex(a => a.id === agentId);
+      
+      if (agentIndex === -1) {
+        throw new Error(`Agent ${agentId} not found`);
+      }
+      
+      const updatedAgent: Agent = {
+        ...agents[agentIndex],
+        config: {
+          ...agents[agentIndex].config,
+          ...agentConfig
+        },
+        updated_at: new Date().toISOString()
+      };
+      
+      agents[agentIndex] = updatedAgent;
+      apiService._saveAgentsToStorage(agents);
+      
+      return updatedAgent;
+    } catch (error) {
+      console.error(`Error updating agent ${agentId}:`, error);
+      throw error;
+    }
   },
 
   deleteAgent: async (agentId: string): Promise<void> => {
-    await api.delete(`/v1/agents/${agentId}`);
+    try {
+      // Try to delete via API
+      try {
+        await api.delete(`/v1/agents/${agentId}`);
+      } catch (error) {
+        console.warn(`API delete failed for agent ${agentId}, removing from local storage only:`, error);
+      }
+      
+      // Remove from localStorage regardless of API success
+      const agents = apiService._getAgentsFromStorage();
+      const updatedAgents = agents.filter(a => a.id !== agentId);
+      apiService._saveAgentsToStorage(updatedAgents);
+    } catch (error) {
+      console.error(`Error deleting agent ${agentId}:`, error);
+      throw error;
+    }
   }
 };
 

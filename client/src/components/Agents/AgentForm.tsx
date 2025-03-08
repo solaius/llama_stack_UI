@@ -27,7 +27,7 @@ import { AgentConfig, Model, ToolGroup, apiService } from '../../services/api';
 
 interface AgentFormProps {
   initialValues?: Partial<AgentConfig>;
-  onSubmit: (values: AgentConfig) => void;
+  onSubmit: (values: AgentConfig & { name?: string }) => void;
   onCancel: () => void;
   isEditing?: boolean;
 }
@@ -55,14 +55,15 @@ const AgentForm: React.FC<AgentFormProps> = ({
   const [models, setModels] = useState<Model[]>([]);
   const [toolGroups, setToolGroups] = useState<ToolGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formValues, setFormValues] = useState<AgentConfig>({
+  const [formValues, setFormValues] = useState<AgentConfig & { name?: string }>({
     model: initialValues?.model || '',
     instructions: initialValues?.instructions || '',
     sampling_params: initialValues?.sampling_params || defaultSamplingParams,
     toolgroups: initialValues?.toolgroups || [],
     tool_config: initialValues?.tool_config || defaultToolConfig,
     max_infer_iters: initialValues?.max_infer_iters || 10,
-    enable_session_persistence: initialValues?.enable_session_persistence || false
+    enable_session_persistence: initialValues?.enable_session_persistence || false,
+    name: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
