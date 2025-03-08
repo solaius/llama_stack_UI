@@ -80,7 +80,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               root: {
                 boxShadow: 'none',
                 borderBottom: `1px solid ${mode === 'light' ? '#e0e0e0' : '#383838'}`, // gray-20 for light, gray-70 for dark
-                backgroundColor: mode === 'light' ? '#ffffff' : '#292929', // white for light, gray-80 for dark
+                backgroundColor: mode === 'light' ? '#a60000' : '#5f0000', // red-60 for light, red-70 for dark
+                color: '#ffffff', // white text for better contrast
               },
             },
           },
@@ -88,6 +89,25 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             styleOverrides: {
               paper: {
                 backgroundColor: mode === 'light' ? '#ffffff' : '#292929', // white for light, gray-80 for dark
+              },
+            },
+          },
+          MuiListItemButton: {
+            styleOverrides: {
+              root: {
+                '&.Mui-selected': {
+                  backgroundColor: mode === 'light' ? 'rgba(238, 0, 0, 0.1)' : 'rgba(166, 0, 0, 0.5)', // light red for light mode, darker red for dark mode
+                  '&:hover': {
+                    backgroundColor: mode === 'light' ? 'rgba(238, 0, 0, 0.2)' : 'rgba(166, 0, 0, 0.6)', // slightly darker on hover
+                  },
+                },
+                '&.Mui-selected .MuiListItemIcon-root': {
+                  color: mode === 'light' ? '#a60000' : '#ee0000', // red-60 for light, red-50 for dark
+                },
+                '&.Mui-selected .MuiTypography-root': {
+                  color: mode === 'light' ? '#a60000' : '#ee0000', // red-60 for light, red-50 for dark
+                  fontWeight: 500,
+                },
               },
             },
           },

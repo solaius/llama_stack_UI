@@ -116,12 +116,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '30px', width: 'auto' }} />
-            <Typography variant="h6" noWrap component="div">
-              {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
-            </Typography>
-          </Stack>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+            {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
+          </Typography>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
           </Typography>
