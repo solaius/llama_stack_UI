@@ -95,12 +95,19 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           MuiListItemButton: {
             styleOverrides: {
               root: {
-                color: '#151515', // dark text for better contrast on gray background
+                color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
                 '&.Mui-selected': {
-                  backgroundColor: '#f56e6e', // red-40 as requested for selected menu item background
+                  backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
+                  color: '#ffffff', // white text for better contrast on red background
                   '&:hover': {
-                    backgroundColor: '#f56e6e', // same color on hover
+                    backgroundColor: '#ee0000', // same color on hover
                   },
+                },
+                '&.Mui-selected .MuiListItemIcon-root': {
+                  color: '#ffffff', // white icon for better contrast on red background
+                },
+                '&.Mui-selected .MuiListItemText-root': {
+                  color: '#ffffff', // white text for better contrast on red background
                 },
               },
             },
@@ -108,14 +115,14 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           MuiListItemIcon: {
             styleOverrides: {
               root: {
-                color: '#151515', // dark icon color for better contrast on gray background
+                color: mode === 'light' ? '#151515' : '#ffffff', // dark icon for light theme, white icon for dark theme
               },
             },
           },
           MuiListItemText: {
             styleOverrides: {
               primary: {
-                color: '#151515', // dark text for better contrast on gray background
+                color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
               },
             },
           },
