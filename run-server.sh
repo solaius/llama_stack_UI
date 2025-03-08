@@ -1,2 +1,2 @@
 #!/bin/bash
-cd /workspace/llama-stack-ui/server && npm run dev
+cd /workspace/llama_stack_UI/server && npm run dev
