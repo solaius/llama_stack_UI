@@ -129,11 +129,11 @@ const AgentList: React.FC<AgentListProps> = ({
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>ID</TableCell>
-              <TableCell>System Prompt</TableCell>
+              <TableCell align="center">ID</TableCell>
+              <TableCell align="center">System Prompt</TableCell>
               <TableCell>Created</TableCell>
               <TableCell>Created By</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -149,7 +149,7 @@ const AgentList: React.FC<AgentListProps> = ({
                 .map((agent) => (
                   <TableRow key={agent.agent_id || agent.id}>
                     <TableCell>{agent.name || 'Unnamed Agent'}</TableCell>
-                    <TableCell>
+                    <TableCell align="center">
                       <Tooltip title={agent.agent_id || agent.id}>
                         <IconButton 
                           onClick={() => {
@@ -161,7 +161,7 @@ const AgentList: React.FC<AgentListProps> = ({
                         </IconButton>
                       </Tooltip>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="center">
                       <Tooltip title={agent.instructions}>
                         <IconButton size="small">
                           <DescriptionIcon fontSize="small" />
@@ -174,8 +174,8 @@ const AgentList: React.FC<AgentListProps> = ({
                     <TableCell>
                       {agent.created_by || 'System'}
                     </TableCell>
-                    <TableCell>
-                      <Box display="flex" gap={1}>
+                    <TableCell align="center">
+                      <Box display="flex" justifyContent="center" gap={1}>
                         <Tooltip title="Chat with Agent">
                           <IconButton 
                             onClick={() => {
