@@ -3,9 +3,14 @@ import axios from 'axios';
 // Get API URL from localStorage or use default
 const getApiBaseUrl = () => {
   const savedApiUrl = localStorage.getItem('apiUrl');
-  return savedApiUrl && savedApiUrl.trim() !== '' 
-    ? savedApiUrl 
-    : (process.env.REACT_APP_API_URL || '/api');
+  
+  // If there's a saved URL in localStorage, use it
+  if (savedApiUrl && savedApiUrl.trim() !== '') {
+    return savedApiUrl;
+  }
+  
+  // Otherwise, use the environment variable or default to the proxy path
+  return process.env.REACT_APP_API_URL || '/api';
 };
 
 // Create axios instance with default config

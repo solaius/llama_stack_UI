@@ -20,6 +20,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "axios": "^1.8.1",
+    "http-proxy-middleware": "^3.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.2.0",
@@ -52,5 +53,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:50544"
+  "proxy": "http://192.168.1.17:8321"
 }
