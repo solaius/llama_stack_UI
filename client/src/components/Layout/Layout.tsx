@@ -68,8 +68,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const drawer = (
     <div>
-      <Toolbar sx={{ backgroundColor: '#1f1f1f', color: '#ffffff', height: '64px' }}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
+      <Toolbar sx={{ 
+        backgroundColor: '#1f1f1f', 
+        color: '#ffffff', 
+        height: '64px', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        padding: '0 8px'
+      }}>
+        <Stack 
+          direction="row" 
+          spacing={1.5} 
+          alignItems="center" 
+          sx={{ 
+            width: '100%', 
+            justifyContent: 'center',
+            ml: '-5px' // Adjust for visual centering
+          }}
+        >
           <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '38px', width: 'auto' }} />
           <Typography variant="h5" noWrap component="div" sx={{ fontWeight: 600 }}>
             Llama Stack UI
