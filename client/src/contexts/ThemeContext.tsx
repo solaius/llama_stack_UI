@@ -88,7 +88,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           MuiDrawer: {
             styleOverrides: {
               paper: {
-                backgroundColor: '#c7c7c7', // gray-30 as requested for menu background
+                backgroundColor: mode === 'light' ? '#e0e0e0' : '#151515', // gray-20 for light, gray-95 for dark as requested
               },
             },
           },
