@@ -187,17 +187,20 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 fontWeight: 600, // Bold text for all menu items
                 '&.Mui-selected': {
                   backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
-                  color: '#ffffff', // white text for better contrast on red background
+                  color: '#ffffff !important', // white text for better contrast on red background, forced with !important
                   fontWeight: 700, // Extra bold for selected menu item
                   '&:hover': {
                     backgroundColor: '#ee0000', // same color on hover
                   },
                 },
                 '&.Mui-selected .MuiListItemIcon-root': {
-                  color: '#ffffff', // white icon for better contrast on red background
+                  color: '#ffffff !important', // white icon for better contrast on red background, forced with !important
                 },
                 '&.Mui-selected .MuiListItemText-root': {
-                  color: '#ffffff', // white text for better contrast on red background
+                  color: '#ffffff !important', // white text for better contrast on red background, forced with !important
+                },
+                '&.Mui-selected .MuiTypography-root': {
+                  color: '#ffffff !important', // ensure typography elements are also white, forced with !important
                 },
               },
             },
