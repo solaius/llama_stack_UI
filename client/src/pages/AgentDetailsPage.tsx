@@ -237,9 +237,22 @@ const AgentDetailsPage: React.FC = () => {
         >
           Back
         </Button>
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
           Agent Details
         </Typography>
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<ChatIcon />}
+          onClick={() => {
+            // Create a new session and navigate to chat
+            const sessionId = `session-${Date.now()}`;
+            navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+          }}
+          sx={{ ml: 2 }}
+        >
+          Chat with Agent
+        </Button>
       </Box>
 
       <Paper sx={{ mb: 3 }}>
@@ -388,8 +401,21 @@ const AgentDetailsPage: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setCreateSessionDialogOpen(true)}
+              sx={{ mr: 1 }}
             >
               New Session
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<ChatIcon />}
+              onClick={() => {
+                // Create a new session and navigate to chat
+                const sessionId = `session-${Date.now()}`;
+                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              }}
+            >
+              New Chat
             </Button>
           </Box>
         </Box>
@@ -399,14 +425,27 @@ const AgentDetailsPage: React.FC = () => {
             <Typography variant="body1" color="text.secondary">
               No sessions found for this agent.
             </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateSessionDialogOpen(true)}
-              sx={{ mt: 2 }}
-            >
-              Create a new session
-            </Button>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateSessionDialogOpen(true)}
+              >
+                Create a new session
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<ChatIcon />}
+                onClick={() => {
+                  // Create a new session and navigate to chat
+                  const sessionId = `session-${Date.now()}`;
+                  navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                }}
+              >
+                Start chatting now
+              </Button>
+            </Box>
           </Paper>
         ) : (
           <List>

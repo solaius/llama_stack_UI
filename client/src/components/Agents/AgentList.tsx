@@ -23,7 +23,8 @@ import {
   ContentCopy as DuplicateIcon,
   Search as SearchIcon,
   Add as AddIcon,
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
+  Chat as ChatIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
@@ -154,6 +155,19 @@ const AgentList: React.FC<AgentListProps> = ({
                       {new Date(agent.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
+                      <Tooltip title="Chat with Agent">
+                        <IconButton 
+                          onClick={() => {
+                            // Create a new session and navigate to chat
+                            const sessionId = `session-${Date.now()}`;
+                            navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                          }} 
+                          size="small"
+                          color="success"
+                        >
+                          <ChatIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="View Details">
                         <IconButton 
                           onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
