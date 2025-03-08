@@ -525,11 +525,13 @@ export const apiService = {
       const newAgent: Agent = {
         agent_id: response.data.agent_id,
         id: response.data.agent_id, // For backward compatibility
+        name: agentConfig.name || '',
         model: agentConfig.model,
         instructions: agentConfig.instructions,
         config: agentConfig,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        created_by: 'User'
       };
       
       // Add to our local storage
@@ -551,21 +553,25 @@ export const apiService = {
         console.log('Agents list response:', response.data);
         
         // Convert AgentInfo[] to Agent[]
-        const apiAgents = response.data.agents.map((agentInfo: AgentInfo) => ({
-          ...agentInfo,
+        const apiAgents = response.data.agents.map((agentInfo: any) => ({
+          agent_id: agentInfo.agent_id,
           id: agentInfo.agent_id, // For backward compatibility
+          name: agentInfo.name || agentInfo.config?.name || '',
+          model: agentInfo.config?.model || '',
+          instructions: agentInfo.config?.instructions || '',
           created_at: new Date().toISOString(),
+          created_by: 'System',
           config: {
-            model: agentInfo.model,
-            instructions: agentInfo.instructions,
-            // Add default values for required fields
-            sampling_params: {
+            ...agentInfo.config,
+            // Ensure these fields exist with default values if not provided
+            sampling_params: agentInfo.config?.sampling_params || {
               temperature: 0.7,
               top_p: 0.9,
               max_tokens: 1024
             },
-            max_infer_iters: 10,
-            enable_session_persistence: false
+            max_infer_iters: agentInfo.config?.max_infer_iters || 10,
+            enable_session_persistence: agentInfo.config?.enable_session_persistence || false,
+            name: agentInfo.name || agentInfo.config?.name || ''
           }
         }));
         
@@ -655,6 +661,7 @@ export const apiService = {
       const baseConfig = agents[agentIndex].config || {
         model: '',
         instructions: '',
+        name: '',
         sampling_params: {
           temperature: 0.7,
           top_p: 0.9,
@@ -668,6 +675,7 @@ export const apiService = {
         ...agents[agentIndex],
         agent_id: agents[agentIndex].agent_id || agents[agentIndex].id,
         id: agents[agentIndex].id || agents[agentIndex].agent_id,
+        name: agentConfig.name || agents[agentIndex].name || '',
         model: agentConfig.model || baseConfig.model,
         instructions: agentConfig.instructions || baseConfig.instructions,
         config: {
@@ -675,7 +683,8 @@ export const apiService = {
           ...agentConfig
         },
         created_at: agents[agentIndex].created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        created_by: agents[agentIndex].created_by || 'User'
       };
       
       agents[agentIndex] = updatedAgent;
