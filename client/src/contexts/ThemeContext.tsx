@@ -80,7 +80,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               root: {
                 boxShadow: 'none',
                 borderBottom: `1px solid ${mode === 'light' ? '#e0e0e0' : '#383838'}`, // gray-20 for light, gray-70 for dark
-                backgroundColor: mode === 'light' ? '#a60000' : '#5f0000', // red-60 for light, red-70 for dark
+                backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
                 color: '#ffffff', // white text for better contrast
               },
             },
@@ -88,26 +88,34 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           MuiDrawer: {
             styleOverrides: {
               paper: {
-                backgroundColor: mode === 'light' ? '#ffffff' : '#292929', // white for light, gray-80 for dark
+                backgroundColor: '#c7c7c7', // gray-30 as requested for menu background
               },
             },
           },
           MuiListItemButton: {
             styleOverrides: {
               root: {
+                color: '#151515', // dark text for better contrast on gray background
                 '&.Mui-selected': {
-                  backgroundColor: mode === 'light' ? 'rgba(238, 0, 0, 0.1)' : 'rgba(166, 0, 0, 0.5)', // light red for light mode, darker red for dark mode
+                  backgroundColor: '#f56e6e', // red-40 as requested for selected menu item background
                   '&:hover': {
-                    backgroundColor: mode === 'light' ? 'rgba(238, 0, 0, 0.2)' : 'rgba(166, 0, 0, 0.6)', // slightly darker on hover
+                    backgroundColor: '#f56e6e', // same color on hover
                   },
                 },
-                '&.Mui-selected .MuiListItemIcon-root': {
-                  color: mode === 'light' ? '#a60000' : '#ee0000', // red-60 for light, red-50 for dark
-                },
-                '&.Mui-selected .MuiTypography-root': {
-                  color: mode === 'light' ? '#a60000' : '#ee0000', // red-60 for light, red-50 for dark
-                  fontWeight: 500,
-                },
+              },
+            },
+          },
+          MuiListItemIcon: {
+            styleOverrides: {
+              root: {
+                color: '#151515', // dark icon color for better contrast on gray background
+              },
+            },
+          },
+          MuiListItemText: {
+            styleOverrides: {
+              primary: {
+                color: '#151515', // dark text for better contrast on gray background
               },
             },
           },
