@@ -158,11 +158,12 @@ const AgentForm: React.FC<AgentFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Only submit if we're on the last step (review) and validation passes
-    if (activeStep === steps.length - 1 && validateStep(activeStep)) {
-      onSubmit(formValues);
-    } else {
-      // If not on the last step, just go to the next step
+    // On the review step, don't do anything - we'll use the button click handler
+    if (activeStep === steps.length - 1) {
+      return;
+    }
+    // For other steps, go to the next step if validation passes
+    if (validateStep(activeStep)) {
       handleNext();
     }
   };
@@ -486,7 +487,15 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 Next
               </Button>
             ) : (
-              <Button variant="contained" color="success" type="submit">
+              <Button 
+                variant="contained" 
+                color="success" 
+                onClick={() => {
+                  if (validateStep(activeStep)) {
+                    onSubmit(formValues);
+                  }
+                }}
+              >
                 {isEditing ? 'Update Agent' : 'Create Agent'}
               </Button>
             )}
