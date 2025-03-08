@@ -99,18 +99,26 @@ export interface ToolParameterDefinition {
 }
 
 export interface AgentToolGroupWithArgs {
-  toolgroup_id: string;
+  name: string;
   args?: Record<string, any>;
 }
 
 export interface SamplingParams {
-  strategy: {
-    type: 'greedy' | 'top_p' | 'top_k';
-    p?: number;
-    k?: number;
-  };
-  max_tokens: number;
-  repetition_penalty: number;
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
+  repetition_penalty?: number;
+  [key: string]: any;
+}
+
+export interface AgentInfo {
+  agent_id: string;
+  model: string;
+  instructions: string;
+}
+
+export interface AgentListResponse {
+  agents: AgentInfo[];
 }
 
 export interface ToolConfig {
@@ -132,11 +140,28 @@ export interface AgentConfig {
   response_format?: any;
 }
 
-export interface Agent {
-  id: string;
-  config: AgentConfig;
-  created_at: string;
-  updated_at: string;
+export interface Agent extends AgentInfo {
+  config?: AgentConfig;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SessionInfo {
+  session_id: string;
+  session_name: string;
+  turns: TurnInfo[];
+  started_at: string;
+}
+
+export interface TurnInfo {
+  turn_id: string;
+  session_id: string;
+  input_messages: Message[];
+  steps: any[];
+  output_message: Message;
+  output_attachments: any[];
+  started_at: string;
+  completed_at: string;
 }
 
 export interface ChatCompletionResponse {
@@ -465,12 +490,18 @@ export const apiService = {
 
   createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
     try {
+      console.log('Creating agent with config:', agentConfig);
+      
       // Call the API to create the agent
       const response = await api.post('/v1/agents', { agent_config: agentConfig });
+      console.log('Create agent response:', response.data);
       
       // Generate a new agent object with the response data
       const newAgent: Agent = {
-        id: response.data.agent_id || `agent-${Date.now()}`,
+        agent_id: response.data.agent_id,
+        id: response.data.agent_id, // For backward compatibility
+        model: agentConfig.model,
+        instructions: agentConfig.instructions,
         config: agentConfig,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -488,26 +519,45 @@ export const apiService = {
   },
 
   getAgents: async (): Promise<Agent[]> => {
-    // Return agents from localStorage
-    return apiService._getAgentsFromStorage();
+    try {
+      // Call the new list endpoint
+      const response = await api.get('/v1/agents/list');
+      console.log('Agents list response:', response.data);
+      
+      // Convert AgentInfo[] to Agent[]
+      const apiAgents = response.data.agents.map((agentInfo: AgentInfo) => ({
+        ...agentInfo,
+        id: agentInfo.agent_id, // For backward compatibility
+        created_at: new Date().toISOString()
+      }));
+      
+      // Also save to local storage as backup
+      apiService._saveAgentsToStorage(apiAgents);
+      
+      return apiAgents;
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      
+      // Fallback to local storage if API fails
+      return apiService._getAgentsFromStorage();
+    }
   },
 
   getAgent: async (agentId: string): Promise<Agent> => {
-    // First try to get from localStorage
-    const agents = apiService._getAgentsFromStorage();
-    const agent = agents.find(a => a.id === agentId);
-    
-    if (agent) {
-      return agent;
-    }
-    
-    // If not found in localStorage, try the API (though this might not work)
     try {
-      const response = await api.get(`/v1/agents/${agentId}`);
-      return response.data;
+      // In the current API, there's no direct endpoint to get a single agent
+      // So we'll get all agents and filter
+      const agents = await apiService.getAgents();
+      const agent = agents.find(agent => agent.agent_id === agentId || agent.id === agentId);
+      
+      if (agent) {
+        return agent;
+      }
+      
+      throw new Error(`Agent ${agentId} not found`);
     } catch (error) {
       console.error(`Error fetching agent ${agentId}:`, error);
-      throw new Error(`Agent ${agentId} not found`);
+      throw error;
     }
   },
 
@@ -549,22 +599,102 @@ export const apiService = {
 
   deleteAgent: async (agentId: string): Promise<void> => {
     try {
-      // Try to delete via API
-      try {
-        await api.delete(`/v1/agents/${agentId}`);
-      } catch (error) {
-        console.warn(`API delete failed for agent ${agentId}, removing from local storage only:`, error);
-      }
+      console.log(`Deleting agent ${agentId}`);
       
-      // Remove from localStorage regardless of API success
+      // Try to delete via API
+      await api.delete(`/v1/agents/${agentId}`);
+      console.log(`Agent ${agentId} deleted successfully`);
+      
+      // Remove from localStorage
       const agents = apiService._getAgentsFromStorage();
-      const updatedAgents = agents.filter(a => a.id !== agentId);
+      const updatedAgents = agents.filter(a => a.agent_id !== agentId && a.id !== agentId);
       apiService._saveAgentsToStorage(updatedAgents);
     } catch (error) {
       console.error(`Error deleting agent ${agentId}:`, error);
+      
+      // If API fails, still try to remove from local storage
+      try {
+        const agents = apiService._getAgentsFromStorage();
+        const updatedAgents = agents.filter(a => a.agent_id !== agentId && a.id !== agentId);
+        apiService._saveAgentsToStorage(updatedAgents);
+        console.log(`Agent ${agentId} removed from local storage`);
+      } catch (storageError) {
+        console.error(`Error removing agent ${agentId} from local storage:`, storageError);
+      }
+      
+      throw error;
+    }
+  },
+  
+  // Create a session for an agent
+  createAgentSession: async (agentId: string, sessionName: string): Promise<string> => {
+    try {
+      console.log(`Creating session for agent ${agentId} with name "${sessionName}"`);
+      const response = await api.post(`/v1/agents/${agentId}/session`, {
+        session_name: sessionName
+      });
+      
+      console.log('Create session response:', response.data);
+      return response.data.session_id;
+    } catch (error) {
+      console.error(`Error creating session for agent ${agentId}:`, error);
+      throw error;
+    }
+  },
+  
+  // Get a session
+  getAgentSession: async (agentId: string, sessionId: string): Promise<SessionInfo> => {
+    try {
+      console.log(`Getting session ${sessionId} for agent ${agentId}`);
+      const response = await api.get(`/v1/agents/${agentId}/session/${sessionId}`);
+      console.log('Get session response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error getting session ${sessionId} for agent ${agentId}:`, error);
+      throw error;
+    }
+  },
+  
+  // Delete a session
+  deleteAgentSession: async (agentId: string, sessionId: string): Promise<void> => {
+    try {
+      console.log(`Deleting session ${sessionId} for agent ${agentId}`);
+      await api.delete(`/v1/agents/${agentId}/session/${sessionId}`);
+      console.log(`Session ${sessionId} deleted successfully`);
+    } catch (error) {
+      console.error(`Error deleting session ${sessionId} for agent ${agentId}:`, error);
+      throw error;
+    }
+  },
+  
+  // Create a turn in a session
+  createAgentTurn: async (
+    agentId: string, 
+    sessionId: string, 
+    messages: Message[], 
+    stream: boolean = false,
+    documents: any[] = [],
+    toolgroups: (string | AgentToolGroupWithArgs)[] = []
+  ): Promise<TurnInfo> => {
+    try {
+      console.log(`Creating turn for session ${sessionId}, agent ${agentId}`);
+      console.log('Turn request:', { messages, stream, documents, toolgroups });
+      
+      const response = await api.post(`/v1/agents/${agentId}/session/${sessionId}/turn`, {
+        messages,
+        stream,
+        documents,
+        toolgroups
+      });
+      
+      console.log('Create turn response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating turn for session ${sessionId}, agent ${agentId}:`, error);
       throw error;
     }
   }
+  
 };
 
 export default apiService;
