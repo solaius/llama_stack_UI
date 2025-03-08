@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const drawer = (
     <div>
-      <Toolbar>
+      <Toolbar sx={{ backgroundColor: '#1f1f1f', color: '#ffffff' }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '30px', width: 'auto' }} />
           <Typography variant="h6" noWrap component="div">
