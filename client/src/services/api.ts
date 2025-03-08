@@ -520,25 +520,61 @@ export const apiService = {
 
   getAgents: async (): Promise<Agent[]> => {
     try {
-      // Call the new list endpoint
-      const response = await api.get('/v1/agents/list');
-      console.log('Agents list response:', response.data);
-      
-      // Convert AgentInfo[] to Agent[]
-      const apiAgents = response.data.agents.map((agentInfo: AgentInfo) => ({
-        ...agentInfo,
-        id: agentInfo.agent_id, // For backward compatibility
-        created_at: new Date().toISOString()
-      }));
-      
-      // Also save to local storage as backup
-      apiService._saveAgentsToStorage(apiAgents);
-      
-      return apiAgents;
+      // Try the new list endpoint first
+      try {
+        const response = await api.get('/v1/agents/list');
+        console.log('Agents list response:', response.data);
+        
+        // Convert AgentInfo[] to Agent[]
+        const apiAgents = response.data.agents.map((agentInfo: AgentInfo) => ({
+          ...agentInfo,
+          id: agentInfo.agent_id, // For backward compatibility
+          created_at: new Date().toISOString()
+        }));
+        
+        // Also save to local storage as backup
+        apiService._saveAgentsToStorage(apiAgents);
+        
+        return apiAgents;
+      } catch (listError) {
+        console.warn('List endpoint failed, trying to get agents individually:', listError);
+        
+        // If the list endpoint fails, try to get agents from local storage
+        // and verify they exist by making individual GET requests
+        const storedAgents = apiService._getAgentsFromStorage();
+        const verifiedAgents: Agent[] = [];
+        
+        for (const agent of storedAgents) {
+          try {
+            // Try to verify the agent exists by creating a session
+            // This is a workaround since there's no direct GET endpoint
+            const sessionName = `verify_session_${Date.now()}`;
+            const sessionResponse = await api.post(`/v1/agents/${agent.agent_id || agent.id}/session`, {
+              session_name: sessionName
+            });
+            
+            if (sessionResponse.data.session_id) {
+              // Agent exists, add to verified list
+              verifiedAgents.push(agent);
+              
+              // Clean up the verification session
+              try {
+                await api.delete(`/v1/agents/${agent.agent_id || agent.id}/session/${sessionResponse.data.session_id}`);
+              } catch (deleteError) {
+                console.warn(`Could not delete verification session for agent ${agent.agent_id || agent.id}:`, deleteError);
+              }
+            }
+          } catch (verifyError) {
+            console.warn(`Agent ${agent.agent_id || agent.id} verification failed, may not exist:`, verifyError);
+          }
+        }
+        
+        return verifiedAgents;
+      }
     } catch (error) {
       console.error('Error fetching agents:', error);
       
-      // Fallback to local storage if API fails
+      // Fallback to local storage if all API methods fail
       return apiService._getAgentsFromStorage();
     }
   },
