@@ -134,6 +134,8 @@ export interface AgentInfo {
   agent_id: string;
   model: string;
   instructions: string;
+  name?: string;
+  created_by?: string;
 }
 
 export interface AgentListResponse {
@@ -157,6 +159,7 @@ export interface AgentConfig {
   max_infer_iters?: number;
   enable_session_persistence?: boolean;
   response_format?: any;
+  name?: string;
 }
 
 export interface Agent extends AgentInfo {

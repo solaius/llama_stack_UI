@@ -26,8 +26,8 @@ import {
 import { AgentConfig, Model, ToolGroup, apiService } from '../../services/api';
 
 interface AgentFormProps {
-  initialValues?: Partial<AgentConfig>;
-  onSubmit: (values: AgentConfig & { name?: string }) => void;
+  initialValues?: Partial<AgentConfig & { name?: string }>;
+  onSubmit: (values: AgentConfig & { name: string }) => void;
   onCancel: () => void;
   isEditing?: boolean;
 }
@@ -53,7 +53,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
   const [models, setModels] = useState<Model[]>([]);
   const [toolGroups, setToolGroups] = useState<ToolGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formValues, setFormValues] = useState<AgentConfig & { name?: string }>({
+  const [formValues, setFormValues] = useState<AgentConfig & { name: string }>({
     model: initialValues?.model || '',
     instructions: initialValues?.instructions || '',
     sampling_params: initialValues?.sampling_params || defaultSamplingParams,
@@ -61,7 +61,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
     tool_config: initialValues?.tool_config || defaultToolConfig,
     max_infer_iters: initialValues?.max_infer_iters || 10,
     enable_session_persistence: initialValues?.enable_session_persistence || false,
-    name: ''
+    name: initialValues?.name || ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -134,11 +134,14 @@ const AgentForm: React.FC<AgentFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (step === 0) {
+      if (!formValues.name) {
+        newErrors.name = 'Name is required';
+      }
       if (!formValues.model) {
         newErrors.model = 'Model is required';
       }
       if (!formValues.instructions) {
-        newErrors.instructions = 'Instructions are required';
+        newErrors.instructions = 'System Prompt is required';
       }
     }
 
@@ -195,6 +198,19 @@ const AgentForm: React.FC<AgentFormProps> = ({
         {activeStep === 0 && (
           <Grid container spacing={3}>
             <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Name"
+                value={formValues.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                error={!!errors.name}
+                helperText={
+                  errors.name ||
+                  'Provide a descriptive name for the agent.'
+                }
+              />
+            </Grid>
+            <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.model}>
                 <InputLabel id="model-label">Model</InputLabel>
                 <Select
@@ -215,7 +231,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Instructions"
+                label="System Prompt"
                 multiline
                 rows={6}
                 value={formValues.instructions}
@@ -406,10 +422,13 @@ const AgentForm: React.FC<AgentFormProps> = ({
               <CardContent>
                 <Typography variant="h6">Basic Information</Typography>
                 <Typography>
+                  <strong>Name:</strong> {formValues.name}
+                </Typography>
+                <Typography>
                   <strong>Model:</strong> {formValues.model}
                 </Typography>
                 <Typography>
-                  <strong>Instructions:</strong>
+                  <strong>System Prompt:</strong>
                 </Typography>
                 <Typography
                   variant="body2"

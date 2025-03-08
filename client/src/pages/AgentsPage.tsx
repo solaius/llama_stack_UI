@@ -48,6 +48,7 @@ const AgentsPage: React.FC = () => {
         {
           agent_id: 'meeting-minutes-agent',
           id: 'meeting-minutes-agent',
+          name: 'Meeting Minutes Assistant',
           model: 'meta-llama/Llama-3.1-8B-Instruct',
           instructions: 'You are a meeting minutes assistant. Help users create meeting minutes from notes or transcripts.',
           config: {
@@ -60,14 +61,17 @@ const AgentsPage: React.FC = () => {
             },
             toolgroups: ['summarization-tools'],
             max_infer_iters: 10,
-            enable_session_persistence: false
+            enable_session_persistence: false,
+            name: 'Meeting Minutes Assistant'
           },
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          created_by: 'Admin'
         },
         {
           agent_id: 'customer-support-agent',
           id: 'customer-support-agent',
+          name: 'Customer Support Agent',
           model: 'meta-llama/Llama-3.1-8B-Instruct',
           instructions: 'You are a customer support assistant. Help users with their questions and issues.',
           config: {
@@ -80,10 +84,12 @@ const AgentsPage: React.FC = () => {
             },
             toolgroups: ['knowledge-base-tools'],
             max_infer_iters: 5,
-            enable_session_persistence: true
+            enable_session_persistence: true,
+            name: 'Customer Support Agent'
           },
           created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          updated_at: new Date(Date.now() - 86400000).toISOString()
+          updated_at: new Date(Date.now() - 86400000).toISOString(),
+          created_by: 'System'
         }
       ]);
     } finally {
@@ -109,10 +115,17 @@ const AgentsPage: React.FC = () => {
 
   const handleDuplicateAgent = (agent: Agent) => {
     const newId = `${agent.id || agent.agent_id}-copy`;
+    const newName = agent.name ? `${agent.name} (Copy)` : `Copy of ${agent.id || agent.agent_id}`;
+    
     setCurrentAgent({
       ...agent,
       agent_id: newId,
       id: newId,
+      name: newName,
+      config: {
+        ...agent.config,
+        name: newName
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -125,23 +138,32 @@ const AgentsPage: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const handleFormSubmit = async (values: AgentConfig) => {
+  const handleFormSubmit = async (values: AgentConfig & { name: string }) => {
     try {
+      // Extract name from values and create a config object without name
+      const { name, ...configValues } = values;
+      
       if (isEditing && currentAgent) {
         // Update existing agent
         const agentId = currentAgent.agent_id || currentAgent.id;
-        const updatedAgent = await apiService.updateAgent(agentId, values);
+        const updatedAgent = await apiService.updateAgent(agentId, {
+          ...configValues,
+          name: name // Include name in the update
+        });
         setNotification({
           open: true,
-          message: `Agent "${updatedAgent.agent_id || updatedAgent.id}" updated successfully`,
+          message: `Agent "${name}" updated successfully`,
           severity: 'success'
         });
       } else {
         // Create new agent
-        const newAgent = await apiService.createAgent(values);
+        const newAgent = await apiService.createAgent({
+          ...configValues,
+          name: name // Include name in the creation
+        });
         setNotification({
           open: true,
-          message: `Agent "${newAgent.agent_id || newAgent.id}" created successfully`,
+          message: `Agent "${name}" created successfully`,
           severity: 'success'
         });
       }
@@ -224,7 +246,10 @@ const AgentsPage: React.FC = () => {
           fullWidth
         >
           <AgentForm
-            initialValues={currentAgent?.config}
+            initialValues={{
+              ...currentAgent?.config,
+              name: currentAgent?.name || currentAgent?.config?.name || ''
+            }}
             onSubmit={handleFormSubmit}
             onCancel={() => setShowForm(false)}
             isEditing={isEditing}

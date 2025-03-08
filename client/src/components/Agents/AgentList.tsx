@@ -24,7 +24,9 @@ import {
   Search as SearchIcon,
   Add as AddIcon,
   Visibility as VisibilityIcon,
-  Chat as ChatIcon
+  Chat as ChatIcon,
+  ContentCopy as ContentCopyIcon,
+  Description as DescriptionIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
@@ -60,6 +62,7 @@ const AgentList: React.FC<AgentListProps> = ({
       setFilteredAgents(
         agents.filter(
           (agent) =>
+            (agent.name || '').toLowerCase().includes(lowercasedSearch) ||
             (agent.id || agent.agent_id || '').toLowerCase().includes(lowercasedSearch) ||
             agent.instructions.toLowerCase().includes(lowercasedSearch) ||
             agent.model.toLowerCase().includes(lowercasedSearch)
@@ -125,17 +128,18 @@ const AgentList: React.FC<AgentListProps> = ({
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Name</TableCell>
               <TableCell>ID</TableCell>
-              <TableCell>Model</TableCell>
-              <TableCell>Instructions</TableCell>
+              <TableCell>System Prompt</TableCell>
               <TableCell>Created</TableCell>
+              <TableCell>Created By</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredAgents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   {searchTerm ? 'No agents match your search' : 'No agents available'}
                 </TableCell>
               </TableRow>
@@ -144,58 +148,76 @@ const AgentList: React.FC<AgentListProps> = ({
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((agent) => (
                   <TableRow key={agent.agent_id || agent.id}>
-                    <TableCell>{agent.agent_id || agent.id}</TableCell>
-                    <TableCell>{agent.model}</TableCell>
+                    <TableCell>{agent.name || 'Unnamed Agent'}</TableCell>
                     <TableCell>
-                      {agent.instructions.length > 100
-                        ? `${agent.instructions.substring(0, 100)}...`
-                        : agent.instructions}
+                      <Tooltip title={agent.agent_id || agent.id}>
+                        <IconButton 
+                          onClick={() => {
+                            navigator.clipboard.writeText(agent.agent_id || agent.id);
+                          }} 
+                          size="small"
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title={agent.instructions}>
+                        <IconButton size="small">
+                          <DescriptionIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                     <TableCell>
                       {new Date(agent.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Chat with Agent">
-                        <IconButton 
-                          onClick={() => {
-                            // Create a new session and navigate to chat
-                            const sessionId = `session-${Date.now()}`;
-                            navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
-                          }} 
-                          size="small"
-                          color="success"
-                        >
-                          <ChatIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="View Details">
-                        <IconButton 
-                          onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
-                          size="small"
-                          color="primary"
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton onClick={() => onEdit(agent)} size="small">
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Duplicate">
-                        <IconButton onClick={() => onDuplicate(agent)} size="small">
-                          <DuplicateIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton 
-                          onClick={() => onDelete(agent)} 
-                          size="small" 
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      {agent.created_by || 'System'}
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" gap={1}>
+                        <Tooltip title="Chat with Agent">
+                          <IconButton 
+                            onClick={() => {
+                              // Create a new session and navigate to chat
+                              const sessionId = `session-${Date.now()}`;
+                              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                            }} 
+                            size="small"
+                            color="success"
+                          >
+                            <ChatIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="View Details">
+                          <IconButton 
+                            onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
+                            size="small"
+                            color="primary"
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton onClick={() => onEdit(agent)} size="small">
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Duplicate">
+                          <IconButton onClick={() => onDuplicate(agent)} size="small">
+                            <DuplicateIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton 
+                            onClick={() => onDelete(agent)} 
+                            size="small" 
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
