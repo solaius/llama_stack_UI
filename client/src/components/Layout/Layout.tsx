@@ -74,20 +74,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         height: '64px', 
         display: 'flex', 
         justifyContent: 'center', 
-        padding: '0 8px'
+        padding: '0 16px',
+        minHeight: '64px'
       }}>
         <Stack 
           direction="row" 
           spacing={1.5} 
           alignItems="center" 
           sx={{ 
-            width: '100%', 
-            justifyContent: 'center',
-            ml: '-5px' // Adjust for visual centering
+            width: 'auto',
+            minWidth: '200px',
+            justifyContent: 'flex-start',
+            ml: '-5px' // Move 5px to the left
           }}
         >
           <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '38px', width: 'auto' }} />
-          <Typography variant="h5" noWrap component="div" sx={{ fontWeight: 600 }}>
+          <Typography 
+            variant="h5" 
+            component="div" 
+            sx={{ 
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              overflow: 'visible',
+              textOverflow: 'clip'
+            }}
+          >
             Llama Stack UI
           </Typography>
         </Stack>
