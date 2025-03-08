@@ -208,9 +208,8 @@ const ToolUsageHistory: React.FC<ToolUsageHistoryProps> = ({ agentId, isLoading 
         {toolUsageHistory.map((dateGroup) => (
           <Paper key={dateGroup.date} sx={{ mb: 2 }}>
             <ListItem
-              button
               onClick={() => handleExpandDate(dateGroup.date)}
-              sx={{ bgcolor: 'background.paper' }}
+              sx={{ bgcolor: 'background.paper', cursor: 'pointer' }}
             >
               <ListItemIcon>
                 <CalendarIcon />
@@ -223,7 +222,7 @@ const ToolUsageHistory: React.FC<ToolUsageHistoryProps> = ({ agentId, isLoading 
                   day: 'numeric' 
                 })} 
                 secondary={`${dateGroup.sessions.length} sessions, ${dateGroup.sessions.reduce(
-                  (total, session) => total + session.toolCalls.length, 0
+                  (total: number, session: any) => total + session.toolCalls.length, 0
                 )} tool calls`}
               />
               <IconButton
@@ -276,107 +275,108 @@ const ToolUsageHistory: React.FC<ToolUsageHistoryProps> = ({ agentId, isLoading 
                             const isSuccess = toolCall.result && !toolCall.result.error;
                             
                             return (
-                              <ListItem 
-                                key={toolCall.id}
-                                sx={{ 
-                                  bgcolor: 'background.default',
-                                  mb: 1,
-                                  borderRadius: 1,
-                                  borderLeft: isSuccess 
-                                    ? '4px solid #4caf50' 
-                                    : toolCall.result?.error 
-                                      ? '4px solid #f44336' 
-                                      : '4px solid #ff9800'
-                                }}
-                              >
-                                <ListItemIcon>
-                                  <BuildIcon color={isSuccess ? "success" : toolCall.result?.error ? "error" : "warning"} />
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={
-                                    <Box display="flex" alignItems="center">
-                                      <Typography variant="subtitle2" fontWeight="bold">
-                                        {toolCall.function.name}
-                                      </Typography>
-                                      <Chip 
-                                        size="small" 
-                                        label={isSuccess ? "Success" : toolCall.result?.error ? "Error" : "Pending"} 
-                                        color={isSuccess ? "success" : toolCall.result?.error ? "error" : "warning"}
-                                        sx={{ ml: 1 }}
-                                      />
-                                    </Box>
-                                  }
-                                  secondary={
-                                    <Typography variant="caption" color="text.secondary">
-                                      {new Date(toolCall.timestamp).toLocaleTimeString()}
-                                    </Typography>
-                                  }
-                                />
-                                <IconButton
-                                  edge="end"
-                                  onClick={() => handleExpandTool(toolCall.id)}
+                              <React.Fragment key={toolCall.id}>
+                                <ListItem 
+                                  sx={{ 
+                                    bgcolor: 'background.default',
+                                    mb: 1,
+                                    borderRadius: 1,
+                                    borderLeft: isSuccess 
+                                      ? '4px solid #4caf50' 
+                                      : toolCall.result?.error 
+                                        ? '4px solid #f44336' 
+                                        : '4px solid #ff9800'
+                                  }}
                                 >
-                                  <ExpandMoreIcon 
-                                    sx={{ 
-                                      transform: expandedTool === toolCall.id ? 'rotate(180deg)' : 'rotate(0deg)',
-                                      transition: 'transform 0.3s'
-                                    }} 
+                                  <ListItemIcon>
+                                    <BuildIcon color={isSuccess ? "success" : toolCall.result?.error ? "error" : "warning"} />
+                                  </ListItemIcon>
+                                  <ListItemText
+                                    primary={
+                                      <Box display="flex" alignItems="center">
+                                        <Typography variant="subtitle2" fontWeight="bold">
+                                          {toolCall.function.name}
+                                        </Typography>
+                                        <Chip 
+                                          size="small" 
+                                          label={isSuccess ? "Success" : toolCall.result?.error ? "Error" : "Pending"} 
+                                          color={isSuccess ? "success" : toolCall.result?.error ? "error" : "warning"}
+                                          sx={{ ml: 1 }}
+                                        />
+                                      </Box>
+                                    }
+                                    secondary={
+                                      <Typography variant="caption" color="text.secondary">
+                                        {new Date(toolCall.timestamp).toLocaleTimeString()}
+                                      </Typography>
+                                    }
                                   />
-                                </IconButton>
-                              </ListItem>
-                              
-                              <Collapse in={expandedTool === toolCall.id}>
-                                <Box sx={{ pl: 4, pr: 2, pb: 2 }}>
-                                  <Grid container spacing={2}>
-                                    <Grid item xs={12} md={6}>
-                                      <Typography variant="subtitle2" color="text.secondary">
-                                        Arguments:
-                                      </Typography>
-                                      <Paper 
-                                        variant="outlined" 
-                                        sx={{ 
-                                          p: 1, 
-                                          my: 1, 
-                                          bgcolor: 'background.paper',
-                                          fontFamily: 'monospace',
-                                          fontSize: '0.875rem',
-                                          overflowX: 'auto'
-                                        }}
-                                      >
-                                        <pre style={{ margin: 0 }}>
-                                          {JSON.stringify(JSON.parse(toolCall.function.arguments), null, 2)}
-                                        </pre>
-                                      </Paper>
+                                  <IconButton
+                                    edge="end"
+                                    onClick={() => handleExpandTool(toolCall.id)}
+                                  >
+                                    <ExpandMoreIcon 
+                                      sx={{ 
+                                        transform: expandedTool === toolCall.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.3s'
+                                      }} 
+                                    />
+                                  </IconButton>
+                                </ListItem>
+                                
+                                <Collapse in={expandedTool === toolCall.id}>
+                                  <Box sx={{ pl: 4, pr: 2, pb: 2 }}>
+                                    <Grid container spacing={2}>
+                                      <Grid item xs={12} md={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">
+                                          Arguments:
+                                        </Typography>
+                                        <Paper 
+                                          variant="outlined" 
+                                          sx={{ 
+                                            p: 1, 
+                                            my: 1, 
+                                            bgcolor: 'background.paper',
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.875rem',
+                                            overflowX: 'auto'
+                                          }}
+                                        >
+                                          <pre style={{ margin: 0 }}>
+                                            {JSON.stringify(JSON.parse(toolCall.function.arguments), null, 2)}
+                                          </pre>
+                                        </Paper>
+                                      </Grid>
+                                      
+                                      <Grid item xs={12} md={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">
+                                          {toolCall.result?.error ? 'Error:' : 'Result:'}
+                                        </Typography>
+                                        <Paper 
+                                          variant="outlined" 
+                                          sx={{ 
+                                            p: 1, 
+                                            my: 1, 
+                                            bgcolor: toolCall.result?.error ? '#ffebee' : 'background.paper',
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.875rem',
+                                            overflowX: 'auto'
+                                          }}
+                                        >
+                                          <pre style={{ margin: 0 }}>
+                                            {toolCall.result?.error 
+                                              ? toolCall.result.error 
+                                              : typeof toolCall.result?.content === 'string' 
+                                                ? toolCall.result.content 
+                                                : JSON.stringify(toolCall.result?.content, null, 2)
+                                            }
+                                          </pre>
+                                        </Paper>
+                                      </Grid>
                                     </Grid>
-                                    
-                                    <Grid item xs={12} md={6}>
-                                      <Typography variant="subtitle2" color="text.secondary">
-                                        {toolCall.result?.error ? 'Error:' : 'Result:'}
-                                      </Typography>
-                                      <Paper 
-                                        variant="outlined" 
-                                        sx={{ 
-                                          p: 1, 
-                                          my: 1, 
-                                          bgcolor: toolCall.result?.error ? '#ffebee' : 'background.paper',
-                                          fontFamily: 'monospace',
-                                          fontSize: '0.875rem',
-                                          overflowX: 'auto'
-                                        }}
-                                      >
-                                        <pre style={{ margin: 0 }}>
-                                          {toolCall.result?.error 
-                                            ? toolCall.result.error 
-                                            : typeof toolCall.result?.content === 'string' 
-                                              ? toolCall.result.content 
-                                              : JSON.stringify(toolCall.result?.content, null, 2)
-                                          }
-                                        </pre>
-                                      </Paper>
-                                    </Grid>
-                                  </Grid>
-                                </Box>
-                              </Collapse>
+                                  </Box>
+                                </Collapse>
+                              </React.Fragment>
                             );
                           })}
                         </List>
