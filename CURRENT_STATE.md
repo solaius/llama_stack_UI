@@ -123,9 +123,9 @@ The application has been significantly enhanced with improved API integration, a
   - [x] Enable users to assign tools to agents during creation or editing
   - [x] Validate tool compatibility with the selected model
 
-- [ ] **Tool Execution & Integration**
-  - [ ] Provide UI components for interacting with tools
-  - [ ] Display tool usage history for each agent
+- [x] **Tool Execution & Integration**
+  - [x] Provide UI components for interacting with tools
+  - [x] Display tool usage history for each agent
 
 ## **Retrieval-Augmented Generation (RAG)**
 - [ ] **Knowledge Source Management**
