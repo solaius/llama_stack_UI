@@ -185,8 +185,18 @@ const AgentList: React.FC<AgentListProps> = ({
                   <TableRow 
                     key={agent.agent_id || agent.id}
                     sx={{ 
-                      '&:nth-of-type(odd)': { backgroundColor: (theme) => theme.palette.action.hover },
-                      '&:hover': { backgroundColor: (theme) => theme.palette.action.selected },
+                      '&:nth-of-type(odd)': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)' 
+                            : theme.palette.action.hover 
+                      },
+                      '&:hover': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : theme.palette.action.selected 
+                      },
                       transition: 'background-color 0.2s ease'
                     }}
                   >
@@ -199,10 +209,11 @@ const AgentList: React.FC<AgentListProps> = ({
                           }} 
                           size="small"
                           sx={{ 
-                            bgcolor: 'grey.200',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
+                            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
                             transition: 'all 0.2s',
                             '&:hover': { 
-                              bgcolor: 'grey.300',
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
                               transform: 'scale(1.1)'
                             }
                           }}
@@ -223,10 +234,11 @@ const AgentList: React.FC<AgentListProps> = ({
                         <IconButton 
                           size="small"
                           sx={{ 
-                            bgcolor: 'grey.200',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
+                            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
                             transition: 'all 0.2s',
                             '&:hover': { 
-                              bgcolor: 'grey.300',
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
                               transform: 'scale(1.1)'
                             }
                           }}

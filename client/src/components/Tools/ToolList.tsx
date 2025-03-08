@@ -128,33 +128,59 @@ const ToolList: React.FC<ToolListProps> = ({
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Tools</Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5" fontWeight="bold" color="primary">
+          Tools
+        </Typography>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={onCreateNew}
+          sx={{ 
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            boxShadow: 2,
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: 3
+            }
+          }}
         >
           Create New Tool
         </Button>
       </Box>
 
       <Box mb={3}>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>
+        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2 }}>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
             Filters
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={2}>
             <TextField
-              placeholder="Search tools..."
+              placeholder="Search tools by ID or description..."
               value={searchTerm}
               onChange={handleSearchChange}
-              sx={{ flexGrow: 1, minWidth: '200px' }}
+              sx={{ 
+                flexGrow: 1, 
+                minWidth: '200px',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    boxShadow: 1
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: 2
+                  }
+                }
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon color="primary" />
                   </InputAdornment>
                 )
               }}
@@ -167,11 +193,18 @@ const ToolList: React.FC<ToolListProps> = ({
                 multiple
                 value={providerFilter}
                 onChange={handleProviderFilterChange}
-                input={<OutlinedInput label="Provider" />}
+                input={<OutlinedInput 
+                  label="Provider" 
+                  sx={{ 
+                    borderRadius: 2,
+                    '&:hover': { boxShadow: 1 },
+                    '&.Mui-focused': { boxShadow: 2 }
+                  }} 
+                />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(selected as string[]).map((value) => (
-                      <Chip key={value} label={value} size="small" />
+                      <Chip key={value} label={value} size="small" color="primary" variant="outlined" />
                     ))}
                   </Box>
                 )}
@@ -191,11 +224,18 @@ const ToolList: React.FC<ToolListProps> = ({
                 multiple
                 value={toolGroupFilter}
                 onChange={handleToolGroupFilterChange}
-                input={<OutlinedInput label="Tool Group" />}
+                input={<OutlinedInput 
+                  label="Tool Group" 
+                  sx={{ 
+                    borderRadius: 2,
+                    '&:hover': { boxShadow: 1 },
+                    '&.Mui-focused': { boxShadow: 2 }
+                  }} 
+                />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(selected as string[]).map((value) => (
-                      <Chip key={value} label={getToolGroupName(value)} size="small" />
+                      <Chip key={value} label={getToolGroupName(value)} size="small" color="secondary" variant="outlined" />
                     ))}
                   </Box>
                 )}
@@ -211,22 +251,31 @@ const ToolList: React.FC<ToolListProps> = ({
         </Paper>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Provider</TableCell>
-              <TableCell>Tool Group</TableCell>
-              <TableCell>Parameters</TableCell>
-              <TableCell>Actions</TableCell>
+            <TableRow sx={{ backgroundColor: (theme) => theme.palette.primary.main }}>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Provider</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Tool Group</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Parameters</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredTools.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell 
+                  colSpan={6} 
+                  align="center" 
+                  sx={{ 
+                    py: 5, 
+                    typography: 'subtitle1', 
+                    color: 'text.secondary',
+                    fontStyle: 'italic'
+                  }}
+                >
                   {searchTerm || providerFilter.length > 0 || toolGroupFilter.length > 0
                     ? 'No tools match your filters'
                     : 'No tools available'}
@@ -235,43 +284,108 @@ const ToolList: React.FC<ToolListProps> = ({
             ) : (
               filteredTools
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((tool) => (
-                  <TableRow key={tool.identifier}>
-                    <TableCell>{tool.identifier}</TableCell>
+                .map((tool, index) => (
+                  <TableRow 
+                    key={tool.identifier}
+                    sx={{ 
+                      '&:nth-of-type(odd)': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)' 
+                            : theme.palette.action.hover 
+                      },
+                      '&:hover': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : theme.palette.action.selected 
+                      },
+                      transition: 'background-color 0.2s ease'
+                    }}
+                  >
+                    <TableCell sx={{ fontWeight: 'medium' }}>{tool.identifier}</TableCell>
                     <TableCell>
                       {tool.description.length > 100
                         ? `${tool.description.substring(0, 100)}...`
                         : tool.description}
                     </TableCell>
                     <TableCell>
-                      <Chip label={tool.provider_id} size="small" />
+                      <Chip 
+                        label={tool.provider_id} 
+                        size="small" 
+                        sx={{ fontWeight: 'medium' }}
+                      />
                     </TableCell>
                     <TableCell>
                       <Chip 
                         label={getToolGroupName(tool.toolgroup_id)} 
                         size="small" 
                         color="secondary" 
+                        sx={{ fontWeight: 'medium' }}
                       />
                     </TableCell>
                     <TableCell>
-                      {tool.parameters.length}
+                      <Chip 
+                        label={tool.parameters.length} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ fontWeight: 'medium' }}
+                      />
                     </TableCell>
-                    <TableCell>
-                      <Tooltip title="View & Test">
-                        <IconButton onClick={() => onView(tool)} size="small">
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton onClick={() => onEdit(tool)} size="small" color="primary">
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton onClick={() => onDelete(tool)} size="small" color="error">
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                    <TableCell align="center">
+                      <Box 
+                        display="flex" 
+                        justifyContent="center" 
+                        gap={1}
+                        sx={{
+                          '& .MuiIconButton-root': {
+                            transition: 'transform 0.2s, background-color 0.2s',
+                            '&:hover': {
+                              transform: 'scale(1.15)',
+                            }
+                          }
+                        }}
+                      >
+                        <Tooltip title="View & Test">
+                          <IconButton 
+                            onClick={() => onView(tool)} 
+                            size="small"
+                            sx={{ 
+                              bgcolor: 'primary.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'primary.main' } 
+                            }}
+                          >
+                            <ViewIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton 
+                            onClick={() => onEdit(tool)} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'info.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'info.main' } 
+                            }}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton 
+                            onClick={() => onDelete(tool)} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'error.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'error.main' } 
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
@@ -286,6 +400,13 @@ const ToolList: React.FC<ToolListProps> = ({
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ 
+            borderTop: 1, 
+            borderColor: 'divider',
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              fontWeight: 'medium'
+            }
+          }}
         />
       </TableContainer>
     </Box>

@@ -118,7 +118,7 @@ const ModelsPage: React.FC = () => {
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
@@ -126,41 +126,84 @@ const ModelsPage: React.FC = () => {
         ) : (
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
-              <TableRow>
-                <TableCell>Model ID</TableCell>
-                <TableCell>Provider</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Provider Resource ID</TableCell>
-                <TableCell>Actions</TableCell>
+              <TableRow sx={{ backgroundColor: (theme) => theme.palette.primary.main }}>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Model ID</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Provider</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Type</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Provider Resource ID</TableCell>
+                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {models.map((model) => (
-                <TableRow key={model.identifier} hover>
-                  <TableCell component="th" scope="row">
-                    {model.identifier}
-                  </TableCell>
-                  <TableCell>{model.provider_id}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={model.model_type}
-                      color={getModelTypeColor(model.model_type) as any}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{model.provider_resource_id}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleModelClick(model)}
-                      startIcon={<InfoIcon />}
-                    >
-                      Details
-                    </Button>
+              {models.length === 0 ? (
+                <TableRow>
+                  <TableCell 
+                    colSpan={5} 
+                    align="center" 
+                    sx={{ 
+                      py: 5, 
+                      typography: 'subtitle1', 
+                      color: 'text.secondary',
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    No models available
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                models.map((model, index) => (
+                  <TableRow 
+                    key={model.identifier} 
+                    sx={{ 
+                      '&:nth-of-type(odd)': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)' 
+                            : theme.palette.action.hover 
+                      },
+                      '&:hover': { 
+                        backgroundColor: (theme) => 
+                          theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : theme.palette.action.selected 
+                      },
+                      transition: 'background-color 0.2s ease'
+                    }}
+                  >
+                    <TableCell component="th" scope="row" sx={{ fontWeight: 'medium' }}>
+                      {model.identifier}
+                    </TableCell>
+                    <TableCell>{model.provider_id}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={model.model_type}
+                        color={getModelTypeColor(model.model_type) as any}
+                        size="small"
+                        sx={{ fontWeight: 'medium' }}
+                      />
+                    </TableCell>
+                    <TableCell>{model.provider_resource_id}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => handleModelClick(model)}
+                        startIcon={<InfoIcon />}
+                        sx={{ 
+                          borderRadius: 2,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: 2
+                          }
+                        }}
+                      >
+                        Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         )}
