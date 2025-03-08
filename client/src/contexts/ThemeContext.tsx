@@ -169,6 +169,18 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
                 color: '#ffffff', // white text for better contrast
                 borderRadius: 0, // Remove rounded edges
+                height: '64px', // Consistent height
+              },
+            },
+          },
+          MuiToolbar: {
+            styleOverrides: {
+              root: {
+                minHeight: '64px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 16px',
               },
             },
           },

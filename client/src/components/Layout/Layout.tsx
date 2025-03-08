@@ -68,10 +68,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const drawer = (
     <div>
-      <Toolbar sx={{ backgroundColor: '#1f1f1f', color: '#ffffff' }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '30px', width: 'auto' }} />
-          <Typography variant="h6" noWrap component="div">
+      <Toolbar sx={{ backgroundColor: '#1f1f1f', color: '#ffffff', height: '64px' }}>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <img src={RHLSLogo} alt="RHLS Logo" style={{ height: '38px', width: 'auto' }} />
+          <Typography variant="h5" noWrap component="div" sx={{ fontWeight: 600 }}>
             Llama Stack UI
           </Typography>
         </Stack>
@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           ml: { md: `${drawerWidth}px` },
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: '64px', display: 'flex', alignItems: 'center' }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -116,13 +116,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Typography 
+            variant="h5" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              flexGrow: 1, 
+              display: { xs: 'none', md: 'flex' },
+              fontWeight: 600,
+              alignSelf: 'center'
+            }}
+          >
             {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
           </Typography>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+          <Typography 
+            variant="h5" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              flexGrow: 1, 
+              display: { xs: 'flex', md: 'none' },
+              fontWeight: 600,
+              alignSelf: 'center'
+            }}
+          >
             {navItems.find(item => item.path === location.pathname)?.text || 'Llama Stack UI'}
           </Typography>
-          <IconButton color="inherit" onClick={toggleColorMode}>
+          <IconButton color="inherit" onClick={toggleColorMode} sx={{ alignSelf: 'center' }}>
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
         </Toolbar>
