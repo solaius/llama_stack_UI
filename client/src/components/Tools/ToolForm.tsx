@@ -30,8 +30,23 @@ import {
   Help as HelpIcon
 } from '@mui/icons-material';
 import { Tool, ToolParameter, ToolGroup, apiService } from '../../services/api';
-// Temporarily disable drag-and-drop due to TypeScript errors
-// import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ToolFormProps {
   toolGroups: ToolGroup[];
@@ -70,6 +85,152 @@ const DEFAULT_PARAMETER: ToolParameter = {
   description: '',
   required: false,
   default: null
+};
+
+// Sortable parameter item component
+interface SortableParameterItemProps {
+  param: ToolParameter;
+  index: number;
+  paramErrors: Record<string, string> | undefined;
+  onParameterChange: (index: number, field: keyof ToolParameter, value: any) => void;
+  onRemoveParameter: (index: number) => void;
+}
+
+const SortableParameterItem: React.FC<SortableParameterItemProps> = ({
+  param,
+  index,
+  paramErrors,
+  onParameterChange,
+  onRemoveParameter
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `param-${index}` });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : 0,
+    position: 'relative' as const
+  };
+  
+  return (
+    <Card 
+      ref={setNodeRef}
+      variant="outlined" 
+      sx={{ 
+        mb: 2,
+        ...style
+      }}
+    >
+      <Box 
+        {...attributes}
+        {...listeners}
+        sx={{ 
+          position: 'absolute', 
+          top: 8, 
+          left: 8, 
+          cursor: 'grab',
+          color: 'text.secondary'
+        }}
+      >
+        <DragIndicatorIcon />
+      </Box>
+      <CardContent sx={{ pt: 3, pl: 5 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Parameter Name"
+              value={param.name}
+              onChange={(e) => onParameterChange(index, 'name', e.target.value)}
+              error={!!paramErrors?.name}
+              helperText={paramErrors?.name || 'Name of the parameter (e.g., "query")'}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth error={!!paramErrors?.parameter_type}>
+              <InputLabel id={`param-type-label-${index}`}>Parameter Type *</InputLabel>
+              <Select
+                labelId={`param-type-label-${index}`}
+                value={param.parameter_type}
+                onChange={(e) => onParameterChange(index, 'parameter_type', e.target.value)}
+                label="Parameter Type *"
+              >
+                {PARAMETER_TYPES.map(type => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                {paramErrors?.parameter_type || 'Data type of the parameter'}
+              </FormHelperText>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Description"
+              value={param.description}
+              onChange={(e) => onParameterChange(index, 'description', e.target.value)}
+              error={!!paramErrors?.description}
+              helperText={paramErrors?.description || 'Description of what the parameter does'}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={param.required}
+                  onChange={(e) => onParameterChange(index, 'required', e.target.checked)}
+                />
+              }
+              label="Required"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Default Value"
+              value={param.default !== null ? JSON.stringify(param.default) : ''}
+              onChange={(e) => {
+                try {
+                  const value = e.target.value.trim() === '' 
+                    ? null 
+                    : JSON.parse(e.target.value);
+                  onParameterChange(index, 'default', value);
+                } catch (error) {
+                  // If not valid JSON, store as string
+                  onParameterChange(index, 'default', e.target.value);
+                }
+              }}
+              helperText="Default value (in JSON format if applicable)"
+              disabled={param.required}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
+      <CardActions sx={{ justifyContent: 'flex-end' }}>
+        <Button
+          size="small"
+          color="error"
+          startIcon={<DeleteIcon />}
+          onClick={() => onRemoveParameter(index)}
+        >
+          Remove
+        </Button>
+      </CardActions>
+    </Card>
+  );
 };
 
 const ToolForm: React.FC<ToolFormProps> = ({
@@ -160,19 +321,30 @@ const ToolForm: React.FC<ToolFormProps> = ({
     }
   };
 
-  // Temporarily disabled drag-and-drop functionality
-  // const handleDragEnd = (result: any) => {
-  //   if (!result.destination) return;
+  // Set up sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end event
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     
-  //   const items = Array.from(formValues.parameters);
-  //   const [reorderedItem] = items.splice(result.source.index, 1);
-  //   items.splice(result.destination.index, 0, reorderedItem);
-    
-  //   setFormValues(prev => ({
-  //     ...prev,
-  //     parameters: items
-  //   }));
-  // };
+    if (over && active.id !== over.id) {
+      setFormValues(prev => {
+        const oldIndex = parseInt(active.id.toString().split('-')[1]);
+        const newIndex = parseInt(over.id.toString().split('-')[1]);
+        
+        return {
+          ...prev,
+          parameters: arrayMove(prev.parameters, oldIndex, newIndex)
+        };
+      });
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -348,120 +520,33 @@ const ToolForm: React.FC<ToolFormProps> = ({
               </Button>
             </Box>
 
-            {/* Temporarily disabled drag-and-drop functionality */}
-            <Box>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
               {formValues.parameters.length === 0 ? (
                 <Typography color="text.secondary" sx={{ my: 2, textAlign: 'center' }}>
                   No parameters defined. Click "Add Parameter" to add one.
                 </Typography>
               ) : (
-                formValues.parameters.map((param, index) => (
-                  <Card 
-                    key={index}
-                    variant="outlined" 
-                    sx={{ mb: 2, position: 'relative' }}
-                  >
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 8, 
-                        left: 8, 
-                        color: 'text.secondary'
-                      }}
-                    >
-                      <DragIndicatorIcon />
-                    </Box>
-                              <CardContent sx={{ pt: 3, pl: 5 }}>
-                                <Grid container spacing={2}>
-                                  <Grid item xs={12} sm={6}>
-                                    <TextField
-                                      fullWidth
-                                      label="Parameter Name"
-                                      value={param.name}
-                                      onChange={(e) => handleParameterChange(index, 'name', e.target.value)}
-                                      error={!!paramErrors[index]?.name}
-                                      helperText={paramErrors[index]?.name || 'Name of the parameter (e.g., "query")'}
-                                      required
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <FormControl fullWidth error={!!paramErrors[index]?.parameter_type}>
-                                      <InputLabel id={`param-type-label-${index}`}>Parameter Type *</InputLabel>
-                                      <Select
-                                        labelId={`param-type-label-${index}`}
-                                        value={param.parameter_type}
-                                        onChange={(e) => handleParameterChange(index, 'parameter_type', e.target.value)}
-                                        label="Parameter Type *"
-                                      >
-                                        {PARAMETER_TYPES.map(type => (
-                                          <MenuItem key={type} value={type}>
-                                            {type}
-                                          </MenuItem>
-                                        ))}
-                                      </Select>
-                                      <FormHelperText>
-                                        {paramErrors[index]?.parameter_type || 'Data type of the parameter'}
-                                      </FormHelperText>
-                                    </FormControl>
-                                  </Grid>
-                                  <Grid item xs={12}>
-                                    <TextField
-                                      fullWidth
-                                      label="Description"
-                                      value={param.description}
-                                      onChange={(e) => handleParameterChange(index, 'description', e.target.value)}
-                                      error={!!paramErrors[index]?.description}
-                                      helperText={paramErrors[index]?.description || 'Description of what the parameter does'}
-                                      required
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <FormControlLabel
-                                      control={
-                                        <Switch
-                                          checked={param.required}
-                                          onChange={(e) => handleParameterChange(index, 'required', e.target.checked)}
-                                        />
-                                      }
-                                      label="Required"
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <TextField
-                                      fullWidth
-                                      label="Default Value"
-                                      value={param.default !== null ? JSON.stringify(param.default) : ''}
-                                      onChange={(e) => {
-                                        try {
-                                          const value = e.target.value.trim() === '' 
-                                            ? null 
-                                            : JSON.parse(e.target.value);
-                                          handleParameterChange(index, 'default', value);
-                                        } catch (error) {
-                                          // If not valid JSON, store as string
-                                          handleParameterChange(index, 'default', e.target.value);
-                                        }
-                                      }}
-                                      helperText="Default value (in JSON format if applicable)"
-                                      disabled={param.required}
-                                    />
-                                  </Grid>
-                                </Grid>
-                              </CardContent>
-                              <CardActions sx={{ justifyContent: 'flex-end' }}>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  startIcon={<DeleteIcon />}
-                                  onClick={() => handleRemoveParameter(index)}
-                                >
-                                  Remove
-                                </Button>
-                              </CardActions>
-                            </Card>
-                          ))
-                        )}
-                      </Box>
+                <SortableContext 
+                  items={formValues.parameters.map((_, index) => `param-${index}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {formValues.parameters.map((param, index) => (
+                    <SortableParameterItem
+                      key={`param-${index}`}
+                      param={param}
+                      index={index}
+                      paramErrors={paramErrors[index]}
+                      onParameterChange={handleParameterChange}
+                      onRemoveParameter={handleRemoveParameter}
+                    />
+                  ))}
+                </SortableContext>
+              )}
+            </DndContext>
           </Grid>
         </Grid>
 
