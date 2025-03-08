@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-const llamaStackApiUrl = process.env.LLAMA_STACK_API_URL || 'http://localhost:8321';
+const llamaStackApiUrl = process.env.LLAMA_STACK_API_URL || 'http://192.168.1.35:53992';
 
 // Middleware
 app.use(cors({
