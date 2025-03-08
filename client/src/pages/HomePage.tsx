@@ -19,7 +19,8 @@ import {
   Code as CodeIcon, 
   Storage as StorageIcon,
   Assessment as AssessmentIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import apiService from '../services/api';
@@ -241,35 +242,190 @@ const HomePage: React.FC = () => {
           Getting Started
         </Typography>
         <Divider sx={{ mb: 3, borderColor: 'primary.main', borderWidth: '2px', width: '60px' }} />
-        <List>
-          <ListItem sx={{ py: 1.5 }}>
-            <ListItemIcon>
-              <ChatIcon color="primary" sx={{ fontSize: '1.75rem' }} />
-            </ListItemIcon>
-            <ListItemText 
-              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Start a conversation</Typography>} 
-              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Head to the Chat page to start interacting with Llama models</Typography>} 
-            />
-          </ListItem>
-          <ListItem sx={{ py: 1.5 }}>
-            <ListItemIcon>
-              <CodeIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
-            </ListItemIcon>
-            <ListItemText 
-              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Explore available tools</Typography>} 
-              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Check out the Tools page to see what tools are available for use</Typography>} 
-            />
-          </ListItem>
-          <ListItem sx={{ py: 1.5 }}>
-            <ListItemIcon>
-              <StorageIcon color="info" sx={{ fontSize: '1.75rem' }} />
-            </ListItemIcon>
-            <ListItemText 
-              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>View available models</Typography>} 
-              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Visit the Models page to see what models are available</Typography>} 
-            />
-          </ListItem>
-        </List>
+        
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Quick Start Guide
+            </Typography>
+            <List>
+              <ListItem 
+                component={Link} 
+                to="/chat" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(238, 0, 0, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <ChatIcon color="primary" sx={{ fontSize: '1.75rem' }} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Start a conversation</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Chat with Llama models using a simple interface</Typography>} 
+                />
+              </ListItem>
+              
+              <ListItem 
+                component={Link} 
+                to="/tools" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 102, 204, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <CodeIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Explore available tools</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Discover and test tools that enhance model capabilities</Typography>} 
+                />
+              </ListItem>
+              
+              <ListItem 
+                component={Link} 
+                to="/models" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(55, 163, 163, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <StorageIcon color="info" sx={{ fontSize: '1.75rem' }} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>View available models</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Browse the models available in your Llama Stack deployment</Typography>} 
+                />
+              </ListItem>
+            </List>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'secondary.main' }}>
+              Advanced Features
+            </Typography>
+            <List>
+              <ListItem 
+                component={Link} 
+                to="/agents" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(99, 153, 61, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '1.75rem',
+                    height: '1.75rem',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(99, 153, 61, 0.1)',
+                  }}>
+                    <AssessmentIcon color="success" sx={{ fontSize: '1.25rem' }} />
+                  </Box>
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Configure agents</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Create and manage specialized agents for different tasks</Typography>} 
+                />
+              </ListItem>
+              
+              <ListItem 
+                component={Link} 
+                to="/evaluations" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(240, 86, 29, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '1.75rem',
+                    height: '1.75rem',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(240, 86, 29, 0.1)',
+                  }}>
+                    <AssessmentIcon color="error" sx={{ fontSize: '1.25rem' }} />
+                  </Box>
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Run evaluations</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Evaluate model performance on specific tasks and datasets</Typography>} 
+                />
+              </ListItem>
+              
+              <ListItem 
+                component={Link} 
+                to="/settings" 
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(245, 146, 27, 0.08)',
+                    transform: 'translateX(5px)'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    width: '1.75rem',
+                    height: '1.75rem',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 146, 27, 0.1)',
+                  }}>
+                    <SettingsIcon color="warning" sx={{ fontSize: '1.25rem' }} />
+                  </Box>
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Configure settings</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Customize your Llama Stack UI experience</Typography>} 
+                />
+              </ListItem>
+            </List>
+          </Grid>
+        </Grid>
+        
+        <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            Tip: Use the theme toggle in the top-right corner to switch between light and dark modes.
+          </Typography>
+        </Box>
       </Paper>
     </Box>
   );
