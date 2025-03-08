@@ -175,8 +175,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           MuiDrawer: {
             styleOverrides: {
               paper: {
-                backgroundColor: mode === 'light' ? '#e0e0e0' : '#151515', // gray-20 for light, gray-95 for dark as requested
+                backgroundColor: mode === 'light' ? '#f0f0f0' : '#1a1a1a', // Light gray for light theme, dark gray for dark theme
                 borderRadius: 0, // Remove rounded edges
+                boxShadow: mode === 'light'
+                  ? '2px 0 8px rgba(0, 0, 0, 0.05)'
+                  : '2px 0 8px rgba(0, 0, 0, 0.2)',
               },
             },
           },
@@ -190,18 +193,22 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 padding: '8px 16px', // Slightly more padding
                 transition: 'all 0.2s ease', // Smooth transitions
                 position: 'relative', // For pseudo-elements
+                backgroundColor: mode === 'light' ? '#ffffff' : '#000000', // White bg for light theme, black for dark
                 
-                // Subtle shadow for depth in light mode
+                // Subtle shadow for depth
                 boxShadow: mode === 'light' 
-                  ? 'inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05)' 
-                  : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.15)',
+                  ? '0 1px 3px rgba(0, 0, 0, 0.08)' 
+                  : '0 1px 3px rgba(0, 0, 0, 0.2)',
                 
                 // Hover effect
                 '&:hover': {
                   backgroundColor: mode === 'light' 
-                    ? 'rgba(0, 0, 0, 0.04)' 
-                    : 'rgba(255, 255, 255, 0.05)',
+                    ? '#f8f8f8' 
+                    : '#111111',
                   transform: 'translateX(4px)',
+                  boxShadow: mode === 'light' 
+                    ? '0 2px 5px rgba(0, 0, 0, 0.1)' 
+                    : '0 2px 5px rgba(0, 0, 0, 0.3)',
                 },
                 
                 // Selected item styling
