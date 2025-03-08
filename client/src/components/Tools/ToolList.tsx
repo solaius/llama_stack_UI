@@ -129,7 +129,11 @@ const ToolList: React.FC<ToolListProps> = ({
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold" color="primary">
+        <Typography 
+          variant="h5" 
+          fontWeight="bold" 
+          sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+        >
           Tools
         </Typography>
         <Button
@@ -155,7 +159,12 @@ const ToolList: React.FC<ToolListProps> = ({
 
       <Box mb={3}>
         <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
+          <Typography 
+            variant="subtitle1" 
+            fontWeight="bold" 
+            gutterBottom 
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+          >
             Filters
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={2}>
