@@ -31,8 +31,10 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
-  Chat as ChatIcon
+  Chat as ChatIcon,
+  Build as BuildIcon
 } from '@mui/icons-material';
+import ToolUsageHistory from '../components/Agents/ToolUsageHistory';
 import { Agent, SessionInfo, apiService } from '../services/api';
 
 interface TabPanelProps {
@@ -71,6 +73,7 @@ const AgentDetailsPage: React.FC = () => {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
+  const [isLoadingToolHistory, setIsLoadingToolHistory] = useState(false);
   const [createSessionDialogOpen, setCreateSessionDialogOpen] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -287,6 +290,7 @@ const AgentDetailsPage: React.FC = () => {
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="agent details tabs">
           <Tab label="Configuration" {...a11yProps(0)} />
           <Tab label="Sessions" {...a11yProps(1)} />
+          <Tab label="Tool Usage" {...a11yProps(2)} icon={<BuildIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
 
@@ -495,6 +499,37 @@ const AgentDetailsPage: React.FC = () => {
             ))}
           </List>
         )}
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
+        <Box>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6">Tool Usage History</Typography>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => {
+                setIsLoadingToolHistory(true);
+                // In a real implementation, you would refresh the tool usage history
+                setTimeout(() => {
+                  setIsLoadingToolHistory(false);
+                  setNotification({
+                    open: true,
+                    message: 'Tool usage history refreshed',
+                    severity: 'info'
+                  });
+                }, 1000);
+              }}
+            >
+              Refresh
+            </Button>
+          </Box>
+          
+          <ToolUsageHistory 
+            agentId={agent.agent_id || agent.id} 
+            isLoading={isLoadingToolHistory} 
+          />
+        </Box>
       </TabPanel>
 
       {/* Create Session Dialog */}

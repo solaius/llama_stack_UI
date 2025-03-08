@@ -72,10 +72,24 @@ export interface Message {
   tool_name?: string;
 }
 
+export interface ToolCallFunction {
+  name: string;
+  arguments: string;
+}
+
 export interface ToolCall {
-  call_id: string;
-  tool_name: string;
-  arguments: Record<string, any>;
+  id: string;
+  call_id?: string; // For backward compatibility
+  type: string;
+  function: ToolCallFunction;
+  tool_name?: string; // For backward compatibility
+  arguments?: Record<string, any>;
+}
+
+export interface ToolResult {
+  tool_call_id: string;
+  content: any;
+  error?: string;
 }
 
 export interface ChatCompletionRequest {
@@ -166,6 +180,8 @@ export interface TurnInfo {
   steps: any[];
   output_message: Message;
   output_attachments: any[];
+  tool_calls?: ToolCall[];
+  tool_results?: ToolResult[];
   started_at: string;
   completed_at: string;
 }

@@ -21,18 +21,23 @@ import {
   Send as SendIcon,
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon,
-  AttachFile as AttachFileIcon
+  AttachFile as AttachFileIcon,
+  Build as BuildIcon
 } from '@mui/icons-material';
-import { Agent, Message, TurnInfo, apiService } from '../services/api';
+import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
+import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
 
 const AgentChatPage: React.FC = () => {
   const { agentId, sessionId } = useParams<{ agentId: string; sessionId: string }>();
   const navigate = useNavigate();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
+  const [toolResults, setToolResults] = useState<ToolResult[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isProcessingTool, setIsProcessingTool] = useState(false);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -73,10 +78,55 @@ const AgentChatPage: React.FC = () => {
           {
             role: 'assistant',
             content: 'Of course! I\'m here to help. What do you need assistance with?'
+          },
+          {
+            role: 'user',
+            content: 'What\'s the weather in New York?'
+          },
+          {
+            role: 'assistant',
+            content: 'I\'ll check the weather in New York for you.',
+            tool_calls: [
+              {
+                id: 'call_01',
+                type: 'function',
+                function: {
+                  name: 'get_weather',
+                  arguments: JSON.stringify({
+                    location: 'New York',
+                    unit: 'celsius'
+                  })
+                }
+              }
+            ]
+          }
+        ];
+        
+        // Mock tool results
+        const mockToolResults: ToolResult[] = [
+          {
+            tool_call_id: 'call_01',
+            content: {
+              temperature: 22,
+              unit: 'celsius',
+              description: 'Partly cloudy',
+              location: 'New York, NY'
+            }
           }
         ];
         
         setMessages(mockMessages);
+        
+        // Extract tool calls from messages
+        const extractedToolCalls: ToolCall[] = [];
+        mockMessages.forEach(msg => {
+          if (msg.tool_calls && msg.tool_calls.length > 0) {
+            extractedToolCalls.push(...msg.tool_calls);
+          }
+        });
+        
+        setToolCalls(extractedToolCalls);
+        setToolResults(mockToolResults);
       } catch (error) {
         console.error('Error fetching chat data:', error);
         setNotification({
@@ -116,10 +166,89 @@ const AgentChatPage: React.FC = () => {
       // For now, we'll simulate a response after a delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockResponse: Message = {
-        role: 'assistant',
-        content: `I'm a simulated response to: "${input}"`
-      };
+      // Check if the input contains keywords that might trigger tool usage
+      const shouldUseTool = input.toLowerCase().includes('weather') || 
+                           input.toLowerCase().includes('calculate') ||
+                           input.toLowerCase().includes('search');
+      
+      let mockResponse: Message;
+      
+      if (shouldUseTool) {
+        // Create a mock tool call
+        const toolCallId = `call_${Date.now()}`;
+        const toolName = input.toLowerCase().includes('weather') 
+          ? 'get_weather' 
+          : input.toLowerCase().includes('calculate')
+            ? 'calculator'
+            : 'web_search';
+            
+        const toolArgs = input.toLowerCase().includes('weather')
+          ? { location: input.includes('New York') ? 'New York' : 'San Francisco', unit: 'celsius' }
+          : input.toLowerCase().includes('calculate')
+            ? { expression: '2 + 2' }
+            : { query: input.replace(/search for |search |look up /gi, '') };
+        
+        mockResponse = {
+          role: 'assistant',
+          content: `I'll help you with that. Let me ${toolName === 'get_weather' ? 'check the weather' : toolName === 'calculator' ? 'calculate that' : 'search for that information'}.`,
+          tool_calls: [
+            {
+              id: toolCallId,
+              type: 'function',
+              function: {
+                name: toolName,
+                arguments: JSON.stringify(toolArgs)
+              }
+            }
+          ]
+        };
+        
+        // Add the tool call to our state
+        const newToolCall = mockResponse.tool_calls![0];
+        setToolCalls(prev => [...prev, newToolCall]);
+        
+        // Simulate tool execution
+        setTimeout(() => {
+          const toolResult: ToolResult = {
+            tool_call_id: toolCallId,
+            content: toolName === 'get_weather' 
+              ? {
+                  temperature: Math.floor(Math.random() * 30),
+                  unit: 'celsius',
+                  description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
+                  location: toolArgs.location
+                }
+              : toolName === 'calculator'
+                ? { result: 4 }
+                : { 
+                    results: [
+                      { title: 'Search result 1', url: 'https://example.com/1' },
+                      { title: 'Search result 2', url: 'https://example.com/2' }
+                    ]
+                  }
+          };
+          
+          setToolResults(prev => [...prev, toolResult]);
+          
+          // Add a follow-up message with the tool result
+          const followUpMessage: Message = {
+            role: 'assistant',
+            content: toolName === 'get_weather'
+              ? `The weather in ${toolArgs.location} is ${toolResult.content.description.toLowerCase()} with a temperature of ${toolResult.content.temperature}°C.`
+              : toolName === 'calculator'
+                ? `The result of the calculation is 4.`
+                : `Here are some search results for "${toolArgs.query}". The top result is "${toolResult.content.results[0].title}".`
+          };
+          
+          setMessages(prev => [...prev, followUpMessage]);
+        }, 2000);
+      } else {
+        // Regular response without tool calls
+        mockResponse = {
+          role: 'assistant',
+          content: `I'm a simulated response to: "${input}"`
+        };
+      }
       
       setMessages(prev => [...prev, mockResponse]);
     } catch (error) {
@@ -139,6 +268,53 @@ const AgentChatPage: React.FC = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+  
+  const handleRerunTool = (toolCall: ToolCall) => {
+    setIsProcessingTool(true);
+    
+    // Find the existing tool result
+    const existingResult = toolResults.find(result => result.tool_call_id === toolCall.id);
+    
+    // Remove the existing result if it exists
+    if (existingResult) {
+      setToolResults(prev => prev.filter(result => result.tool_call_id !== toolCall.id));
+    }
+    
+    // Simulate tool execution with a delay
+    setTimeout(() => {
+      const toolName = toolCall.function.name;
+      const toolArgs = JSON.parse(toolCall.function.arguments);
+      
+      const toolResult: ToolResult = {
+        tool_call_id: toolCall.id,
+        content: toolName === 'get_weather' 
+          ? {
+              temperature: Math.floor(Math.random() * 30),
+              unit: 'celsius',
+              description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
+              location: toolArgs.location
+            }
+          : toolName === 'calculator'
+            ? { result: 4 }
+            : { 
+                results: [
+                  { title: 'Updated search result 1', url: 'https://example.com/updated1' },
+                  { title: 'Updated search result 2', url: 'https://example.com/updated2' }
+                ]
+              }
+      };
+      
+      setToolResults(prev => [...prev, toolResult]);
+      setIsProcessingTool(false);
+      
+      // Show notification
+      setNotification({
+        open: true,
+        message: 'Tool execution completed successfully',
+        severity: 'success'
+      });
+    }, 1500);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,6 +427,18 @@ const AgentChatPage: React.FC = () => {
                       >
                         {message.content}
                       </Typography>
+                      
+                      {message.tool_calls && message.tool_calls.length > 0 && (
+                        <Box sx={{ mt: 2, color: 'text.primary' }}>
+                          <ToolUsageDisplay 
+                            toolCalls={message.tool_calls}
+                            toolResults={toolResults.filter(result => 
+                              message.tool_calls?.some(call => call.id === result.tool_call_id)
+                            )}
+                            onRerunTool={handleRerunTool}
+                          />
+                        </Box>
+                      )}
                     </CardContent>
                   </Card>
                 </Box>
@@ -260,6 +448,27 @@ const AgentChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </Box>
 
+      {/* Tool Processing Indicator */}
+      {isProcessingTool && (
+        <Box 
+          sx={{ 
+            position: 'fixed', 
+            bottom: 80, 
+            right: 20, 
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: 'background.paper',
+            p: 1,
+            borderRadius: 1,
+            boxShadow: 3
+          }}
+        >
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          <Typography variant="body2">Processing tool...</Typography>
+        </Box>
+      )}
+      
       {/* Input */}
       <Box
         component={Paper}
