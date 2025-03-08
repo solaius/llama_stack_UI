@@ -24,6 +24,7 @@ const ToolGroupsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentToolGroup, setCurrentToolGroup] = useState<ToolGroup | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -72,6 +73,13 @@ const ToolGroupsPage: React.FC = () => {
 
   const handleCreateToolGroup = () => {
     setCurrentToolGroup(null);
+    setIsEditing(false);
+    setShowForm(true);
+  };
+
+  const handleEditToolGroup = (toolGroup: ToolGroup) => {
+    setCurrentToolGroup(toolGroup);
+    setIsEditing(true);
     setShowForm(true);
   };
 
@@ -95,37 +103,66 @@ const ToolGroupsPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      // Create the tool group
-      await apiService.createToolGroup({
-        toolgroup_id: values.toolgroup_id,
-        provider_id: values.provider_id
-      });
-      
-      // For UI purposes, create a complete tool group object
-      const newToolGroup: ToolGroup = {
-        identifier: values.toolgroup_id,
-        name: values.name,
-        description: values.description,
-        tools: values.tools
-      };
-      
-      // Update local storage for UI state
-      const currentToolGroups = apiService._getToolGroupsFromStorage();
-      apiService._saveToolGroupsToStorage([...currentToolGroups, newToolGroup]);
-      
-      setNotification({
-        open: true,
-        message: `Tool Group "${values.name}" created successfully`,
-        severity: 'success'
-      });
+      if (isEditing && currentToolGroup) {
+        // Update the tool group
+        await apiService.updateToolGroup(currentToolGroup.identifier, {
+          provider_id: values.provider_id
+        });
+        
+        // For UI purposes, update the tool group object in local storage
+        const currentToolGroups = apiService._getToolGroupsFromStorage();
+        const updatedToolGroups = currentToolGroups.map(tg => 
+          tg.identifier === currentToolGroup.identifier 
+            ? {
+                ...tg,
+                name: values.name,
+                description: values.description,
+                tools: values.tools,
+                provider_id: values.provider_id
+              } 
+            : tg
+        );
+        
+        apiService._saveToolGroupsToStorage(updatedToolGroups);
+        
+        setNotification({
+          open: true,
+          message: `Tool Group "${values.name}" updated successfully`,
+          severity: 'success'
+        });
+      } else {
+        // Create the tool group
+        await apiService.createToolGroup({
+          toolgroup_id: values.toolgroup_id,
+          provider_id: values.provider_id
+        });
+        
+        // For UI purposes, create a complete tool group object
+        const newToolGroup: ToolGroup = {
+          identifier: values.toolgroup_id,
+          name: values.name,
+          description: values.description,
+          tools: values.tools
+        };
+        
+        // Update local storage for UI state
+        const currentToolGroups = apiService._getToolGroupsFromStorage();
+        apiService._saveToolGroupsToStorage([...currentToolGroups, newToolGroup]);
+        
+        setNotification({
+          open: true,
+          message: `Tool Group "${values.name}" created successfully`,
+          severity: 'success'
+        });
+      }
       
       setShowForm(false);
       fetchData(); // Refresh the list
     } catch (err) {
-      console.error('Error creating tool group:', err);
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} tool group:`, err);
       setNotification({
         open: true,
-        message: 'Failed to create tool group. Please try again.',
+        message: `Failed to ${isEditing ? 'update' : 'create'} tool group. Please try again.`,
         severity: 'error'
       });
     } finally {
@@ -194,6 +231,7 @@ const ToolGroupsPage: React.FC = () => {
             toolGroups={toolGroups}
             loading={loading}
             onDelete={handleDeleteClick}
+            onEdit={handleEditToolGroup}
             onCreateNew={handleCreateToolGroup}
             onView={handleViewToolGroup}
           />
@@ -207,9 +245,17 @@ const ToolGroupsPage: React.FC = () => {
         >
           <ToolGroupForm
             tools={tools}
+            initialValues={isEditing && currentToolGroup ? {
+              toolgroup_id: currentToolGroup.identifier,
+              name: currentToolGroup.name || '',
+              description: currentToolGroup.description || '',
+              provider_id: currentToolGroup.provider_id || '',
+              tools: currentToolGroup.tools || []
+            } : undefined}
             onSubmit={handleFormSubmit}
             onCancel={() => setShowForm(false)}
             loading={isSubmitting}
+            isEditing={isEditing}
           />
         </Dialog>
 

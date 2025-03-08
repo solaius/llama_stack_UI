@@ -15,6 +15,13 @@ import { Tool } from '../../services/api';
 
 interface ToolGroupFormProps {
   tools: Tool[];
+  initialValues?: {
+    toolgroup_id: string;
+    name: string;
+    description: string;
+    provider_id: string;
+    tools: string[];
+  };
   onSubmit: (values: {
     toolgroup_id: string;
     name: string;
@@ -24,20 +31,23 @@ interface ToolGroupFormProps {
   }) => void;
   onCancel: () => void;
   loading: boolean;
+  isEditing?: boolean;
 }
 
 const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
   tools,
+  initialValues,
   onSubmit,
   onCancel,
-  loading
+  loading,
+  isEditing = false
 }) => {
   const [formValues, setFormValues] = useState({
-    toolgroup_id: '',
-    name: '',
-    description: '',
-    provider_id: '',
-    tools: [] as string[]
+    toolgroup_id: initialValues?.toolgroup_id || '',
+    name: initialValues?.name || '',
+    description: initialValues?.description || '',
+    provider_id: initialValues?.provider_id || '',
+    tools: initialValues?.tools || [] as string[]
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -102,7 +112,7 @@ const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
   return (
     <Box component={Paper} p={3}>
       <Typography variant="h5" gutterBottom>
-        Create New Tool Group
+        {isEditing ? 'Edit Tool Group' : 'Create New Tool Group'}
       </Typography>
 
       <form onSubmit={handleSubmit}>
@@ -116,6 +126,7 @@ const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
               error={!!errors.toolgroup_id}
               helperText={errors.toolgroup_id || 'Unique identifier for the tool group (e.g., "search-tools")'}
               required
+              disabled={isEditing}
             />
           </Grid>
 
@@ -202,7 +213,9 @@ const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : undefined}
           >
-            {loading ? 'Creating...' : 'Create Tool Group'}
+            {loading 
+              ? (isEditing ? 'Updating...' : 'Creating...') 
+              : (isEditing ? 'Update Tool Group' : 'Create Tool Group')}
           </Button>
         </Box>
       </form>

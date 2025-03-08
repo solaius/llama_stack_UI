@@ -22,7 +22,8 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   Add as AddIcon,
-  Visibility as ViewIcon
+  Visibility as ViewIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { ToolGroup } from '../../services/api';
 
@@ -30,6 +31,7 @@ interface ToolGroupListProps {
   toolGroups: ToolGroup[];
   loading: boolean;
   onDelete: (toolGroup: ToolGroup) => void;
+  onEdit: (toolGroup: ToolGroup) => void;
   onCreateNew: () => void;
   onView: (toolGroup: ToolGroup) => void;
 }
@@ -38,6 +40,7 @@ const ToolGroupList: React.FC<ToolGroupListProps> = ({
   toolGroups,
   loading,
   onDelete,
+  onEdit,
   onCreateNew,
   onView
 }) => {
@@ -169,6 +172,11 @@ const ToolGroupList: React.FC<ToolGroupListProps> = ({
                       <Tooltip title="View Details">
                         <IconButton onClick={() => onView(toolGroup)} size="small">
                           <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton onClick={() => onEdit(toolGroup)} size="small" color="primary">
+                          <EditIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
