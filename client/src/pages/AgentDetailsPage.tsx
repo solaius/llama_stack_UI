@@ -236,11 +236,26 @@ const AgentDetailsPage: React.FC = () => {
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/agents')}
-          sx={{ mr: 2 }}
+          sx={{ 
+            mr: 2,
+            borderRadius: 2,
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'translateX(-4px)',
+              boxShadow: 1
+            }
+          }}
         >
           Back
         </Button>
-        <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{ 
+            flexGrow: 1,
+            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary'
+          }}
+        >
           Agent Details
         </Typography>
         <Button
@@ -252,105 +267,265 @@ const AgentDetailsPage: React.FC = () => {
             const sessionId = `session-${Date.now()}`;
             navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
           }}
-          sx={{ ml: 2 }}
+          sx={{ 
+            ml: 2,
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            boxShadow: 2,
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: 3
+            }
+          }}
         >
           Chat with Agent
         </Button>
       </Box>
 
-      <Paper sx={{ mb: 3 }}>
-        <Box p={3}>
-          <Typography variant="h5" gutterBottom>
-            {agent.agent_id}
+      <Paper sx={{ mb: 3, borderRadius: 2, boxShadow: 3, overflow: 'hidden' }}>
+        <Box 
+          p={3} 
+          sx={{ 
+            bgcolor: (theme) => theme.palette.primary.main,
+            color: 'white'
+          }}
+        >
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            {agent.name || 'Unnamed Agent'}
           </Typography>
-          <Grid container spacing={2}>
+          <Typography variant="caption" sx={{ opacity: 0.8 }}>
+            ID: {agent.agent_id}
+          </Typography>
+        </Box>
+        <Box p={3}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1">
-                <strong>Model:</strong> {agent.model}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mr: 1 }}>
+                  Model:
+                </Typography>
+                <Chip 
+                  label={agent.model} 
+                  color="primary" 
+                  variant="outlined" 
+                  size="small"
+                  sx={{ fontWeight: 'medium' }}
+                />
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1">
-                <strong>Created:</strong> {new Date(agent.created_at).toLocaleString()}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mr: 1 }}>
+                  Created:
+                </Typography>
+                <Chip 
+                  label={new Date(agent.created_at).toLocaleString()} 
+                  variant="outlined" 
+                  size="small"
+                  sx={{ fontWeight: 'medium' }}
+                />
+              </Box>
             </Grid>
             <Grid item xs={12}>
-              <Typography variant="subtitle1">
-                <strong>Instructions:</strong>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                System Prompt:
               </Typography>
-              <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'background.default' }}>
-                <Typography sx={{ whiteSpace: 'pre-wrap' }}>{agent.instructions}</Typography>
+              <Paper 
+                variant="outlined" 
+                sx={{ 
+                  p: 3, 
+                  mt: 1, 
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: 2,
+                  boxShadow: 1
+                }}
+              >
+                <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{agent.instructions}</Typography>
               </Paper>
             </Grid>
           </Grid>
         </Box>
       </Paper>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tabValue} onChange={handleTabChange} aria-label="agent details tabs">
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          aria-label="agent details tabs"
+          sx={{
+            '& .MuiTab-root': {
+              fontWeight: 'bold',
+              transition: 'all 0.2s',
+              '&:hover': {
+                color: 'primary.main',
+                opacity: 1
+              }
+            },
+            '& .Mui-selected': {
+              color: 'primary.main',
+              fontWeight: 'bold'
+            },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: '3px 3px 0 0'
+            }
+          }}
+        >
           <Tab label="Configuration" {...a11yProps(0)} />
           <Tab label="Sessions" {...a11yProps(1)} />
-          <Tab label="Tool Usage" {...a11yProps(2)} icon={<BuildIcon fontSize="small" />} iconPosition="start" />
+          <Tab 
+            label="Tool Usage" 
+            {...a11yProps(2)} 
+            icon={<BuildIcon fontSize="small" />} 
+            iconPosition="start" 
+          />
         </Tabs>
       </Box>
 
       <TabPanel value={tabValue} index={0}>
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
+        <Card 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2, 
+            boxShadow: 2,
+            overflow: 'hidden'
+          }}
+        >
+          <Box 
+            sx={{ 
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              borderBottom: 1,
+              borderColor: 'divider',
+              py: 1.5,
+              px: 3
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+            >
               Sampling Parameters
             </Typography>
-            <Grid container spacing={2}>
+          </Box>
+          <CardContent sx={{ p: 3 }}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
-                <Typography>
-                  <strong>Temperature:</strong> {agent.config?.sampling_params?.temperature || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Temperature
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.sampling_params?.temperature || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Typography>
-                  <strong>Top P:</strong> {agent.config?.sampling_params?.top_p || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Top P
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.sampling_params?.top_p || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Typography>
-                  <strong>Max Tokens:</strong> {agent.config?.sampling_params?.max_tokens || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Max Tokens
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.sampling_params?.max_tokens || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
             </Grid>
           </CardContent>
         </Card>
 
-        <Card variant="outlined" sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
+        <Card 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2, 
+            boxShadow: 2,
+            overflow: 'hidden'
+          }}
+        >
+          <Box 
+            sx={{ 
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              borderBottom: 1,
+              borderColor: 'divider',
+              py: 1.5,
+              px: 3
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+            >
               Tool Configuration
             </Typography>
-            <Grid container spacing={2}>
+          </Box>
+          <CardContent sx={{ p: 3 }}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Typography>
-                  <strong>Tool Choice:</strong> {agent.config?.tool_config?.tool_choice || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Tool Choice
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.tool_config?.tool_choice || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Typography>
-                  <strong>Tool Prompt Format:</strong> {agent.config?.tool_config?.tool_prompt_format || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Tool Prompt Format
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.tool_config?.tool_prompt_format || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
               <Grid item xs={12}>
-                <Typography>
-                  <strong>Tool Groups:</strong>
+                <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" gutterBottom>
+                  Tool Groups
                 </Typography>
-                <Box sx={{ mt: 1 }}>
+                <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {agent.config?.toolgroups && agent.config.toolgroups.length > 0 ? (
                     agent.config.toolgroups.map((tg, index) => (
                       <Chip
                         key={index}
                         label={typeof tg === 'string' ? tg : tg.name}
-                        sx={{ mr: 1, mb: 1 }}
+                        color="secondary"
+                        variant="outlined"
+                        size="small"
+                        sx={{ fontWeight: 'medium' }}
                       />
                     ))
                   ) : (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" fontStyle="italic">
                       No tool groups assigned
                     </Typography>
                   )}
@@ -360,22 +535,58 @@ const AgentDetailsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
+        <Card 
+          sx={{ 
+            borderRadius: 2, 
+            boxShadow: 2,
+            overflow: 'hidden'
+          }}
+        >
+          <Box 
+            sx={{ 
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              borderBottom: 1,
+              borderColor: 'divider',
+              py: 1.5,
+              px: 3
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+            >
               Advanced Settings
             </Typography>
-            <Grid container spacing={2}>
+          </Box>
+          <CardContent sx={{ p: 3 }}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Typography>
-                  <strong>Max Inference Iterations:</strong> {agent.config?.max_infer_iters || 'Default'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Max Inference Iterations
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.max_infer_iters || 'Default'} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Typography>
-                  <strong>Session Persistence:</strong>{' '}
-                  {agent.config?.enable_session_persistence ? 'Enabled' : 'Disabled'}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+                    Session Persistence
+                  </Typography>
+                  <Chip 
+                    label={agent.config?.enable_session_persistence ? 'Enabled' : 'Disabled'} 
+                    color={agent.config?.enable_session_persistence ? 'success' : 'default'}
+                    variant="outlined" 
+                    size="small"
+                    sx={{ alignSelf: 'flex-start' }}
+                  />
+                </Box>
               </Grid>
             </Grid>
           </CardContent>
@@ -383,13 +594,26 @@ const AgentDetailsPage: React.FC = () => {
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">Sessions</Typography>
-          <Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography 
+            variant="h6" 
+            fontWeight="bold"
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+          >
+            Sessions
+          </Typography>
+          <Box display="flex" gap={1}>
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
-              sx={{ mr: 1 }}
+              sx={{ 
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'rotate(180deg)',
+                  boxShadow: 1
+                }
+              }}
               onClick={() => {
                 // In a real implementation, you would refresh the sessions list
                 setNotification({
@@ -405,7 +629,14 @@ const AgentDetailsPage: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setCreateSessionDialogOpen(true)}
-              sx={{ mr: 1 }}
+              sx={{ 
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 2
+                }
+              }}
             >
               New Session
             </Button>
@@ -417,6 +648,14 @@ const AgentDetailsPage: React.FC = () => {
                 // Create a new session and navigate to chat
                 const sessionId = `session-${Date.now()}`;
                 navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              }}
+              sx={{ 
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 2
+                }
               }}
             >
               New Chat
@@ -503,11 +742,25 @@ const AgentDetailsPage: React.FC = () => {
 
       <TabPanel value={tabValue} index={2}>
         <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">Tool Usage History</Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+            >
+              Tool Usage History
+            </Typography>
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
+              sx={{ 
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'rotate(180deg)',
+                  boxShadow: 1
+                }
+              }}
               onClick={() => {
                 setIsLoadingToolHistory(true);
                 // In a real implementation, you would refresh the tool usage history
