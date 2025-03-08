@@ -55,35 +55,63 @@ const SettingsPage: React.FC = () => {
   const fetchServerInfo = async () => {
     try {
       setIsLoading(true);
-      const version = await apiService.getVersion();
-      const health = await apiService.getHealth();
       
-      setServerInfo({
-        version: version.version,
-        health: health.status,
-        timestamp: health.timestamp,
-      });
+      // Get version and health in parallel
+      const [version, health] = await Promise.allSettled([
+        apiService.getVersion(),
+        apiService.getHealth()
+      ]);
       
-      setIsLoading(false);
+      // Check if both requests failed
+      if (version.status === 'rejected' && health.status === 'rejected') {
+        console.error('Both version and health checks failed');
+        setServerInfo(null);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create server info object with available data
+      const serverInfoData: any = {
+        version: version.status === 'fulfilled' ? version.value.version : 'Unknown',
+        health: health.status === 'fulfilled' ? health.value.status : 'Unknown',
+        timestamp: health.status === 'fulfilled' ? health.value.timestamp : new Date().toISOString(),
+      };
+      
+      setServerInfo(serverInfoData);
+      
+      // Show a notification if we got partial data
+      if (version.status === 'rejected' || health.status === 'rejected') {
+        setSnackbar({
+          open: true,
+          message: 'Partial server information retrieved. Some endpoints may be unavailable.',
+          severity: 'warning',
+        });
+      }
     } catch (error) {
       console.error('Error fetching server info:', error);
-      setIsLoading(false);
       setServerInfo(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     try {
+      // Save the API URL to localStorage
       localStorage.setItem('apiUrl', apiUrl);
       
+      // Update axios baseURL directly
+      apiService.updateBaseUrl(apiUrl);
+      
+      // Show success message
       setSnackbar({
         open: true,
         message: 'Settings saved successfully',
         severity: 'success',
       });
       
-      // Reload the page to apply new settings
-      window.location.reload();
+      // Fetch server info with the new URL
+      await fetchServerInfo();
     } catch (error) {
       console.error('Error saving settings:', error);
       setSnackbar({

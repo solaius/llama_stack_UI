@@ -1,13 +1,24 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// Get API URL from localStorage or use default
+const getApiBaseUrl = () => {
+  const savedApiUrl = localStorage.getItem('apiUrl');
+  return savedApiUrl && savedApiUrl.trim() !== '' 
+    ? savedApiUrl 
+    : (process.env.REACT_APP_API_URL || '/api');
+};
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Update baseURL when localStorage changes
+window.addEventListener('storage', () => {
+  api.defaults.baseURL = getApiBaseUrl();
 });
 
 // Types for API responses
@@ -351,16 +362,45 @@ export const apiService = {
     return response.data;
   },
 
+  // Update the base URL of the API
+  updateBaseUrl: (newUrl: string) => {
+    if (newUrl && newUrl.trim() !== '') {
+      api.defaults.baseURL = newUrl;
+    } else {
+      api.defaults.baseURL = process.env.REACT_APP_API_URL || '/api';
+    }
+    console.log('API base URL updated to:', api.defaults.baseURL);
+    return api.defaults.baseURL;
+  },
+
   // Server Health
   getHealth: async () => {
-    const response = await api.get('/health');
-    return response.data;
+    try {
+      const response = await api.get('/health');
+      return response.data;
+    } catch (error) {
+      console.error('Health check failed:', error);
+      // Try alternative endpoint if the first one fails
+      try {
+        const response = await api.get('/v1/health');
+        return response.data;
+      } catch (secondError) {
+        console.error('Alternative health check failed:', secondError);
+        throw secondError;
+      }
+    }
   },
 
   // Version
   getVersion: async () => {
-    const response = await api.get('/v1/version');
-    return response.data;
+    try {
+      const response = await api.get('/v1/version');
+      return response.data;
+    } catch (error) {
+      console.error('Version check failed:', error);
+      // Return a default version if the endpoint fails
+      return { version: 'Unknown' };
+    }
   },
 
   // Agents - Local Storage Implementation
