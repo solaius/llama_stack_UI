@@ -72,7 +72,93 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           },
         },
         typography: {
-          fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+          fontFamily: '"Red Hat Text", "Roboto", "Helvetica", "Arial", sans-serif',
+          h1: {
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            letterSpacing: '-0.01562em',
+            marginBottom: '0.5em',
+          },
+          h2: {
+            fontSize: '2rem',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            letterSpacing: '-0.00833em',
+            marginBottom: '0.5em',
+          },
+          h3: {
+            fontSize: '1.75rem',
+            fontWeight: 600,
+            lineHeight: 1.2,
+            letterSpacing: '0em',
+            marginBottom: '0.5em',
+          },
+          h4: {
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            lineHeight: 1.2,
+            letterSpacing: '0.00735em',
+            marginBottom: '0.5em',
+          },
+          h5: {
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            lineHeight: 1.2,
+            letterSpacing: '0em',
+            marginBottom: '0.5em',
+          },
+          h6: {
+            fontSize: '1.125rem',
+            fontWeight: 600,
+            lineHeight: 1.2,
+            letterSpacing: '0.0075em',
+            marginBottom: '0.5em',
+          },
+          subtitle1: {
+            fontSize: '1rem',
+            fontWeight: 500,
+            lineHeight: 1.5,
+            letterSpacing: '0.00938em',
+          },
+          subtitle2: {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            lineHeight: 1.5,
+            letterSpacing: '0.00714em',
+          },
+          body1: {
+            fontSize: '1rem',
+            fontWeight: 400,
+            lineHeight: 1.5,
+            letterSpacing: '0.00938em',
+          },
+          body2: {
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            lineHeight: 1.5,
+            letterSpacing: '0.01071em',
+          },
+          button: {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            lineHeight: 1.75,
+            letterSpacing: '0.02857em',
+            textTransform: 'none',
+          },
+          caption: {
+            fontSize: '0.75rem',
+            fontWeight: 400,
+            lineHeight: 1.66,
+            letterSpacing: '0.03333em',
+          },
+          overline: {
+            fontSize: '0.75rem',
+            fontWeight: 400,
+            lineHeight: 2.66,
+            letterSpacing: '0.08333em',
+            textTransform: 'uppercase',
+          },
         },
         components: {
           MuiAppBar: {
@@ -126,10 +212,136 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               },
             },
           },
+          MuiCard: {
+            styleOverrides: {
+              root: {
+                borderRadius: '8px',
+                boxShadow: mode === 'light' 
+                  ? '0 2px 8px rgba(0, 0, 0, 0.08)' 
+                  : '0 2px 8px rgba(0, 0, 0, 0.3)',
+                transition: 'all 0.3s ease-in-out',
+                overflow: 'hidden',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: mode === 'light' 
+                    ? '0 6px 12px rgba(0, 0, 0, 0.12)' 
+                    : '0 6px 12px rgba(0, 0, 0, 0.5)',
+                },
+              },
+            },
+          },
+          MuiCardContent: {
+            styleOverrides: {
+              root: {
+                padding: '24px',
+                '&:last-child': {
+                  paddingBottom: '24px',
+                },
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                borderRadius: '8px',
+                boxShadow: mode === 'light' 
+                  ? '0 2px 8px rgba(0, 0, 0, 0.05)' 
+                  : '0 2px 8px rgba(0, 0, 0, 0.2)',
+              },
+              elevation1: {
+                boxShadow: mode === 'light' 
+                  ? '0 2px 4px rgba(0, 0, 0, 0.05)' 
+                  : '0 2px 4px rgba(0, 0, 0, 0.2)',
+              },
+              elevation2: {
+                boxShadow: mode === 'light' 
+                  ? '0 3px 6px rgba(0, 0, 0, 0.08)' 
+                  : '0 3px 6px rgba(0, 0, 0, 0.25)',
+              },
+              elevation3: {
+                boxShadow: mode === 'light' 
+                  ? '0 4px 8px rgba(0, 0, 0, 0.1)' 
+                  : '0 4px 8px rgba(0, 0, 0, 0.3)',
+              },
+            },
+          },
           MuiButton: {
             styleOverrides: {
               root: {
                 borderRadius: '4px',
+                padding: '8px 16px',
+                fontWeight: 500,
+                textTransform: 'none',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: mode === 'light' 
+                    ? '0 2px 4px rgba(0, 0, 0, 0.1)' 
+                    : '0 2px 4px rgba(0, 0, 0, 0.3)',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                  boxShadow: 'none',
+                },
+              },
+              contained: {
+                boxShadow: mode === 'light' 
+                  ? '0 1px 3px rgba(0, 0, 0, 0.1)' 
+                  : '0 1px 3px rgba(0, 0, 0, 0.3)',
+                '&:hover': {
+                  boxShadow: mode === 'light' 
+                    ? '0 3px 6px rgba(0, 0, 0, 0.15)' 
+                    : '0 3px 6px rgba(0, 0, 0, 0.4)',
+                },
+              },
+              containedPrimary: {
+                backgroundColor: '#ee0000', // Red Hat red
+                color: '#ffffff',
+                '&:hover': {
+                  backgroundColor: '#a60000', // darker red
+                },
+              },
+              containedSecondary: {
+                backgroundColor: '#0066cc', // Blue
+                color: '#ffffff',
+                '&:hover': {
+                  backgroundColor: '#004d99', // darker blue
+                },
+              },
+              outlined: {
+                borderWidth: '1px',
+                '&:hover': {
+                  borderWidth: '1px',
+                },
+              },
+              outlinedPrimary: {
+                borderColor: '#ee0000', // Red Hat red
+                color: '#ee0000',
+                '&:hover': {
+                  backgroundColor: 'rgba(238, 0, 0, 0.04)',
+                  borderColor: '#a60000', // darker red
+                },
+              },
+              text: {
+                '&:hover': {
+                  backgroundColor: mode === 'light' 
+                    ? 'rgba(0, 0, 0, 0.04)' 
+                    : 'rgba(255, 255, 255, 0.08)',
+                },
+              },
+              textPrimary: {
+                color: '#ee0000', // Red Hat red
+                '&:hover': {
+                  backgroundColor: 'rgba(238, 0, 0, 0.04)',
+                },
+              },
+              sizeSmall: {
+                padding: '4px 10px',
+                fontSize: '0.8125rem',
+              },
+              sizeLarge: {
+                padding: '10px 22px',
+                fontSize: '0.9375rem',
               },
             },
           },

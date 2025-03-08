@@ -86,11 +86,11 @@ const HomePage: React.FC = () => {
 
   return (
     <Box>
-      <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom>
+      <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+        <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
           Welcome to Llama Stack UI
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ fontSize: '1.1rem', maxWidth: '800px' }}>
           A comprehensive interface for interacting with Llama Stack API endpoints
         </Typography>
         
@@ -102,34 +102,34 @@ const HomePage: React.FC = () => {
           <Box sx={{ mt: 3 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
-                <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <InfoIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Llama Stack Version</Typography>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <InfoIcon color="primary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Llama Stack Version</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
+                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main' }}>
                     {version}
                   </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <StorageIcon color="secondary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Available Models</Typography>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <StorageIcon color="secondary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Models</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
+                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main' }}>
                     {modelCount}
                   </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CodeIcon color="info" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Available Tools</Typography>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <CodeIcon color="info" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Tools</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
+                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main' }}>
                     {toolCount}
                   </Typography>
                 </Paper>
@@ -139,23 +139,52 @@ const HomePage: React.FC = () => {
         )}
       </Paper>
 
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 600, mt: 5 }}>
         Features
       </Typography>
       
       <Grid container spacing={3}>
         {features.map((feature, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card sx={{ height: '100%' }}>
-              <CardActionArea component={Link} to={feature.link} sx={{ height: '100%' }}>
-                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <Box sx={{ mb: 2 }}>
+            <Card sx={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+              <CardActionArea 
+                component={Link} 
+                to={feature.link} 
+                sx={{ 
+                  height: '100%',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '4px',
+                    backgroundColor: index === 0 ? 'primary.main' : 
+                                    index === 1 ? 'secondary.main' : 
+                                    index === 2 ? 'info.main' : 'success.main',
+                    opacity: 0,
+                    transition: 'opacity 0.3s ease-in-out',
+                  },
+                  '&:hover::before': {
+                    opacity: 1,
+                  }
+                }}
+              >
+                <CardContent sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  textAlign: 'center',
+                  p: 3
+                }}>
+                  <Box sx={{ mb: 3, transform: 'scale(1.2)' }}>
                     {feature.icon}
                   </Box>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
                     {feature.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                     {feature.description}
                   </Typography>
                 </CardContent>
@@ -165,37 +194,37 @@ const HomePage: React.FC = () => {
         ))}
       </Grid>
       
-      <Paper elevation={0} sx={{ p: 3, mt: 4, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper elevation={2} sx={{ p: 4, mt: 5, borderRadius: 2, backgroundColor: theme => theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(41, 41, 41, 0.9)' }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
           Getting Started
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 3, borderColor: 'primary.main', borderWidth: '2px', width: '60px' }} />
         <List>
-          <ListItem>
+          <ListItem sx={{ py: 1.5 }}>
             <ListItemIcon>
-              <ChatIcon color="primary" />
+              <ChatIcon color="primary" sx={{ fontSize: '1.75rem' }} />
             </ListItemIcon>
             <ListItemText 
-              primary="Start a conversation" 
-              secondary="Head to the Chat page to start interacting with Llama models" 
+              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Start a conversation</Typography>} 
+              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Head to the Chat page to start interacting with Llama models</Typography>} 
             />
           </ListItem>
-          <ListItem>
+          <ListItem sx={{ py: 1.5 }}>
             <ListItemIcon>
-              <CodeIcon color="secondary" />
+              <CodeIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
             </ListItemIcon>
             <ListItemText 
-              primary="Explore available tools" 
-              secondary="Check out the Tools page to see what tools are available for use" 
+              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Explore available tools</Typography>} 
+              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Check out the Tools page to see what tools are available for use</Typography>} 
             />
           </ListItem>
-          <ListItem>
+          <ListItem sx={{ py: 1.5 }}>
             <ListItemIcon>
-              <StorageIcon color="info" />
+              <StorageIcon color="info" sx={{ fontSize: '1.75rem' }} />
             </ListItemIcon>
             <ListItemText 
-              primary="View available models" 
-              secondary="Visit the Models page to see what models are available" 
+              primary={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>View available models</Typography>} 
+              secondary={<Typography variant="body2" sx={{ mt: 0.5 }}>Visit the Models page to see what models are available</Typography>} 
             />
           </ListItem>
         </List>
