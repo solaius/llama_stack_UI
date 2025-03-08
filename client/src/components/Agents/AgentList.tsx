@@ -27,7 +27,6 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
-import DeleteAgentModal from './DeleteAgentModal';
 
 interface AgentListProps {
   agents: Agent[];
@@ -51,9 +50,6 @@ const AgentList: React.FC<AgentListProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -179,10 +175,7 @@ const AgentList: React.FC<AgentListProps> = ({
                       </Tooltip>
                       <Tooltip title="Delete">
                         <IconButton 
-                          onClick={() => {
-                            setAgentToDelete(agent);
-                            setDeleteModalOpen(true);
-                          }} 
+                          onClick={() => onDelete(agent)} 
                           size="small" 
                           color="error"
                         >
@@ -205,29 +198,6 @@ const AgentList: React.FC<AgentListProps> = ({
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
-
-      {/* Delete Confirmation Modal */}
-      <DeleteAgentModal
-        open={deleteModalOpen}
-        agent={agentToDelete}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setAgentToDelete(null);
-        }}
-        onConfirm={async () => {
-          if (!agentToDelete) return;
-          
-          setIsDeleting(true);
-          try {
-            await onDelete(agentToDelete);
-          } finally {
-            setIsDeleting(false);
-            setDeleteModalOpen(false);
-            setAgentToDelete(null);
-          }
-        }}
-        isDeleting={isDeleting}
-      />
     </Box>
   );
 };
