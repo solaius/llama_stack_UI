@@ -102,34 +102,76 @@ const HomePage: React.FC = () => {
           <Box sx={{ mt: 3 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Paper 
+                  elevation={3}
+                  sx={(theme) => ({ 
+                    p: 3, 
+                    borderRadius: 2, 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    ...(theme.palette.mode === 'light' ? {
+                      border: '1px solid rgba(238, 0, 0, 0.2)',
+                      background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
+                      boxShadow: '0 4px 12px rgba(238, 0, 0, 0.15)'
+                    } : {})
+                  })}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <InfoIcon color="primary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>Llama Stack Version</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main' }}>
+                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                     {version}
                   </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Paper 
+                  elevation={3}
+                  sx={(theme) => ({ 
+                    p: 3, 
+                    borderRadius: 2, 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    ...(theme.palette.mode === 'light' ? {
+                      border: '1px solid rgba(0, 102, 204, 0.2)',
+                      background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
+                      boxShadow: '0 4px 12px rgba(0, 102, 204, 0.15)'
+                    } : {})
+                  })}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <StorageIcon color="secondary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Models</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main' }}>
+                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
                     {modelCount}
                   </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Paper 
+                  elevation={3}
+                  sx={(theme) => ({ 
+                    p: 3, 
+                    borderRadius: 2, 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    ...(theme.palette.mode === 'light' ? {
+                      border: '1px solid rgba(55, 163, 163, 0.2)',
+                      background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
+                      boxShadow: '0 4px 12px rgba(55, 163, 163, 0.15)'
+                    } : {})
+                  })}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <CodeIcon color="info" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Tools</Typography>
                   </Box>
-                  <Typography variant="h4" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main' }}>
+                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
                     {toolCount}
                   </Typography>
                 </Paper>

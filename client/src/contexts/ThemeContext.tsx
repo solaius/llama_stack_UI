@@ -168,6 +168,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 borderBottom: `1px solid ${mode === 'light' ? '#e0e0e0' : '#383838'}`, // gray-20 for light, gray-70 for dark
                 backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
                 color: '#ffffff', // white text for better contrast
+                borderRadius: 0, // Remove rounded edges
               },
             },
           },
@@ -175,6 +176,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             styleOverrides: {
               paper: {
                 backgroundColor: mode === 'light' ? '#e0e0e0' : '#151515', // gray-20 for light, gray-95 for dark as requested
+                borderRadius: 0, // Remove rounded edges
               },
             },
           },
