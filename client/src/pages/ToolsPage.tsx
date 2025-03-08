@@ -24,7 +24,9 @@ import {
   ListItemText,
   Tabs,
   Tab,
-  Container
+  Container,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Code as CodeIcon,
@@ -38,6 +40,9 @@ import { docco, dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { useTheme } from '@mui/material/styles';
 import ToolGroupsPage from './ToolGroupsPage';
 import ToolTestPanel from '../components/Tools/ToolTestPanel';
+import ToolList from '../components/Tools/ToolList';
+import ToolForm from '../components/Tools/ToolForm';
+import DeleteToolModal from '../components/Tools/DeleteToolModal';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -75,9 +80,24 @@ function a11yProps(index: number) {
 const ToolsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [tools, setTools] = useState<Tool[]>([]);
+  const [toolGroups, setToolGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [showToolForm, setShowToolForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
   const theme = useTheme();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -85,19 +105,35 @@ const ToolsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchTools = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getTools();
-        setTools(data);
-        setLoading(false);
+        const [toolsResponse, toolGroupsResponse] = await Promise.all([
+          apiService.getTools(),
+          apiService.getToolGroups()
+        ]);
+        
+        // Also check local storage for any custom tools
+        const localTools = apiService._getToolsFromStorage();
+        
+        // Combine API tools with local tools, avoiding duplicates
+        const allTools = [...toolsResponse];
+        localTools.forEach(localTool => {
+          if (!allTools.some(tool => tool.identifier === localTool.identifier)) {
+            allTools.push(localTool);
+          }
+        });
+        
+        setTools(allTools);
+        setToolGroups(toolGroupsResponse);
       } catch (error) {
-        console.error('Error fetching tools:', error);
+        console.error('Error fetching data:', error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchTools();
+    fetchData();
   }, []);
 
   const handleToolClick = (tool: Tool) => {
@@ -108,6 +144,170 @@ const ToolsPage: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedTool(null);
+  };
+  
+  const handleCreateTool = () => {
+    setSelectedTool(null);
+    setIsEditing(false);
+    setShowToolForm(true);
+  };
+  
+  const handleEditTool = (tool: Tool) => {
+    setSelectedTool(tool);
+    setIsEditing(true);
+    setShowToolForm(true);
+  };
+  
+  const handleDeleteClick = (tool: Tool) => {
+    setSelectedTool(tool);
+    setShowDeleteModal(true);
+  };
+  
+  const handleFormSubmit = async (values: {
+    identifier: string;
+    description: string;
+    provider_id: string;
+    toolgroup_id: string;
+    parameters: ToolParameter[];
+  }) => {
+    try {
+      setIsSubmitting(true);
+      
+      if (isEditing && selectedTool) {
+        // Update the tool
+        await apiService.updateTool(selectedTool.identifier, {
+          description: values.description,
+          provider_id: values.provider_id,
+          toolgroup_id: values.toolgroup_id,
+          parameters: values.parameters
+        });
+        
+        // Update local storage
+        const currentTools = apiService._getToolsFromStorage();
+        const updatedTools = currentTools.map(tool => 
+          tool.identifier === selectedTool.identifier 
+            ? {
+                ...tool,
+                description: values.description,
+                provider_id: values.provider_id,
+                toolgroup_id: values.toolgroup_id,
+                parameters: values.parameters
+              } 
+            : tool
+        );
+        
+        apiService._saveToolsToStorage(updatedTools);
+        
+        setNotification({
+          open: true,
+          message: `Tool "${values.identifier}" updated successfully`,
+          severity: 'success'
+        });
+      } else {
+        // Create the tool
+        await apiService.createTool(values);
+        
+        // Update local storage
+        const currentTools = apiService._getToolsFromStorage();
+        const newTool: Tool = {
+          identifier: values.identifier,
+          provider_resource_id: '',
+          provider_id: values.provider_id,
+          type: 'function',
+          toolgroup_id: values.toolgroup_id,
+          tool_host: '',
+          description: values.description,
+          parameters: values.parameters,
+          metadata: null
+        };
+        
+        apiService._saveToolsToStorage([...currentTools, newTool]);
+        
+        setNotification({
+          open: true,
+          message: `Tool "${values.identifier}" created successfully`,
+          severity: 'success'
+        });
+      }
+      
+      // Refresh the tools list
+      const [toolsResponse] = await Promise.all([
+        apiService.getTools()
+      ]);
+      
+      // Combine with local storage
+      const localTools = apiService._getToolsFromStorage();
+      const allTools = [...toolsResponse];
+      localTools.forEach(localTool => {
+        if (!allTools.some(tool => tool.identifier === localTool.identifier)) {
+          allTools.push(localTool);
+        }
+      });
+      
+      setTools(allTools);
+      setShowToolForm(false);
+    } catch (err) {
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} tool:`, err);
+      setNotification({
+        open: true,
+        message: `Failed to ${isEditing ? 'update' : 'create'} tool. Please try again.`,
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleDeleteConfirm = async () => {
+    if (!selectedTool) return;
+    
+    try {
+      setIsDeleting(true);
+      await apiService.deleteTool(selectedTool.identifier);
+      
+      // Update local storage
+      const currentTools = apiService._getToolsFromStorage();
+      const updatedTools = currentTools.filter(
+        tool => tool.identifier !== selectedTool.identifier
+      );
+      apiService._saveToolsToStorage(updatedTools);
+      
+      setNotification({
+        open: true,
+        message: `Tool "${selectedTool.identifier}" deleted successfully`,
+        severity: 'success'
+      });
+      
+      // Refresh the tools list
+      const [toolsResponse] = await Promise.all([
+        apiService.getTools()
+      ]);
+      
+      // Combine with local storage
+      const localTools = apiService._getToolsFromStorage();
+      const allTools = [...toolsResponse];
+      localTools.forEach(localTool => {
+        if (!allTools.some(tool => tool.identifier === localTool.identifier)) {
+          allTools.push(localTool);
+        }
+      });
+      
+      setTools(allTools);
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error('Error deleting tool:', err);
+      setNotification({
+        open: true,
+        message: 'Failed to delete tool. Please try again.',
+        severity: 'error'
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification((prev) => ({ ...prev, open: false }));
   };
 
   const groupToolsByProvider = () => {
@@ -137,83 +337,15 @@ const ToolsPage: React.FC = () => {
         
         <TabPanel value={tabValue} index={0}>
           <Paper elevation={0} sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              Available Tools
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Explore and test the available tools in your Llama Stack deployment.
-            </Typography>
-
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Tools by Provider
-                </Typography>
-                {Object.entries(groupToolsByProvider()).map(([provider, providerTools]) => (
-                  <Accordion key={provider} defaultExpanded>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography variant="subtitle1">
-                        {provider} ({providerTools.length})
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Grid container spacing={2}>
-                        {providerTools.map((tool) => (
-                          <Grid item xs={12} sm={6} md={4} key={tool.identifier}>
-                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                              <CardContent sx={{ flexGrow: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                  <CodeIcon color="primary" sx={{ mr: 1 }} />
-                                  <Typography variant="h6" noWrap>
-                                    {tool.identifier}
-                                  </Typography>
-                                </Box>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  sx={{
-                                    mb: 2,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                  }}
-                                >
-                                  {tool.description}
-                                </Typography>
-                                <Chip
-                                  label={tool.toolgroup_id}
-                                  size="small"
-                                  color="secondary"
-                                  sx={{ mb: 1 }}
-                                />
-                                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                                  Parameters: {tool.parameters.length}
-                                </Typography>
-                              </CardContent>
-                              <CardActions>
-                                <Button
-                                  size="small"
-                                  startIcon={<InfoIcon />}
-                                  onClick={() => handleToolClick(tool)}
-                                >
-                                  Details & Test
-                                </Button>
-                              </CardActions>
-                            </Card>
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </Box>
-            )}
+            <ToolList
+              tools={tools}
+              toolGroups={toolGroups}
+              loading={loading}
+              onDelete={handleDeleteClick}
+              onEdit={handleEditTool}
+              onCreateNew={handleCreateTool}
+              onView={handleToolClick}
+            />
           </Paper>
         </TabPanel>
         
@@ -241,6 +373,49 @@ const ToolsPage: React.FC = () => {
           </>
         )}
       </Dialog>
+
+      {/* Tool Form Dialog */}
+      <Dialog open={showToolForm} onClose={() => setShowToolForm(false)} maxWidth="lg" fullWidth>
+        <ToolForm
+          toolGroups={toolGroups}
+          initialValues={isEditing && selectedTool ? {
+            identifier: selectedTool.identifier,
+            description: selectedTool.description,
+            provider_id: selectedTool.provider_id,
+            toolgroup_id: selectedTool.toolgroup_id,
+            parameters: selectedTool.parameters
+          } : undefined}
+          onSubmit={handleFormSubmit}
+          onCancel={() => setShowToolForm(false)}
+          loading={isSubmitting}
+          isEditing={isEditing}
+        />
+      </Dialog>
+
+      {/* Delete Tool Modal */}
+      <DeleteToolModal
+        open={showDeleteModal}
+        tool={selectedTool}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
+      />
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          variant="filled"
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

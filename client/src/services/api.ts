@@ -176,6 +176,90 @@ export const apiService = {
     return response.data;
   },
 
+  createTool: async (toolData: {
+    identifier: string;
+    description: string;
+    provider_id: string;
+    toolgroup_id: string;
+    parameters: ToolParameter[];
+  }): Promise<Tool> => {
+    try {
+      // Note: The Llama Stack API might not support direct tool creation
+      // This is a placeholder for when the API supports it
+      const response = await api.post('/v1/tools', toolData);
+      return response.data;
+    } catch (error) {
+      console.warn(`API tool creation failed, using local storage only:`, error);
+      // Return a mock response for now
+      return {
+        identifier: toolData.identifier,
+        provider_resource_id: '',
+        provider_id: toolData.provider_id,
+        type: 'function',
+        toolgroup_id: toolData.toolgroup_id,
+        tool_host: '',
+        description: toolData.description,
+        parameters: toolData.parameters,
+        metadata: null
+      };
+    }
+  },
+
+  updateTool: async (toolId: string, toolData: {
+    description?: string;
+    provider_id?: string;
+    toolgroup_id?: string;
+    parameters?: ToolParameter[];
+  }): Promise<Tool> => {
+    try {
+      // Note: The Llama Stack API might not support tool updates
+      // This is a placeholder for when the API supports it
+      const response = await api.put(`/v1/tools/${toolId}`, toolData);
+      return response.data;
+    } catch (error) {
+      console.warn(`API tool update failed for ${toolId}, using local storage only:`, error);
+      // Return a mock response for now
+      return {
+        identifier: toolId,
+        provider_resource_id: '',
+        provider_id: toolData.provider_id || '',
+        type: 'function',
+        toolgroup_id: toolData.toolgroup_id || '',
+        tool_host: '',
+        description: toolData.description || '',
+        parameters: toolData.parameters || [],
+        metadata: null
+      };
+    }
+  },
+
+  deleteTool: async (toolId: string): Promise<void> => {
+    try {
+      await api.delete(`/v1/tools/${toolId}`);
+    } catch (error) {
+      console.warn(`API tool deletion failed for ${toolId}:`, error);
+      // No action needed for local storage since we'll handle that in the UI
+    }
+  },
+
+  // Local storage for tools (for UI state management)
+  _getToolsFromStorage: (): Tool[] => {
+    const storedTools = localStorage.getItem('llamastack_tools');
+    if (storedTools) {
+      try {
+        return JSON.parse(storedTools);
+      } catch (e) {
+        console.error('Error parsing stored tools:', e);
+        return [];
+      }
+    }
+    return [];
+  },
+
+  _saveToolsToStorage: (tools: Tool[]): void => {
+    localStorage.setItem('llamastack_tools', JSON.stringify(tools));
+  },
+
   // Tool Groups
   getToolGroups: async (): Promise<ToolGroup[]> => {
     const response = await api.get('/v1/toolgroups');
