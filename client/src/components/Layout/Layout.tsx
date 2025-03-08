@@ -25,7 +25,8 @@ import {
   Settings as SettingsIcon,
   Home as HomeIcon,
   Assessment as AssessmentIcon,
-  Storage as StorageIcon
+  Storage as StorageIcon,
+  SmartToy as AgentIcon
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -47,6 +48,7 @@ const navItems: NavItem[] = [
   { text: 'Chat', path: '/chat', icon: <ChatIcon /> },
   { text: 'Tools', path: '/tools', icon: <CodeIcon /> },
   { text: 'Models', path: '/models', icon: <StorageIcon /> },
+  { text: 'Agents', path: '/agents', icon: <AgentIcon /> },
   { text: 'Evaluations', path: '/evaluations', icon: <AssessmentIcon /> },
   { text: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];

@@ -86,6 +86,47 @@ export interface ToolParameterDefinition {
   default?: any;
 }
 
+export interface AgentToolGroupWithArgs {
+  toolgroup_id: string;
+  args?: Record<string, any>;
+}
+
+export interface SamplingParams {
+  strategy: {
+    type: 'greedy' | 'top_p' | 'top_k';
+    p?: number;
+    k?: number;
+  };
+  max_tokens: number;
+  repetition_penalty: number;
+}
+
+export interface ToolConfig {
+  tool_choice?: 'auto' | 'required' | 'none';
+  tool_prompt_format?: 'json' | 'xml' | 'yaml';
+}
+
+export interface AgentConfig {
+  model: string;
+  instructions: string;
+  sampling_params?: SamplingParams;
+  input_shields?: string[];
+  output_shields?: string[];
+  toolgroups?: (string | AgentToolGroupWithArgs)[];
+  client_tools?: ToolDefinition[];
+  tool_config?: ToolConfig;
+  max_infer_iters?: number;
+  enable_session_persistence?: boolean;
+  response_format?: any;
+}
+
+export interface Agent {
+  id: string;
+  config: AgentConfig;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ChatCompletionResponse {
   metrics: any;
   completion_message: {
@@ -183,6 +224,39 @@ export const apiService = {
   getVersion: async () => {
     const response = await api.get('/v1/version');
     return response.data;
+  },
+
+  // Agents
+  createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
+    const response = await api.post('/v1/agents', { agent_config: agentConfig });
+    return response.data;
+  },
+
+  getAgents: async (): Promise<Agent[]> => {
+    try {
+      // This is a workaround since the API doesn't have a direct endpoint to list all agents
+      // In a real implementation, we would use a proper endpoint
+      const response = await api.get('/v1/agents/list');
+      return response.data.agents || [];
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      // For now, return an empty array
+      return [];
+    }
+  },
+
+  getAgent: async (agentId: string): Promise<Agent> => {
+    const response = await api.get(`/v1/agents/${agentId}`);
+    return response.data;
+  },
+
+  updateAgent: async (agentId: string, agentConfig: Partial<AgentConfig>): Promise<Agent> => {
+    const response = await api.put(`/v1/agents/${agentId}`, { agent_config: agentConfig });
+    return response.data;
+  },
+
+  deleteAgent: async (agentId: string): Promise<void> => {
+    await api.delete(`/v1/agents/${agentId}`);
   }
 };
 

@@ -5,6 +5,7 @@ import ToolsPage from './ToolsPage';
 import EvaluationsPage from './EvaluationsPage';
 import SettingsPage from './SettingsPage';
 import NotFoundPage from './NotFoundPage';
+import AgentsPage from './AgentsPage';
 
 export {
   HomePage,
@@ -13,5 +14,6 @@ export {
   ToolsPage,
   EvaluationsPage,
   SettingsPage,
-  NotFoundPage
+  NotFoundPage,
+  AgentsPage
 };

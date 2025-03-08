@@ -10,7 +10,8 @@ import {
   ToolsPage,
   EvaluationsPage,
   SettingsPage,
-  NotFoundPage
+  NotFoundPage,
+  AgentsPage
 } from './pages';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/models" element={<ModelsPage />} />
             <Route path="/tools" element={<ToolsPage />} />
+            <Route path="/agents" element={<AgentsPage />} />
             <Route path="/evaluations" element={<EvaluationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
