@@ -111,16 +111,25 @@ const HomePage: React.FC = () => {
                     height: '100%', 
                     display: 'flex', 
                     flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' ? {
-                      border: '1px solid rgba(238, 0, 0, 0.2)',
-                      background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
-                      boxShadow: 'none'
-                    } : {})
+                    ...(theme.palette.mode === 'light' 
+                      ? {
+                          border: '1px solid rgba(238, 0, 0, 0.2)',
+                          background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
+                          boxShadow: 'none'
+                        } 
+                      : {
+                          border: '1px solid rgba(238, 0, 0, 0.2)',
+                          background: 'linear-gradient(to bottom, #202020, #3a0000)',
+                          boxShadow: 'none'
+                        }
+                    )
                   })}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <InfoIcon color="primary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Llama Stack Version</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
+                      <InfoIcon color="primary" sx={{ fontSize: '1.75rem' }} />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Llama Stack Version</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                     {version}
@@ -136,16 +145,25 @@ const HomePage: React.FC = () => {
                     height: '100%', 
                     display: 'flex', 
                     flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' ? {
-                      border: '1px solid rgba(0, 102, 204, 0.2)',
-                      background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
-                      boxShadow: 'none'
-                    } : {})
+                    ...(theme.palette.mode === 'light' 
+                      ? {
+                          border: '1px solid rgba(0, 102, 204, 0.2)',
+                          background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
+                          boxShadow: 'none'
+                        } 
+                      : {
+                          border: '1px solid rgba(0, 102, 204, 0.2)',
+                          background: 'linear-gradient(to bottom, #202020, #002952)',
+                          boxShadow: 'none'
+                        }
+                    )
                   })}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <StorageIcon color="secondary" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Models</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
+                      <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Available Models</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
                     {modelCount}
@@ -161,16 +179,25 @@ const HomePage: React.FC = () => {
                     height: '100%', 
                     display: 'flex', 
                     flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' ? {
-                      border: '1px solid rgba(55, 163, 163, 0.2)',
-                      background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
-                      boxShadow: 'none'
-                    } : {})
+                    ...(theme.palette.mode === 'light' 
+                      ? {
+                          border: '1px solid rgba(55, 163, 163, 0.2)',
+                          background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
+                          boxShadow: 'none'
+                        } 
+                      : {
+                          border: '1px solid rgba(55, 163, 163, 0.2)',
+                          background: 'linear-gradient(to bottom, #202020, #003636)',
+                          boxShadow: 'none'
+                        }
+                    )
                   })}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <CodeIcon color="info" sx={{ mr: 1.5, fontSize: '1.75rem' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>Available Tools</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
+                      <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center' }}>Available Tools</Typography>
                   </Box>
                   <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
                     {toolCount}

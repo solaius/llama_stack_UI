@@ -232,7 +232,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     transform: 'translateY(-50%)',
                     width: '4px',
                     height: '70%',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: mode === 'light' ? '#151515' : '#ffffff',
                     borderRadius: '2px',
                   },
                 },
