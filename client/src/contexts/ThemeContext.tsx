@@ -185,14 +185,51 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               root: {
                 color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
                 fontWeight: 600, // Bold text for all menu items
+                margin: '4px 8px', // Add margin for spacing between items
+                borderRadius: '6px', // Rounded corners for depth
+                padding: '8px 16px', // Slightly more padding
+                transition: 'all 0.2s ease', // Smooth transitions
+                position: 'relative', // For pseudo-elements
+                
+                // Subtle shadow for depth in light mode
+                boxShadow: mode === 'light' 
+                  ? 'inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05)' 
+                  : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.15)',
+                
+                // Hover effect
+                '&:hover': {
+                  backgroundColor: mode === 'light' 
+                    ? 'rgba(0, 0, 0, 0.04)' 
+                    : 'rgba(255, 255, 255, 0.05)',
+                  transform: 'translateX(4px)',
+                },
+                
+                // Selected item styling
                 '&.Mui-selected': {
                   backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
                   color: '#ffffff !important', // white text for better contrast on red background, forced with !important
                   fontWeight: 700, // Extra bold for selected menu item
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', // More pronounced shadow for selected item
+                  transform: 'translateX(4px)', // Slight indent for selected item
+                  
                   '&:hover': {
                     backgroundColor: '#ee0000', // same color on hover
                   },
+                  
+                  // Subtle indicator on the left
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '-8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '4px',
+                    height: '70%',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '2px',
+                  },
                 },
+                
                 '&.Mui-selected .MuiListItemIcon-root': {
                   color: '#ffffff !important', // white icon for better contrast on red background, forced with !important
                 },
@@ -209,6 +246,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             styleOverrides: {
               root: {
                 color: mode === 'light' ? '#151515' : '#ffffff', // dark icon for light theme, white icon for dark theme
+                minWidth: '40px', // Slightly more space for icons
               },
             },
           },
@@ -217,6 +255,27 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               primary: {
                 color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
                 fontWeight: 'inherit', // Inherit the font weight from the parent
+              },
+            },
+          },
+          MuiList: {
+            styleOverrides: {
+              root: {
+                padding: '8px 0',
+                '& .MuiListItem-root': {
+                  position: 'relative',
+                  '&:not(:last-child)::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '16px',
+                    right: '16px',
+                    height: '1px',
+                    backgroundColor: mode === 'light' 
+                      ? 'rgba(0, 0, 0, 0.06)' 
+                      : 'rgba(255, 255, 255, 0.06)',
+                  }
+                }
               },
             },
           },
