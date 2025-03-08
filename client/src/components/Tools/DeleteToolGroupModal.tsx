@@ -35,18 +35,18 @@ const DeleteToolGroupModal: React.FC<DeleteToolGroupModalProps> = ({
       <DialogTitle>Delete Tool Group</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Are you sure you want to delete the tool group <strong>{toolGroup.name}</strong> ({toolGroup.identifier})? This action cannot be undone.
+          Are you sure you want to delete the tool group <strong>{toolGroup.name || toolGroup.identifier}</strong> ({toolGroup.identifier})? This action cannot be undone.
         </DialogContentText>
         <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1}>
           <Typography variant="subtitle2">Tool Group Details:</Typography>
           <Typography variant="body2">
-            <strong>Description:</strong> {toolGroup.description}
+            <strong>Description:</strong> {toolGroup.description || 'No description available'}
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             <strong>Tools:</strong>
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-            {toolGroup.tools.length > 0 ? (
+            {toolGroup.tools && toolGroup.tools.length > 0 ? (
               toolGroup.tools.map((tool) => (
                 <Chip key={tool} label={tool} size="small" />
               ))
@@ -57,7 +57,7 @@ const DeleteToolGroupModal: React.FC<DeleteToolGroupModalProps> = ({
             )}
           </Box>
         </Box>
-        {toolGroup.tools.length > 0 && (
+        {toolGroup.tools && toolGroup.tools.length > 0 && (
           <DialogContentText sx={{ mt: 2, color: 'warning.main' }}>
             Warning: Deleting this tool group will remove these tools from the group, but will not delete the tools themselves.
           </DialogContentText>

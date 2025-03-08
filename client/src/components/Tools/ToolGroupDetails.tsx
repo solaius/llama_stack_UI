@@ -48,7 +48,7 @@ const ToolGroupDetails: React.FC<ToolGroupDetailsProps> = ({
           
           // Filter tools that belong to this tool group
           const groupTools = allTools.filter(tool => 
-            toolGroup.tools.includes(tool.identifier)
+            toolGroup.tools && toolGroup.tools.includes(tool.identifier)
           );
           
           setTools(groupTools);
@@ -70,7 +70,7 @@ const ToolGroupDetails: React.FC<ToolGroupDetailsProps> = ({
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h6">
-            Tool Group: {toolGroup.name}
+            Tool Group: {toolGroup.name || toolGroup.identifier}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -88,7 +88,7 @@ const ToolGroupDetails: React.FC<ToolGroupDetailsProps> = ({
                 <strong>ID:</strong> {toolGroup.identifier}
               </Typography>
               <Typography variant="body2" mt={1}>
-                <strong>Description:</strong> {toolGroup.description}
+                <strong>Description:</strong> {toolGroup.description || 'No description available'}
               </Typography>
             </Box>
           </Grid>

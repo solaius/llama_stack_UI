@@ -55,8 +55,8 @@ const ToolGroupList: React.FC<ToolGroupListProps> = ({
         toolGroups.filter(
           (toolGroup) =>
             toolGroup.identifier.toLowerCase().includes(lowercasedSearch) ||
-            toolGroup.name.toLowerCase().includes(lowercasedSearch) ||
-            toolGroup.description.toLowerCase().includes(lowercasedSearch)
+            (toolGroup.name?.toLowerCase() || '').includes(lowercasedSearch) ||
+            (toolGroup.description?.toLowerCase() || '').includes(lowercasedSearch)
         )
       );
     }
@@ -139,14 +139,14 @@ const ToolGroupList: React.FC<ToolGroupListProps> = ({
                 .map((toolGroup) => (
                   <TableRow key={toolGroup.identifier}>
                     <TableCell>{toolGroup.identifier}</TableCell>
-                    <TableCell>{toolGroup.name}</TableCell>
+                    <TableCell>{toolGroup.name || toolGroup.identifier}</TableCell>
                     <TableCell>
-                      {toolGroup.description.length > 100
+                      {toolGroup.description && toolGroup.description.length > 100
                         ? `${toolGroup.description.substring(0, 100)}...`
-                        : toolGroup.description}
+                        : (toolGroup.description || 'No description available')}
                     </TableCell>
                     <TableCell>
-                      {toolGroup.tools.length > 0 ? (
+                      {toolGroup.tools && toolGroup.tools.length > 0 ? (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {toolGroup.tools.slice(0, 3).map((tool) => (
                             <Chip key={tool} label={tool} size="small" />

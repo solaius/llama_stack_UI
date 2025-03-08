@@ -46,7 +46,16 @@ const ToolGroupsPage: React.FC = () => {
         apiService.getToolGroups(),
         apiService.getTools()
       ]);
-      setToolGroups(toolGroupsData);
+      
+      // Ensure we have valid data with required fields
+      const validToolGroups = toolGroupsData.map(tg => ({
+        ...tg,
+        name: tg.name || tg.identifier,
+        description: tg.description || 'No description available',
+        tools: tg.tools || []
+      }));
+      
+      setToolGroups(validToolGroups);
       setTools(toolsData);
       setError(null);
     } catch (err) {

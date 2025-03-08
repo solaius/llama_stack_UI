@@ -42,9 +42,9 @@ export interface ToolParameter {
 
 export interface ToolGroup {
   identifier: string;
-  name: string;
-  description: string;
-  tools: string[];
+  name?: string;
+  description?: string;
+  tools?: string[];
 }
 
 export interface Message {
