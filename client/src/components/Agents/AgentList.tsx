@@ -22,8 +22,10 @@ import {
   Delete as DeleteIcon,
   ContentCopy as DuplicateIcon,
   Search as SearchIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
 
 interface AgentListProps {
@@ -43,6 +45,7 @@ const AgentList: React.FC<AgentListProps> = ({
   onDuplicate,
   onCreateNew
 }) => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -151,6 +154,15 @@ const AgentList: React.FC<AgentListProps> = ({
                       {new Date(agent.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
+                      <Tooltip title="View Details">
+                        <IconButton 
+                          onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
+                          size="small"
+                          color="primary"
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Edit">
                         <IconButton onClick={() => onEdit(agent)} size="small">
                           <EditIcon />

@@ -33,11 +33,9 @@ interface AgentFormProps {
 }
 
 const defaultSamplingParams = {
-  strategy: {
-    type: 'greedy' as const
-  },
-  max_tokens: 1000,
-  repetition_penalty: 1
+  temperature: 0.7,
+  top_p: 0.9,
+  max_tokens: 1024
 };
 
 const defaultToolConfig = {
@@ -113,31 +111,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
     }));
   };
 
-  const handleStrategyTypeChange = (value: 'greedy' | 'top_p' | 'top_k') => {
-    setFormValues((prev) => ({
-      ...prev,
-      sampling_params: {
-        ...prev.sampling_params!,
-        strategy: {
-          ...prev.sampling_params!.strategy,
-          type: value
-        }
-      }
-    }));
-  };
-
-  const handleStrategyParamChange = (field: 'p' | 'k', value: number) => {
-    setFormValues((prev) => ({
-      ...prev,
-      sampling_params: {
-        ...prev.sampling_params!,
-        strategy: {
-          ...prev.sampling_params!.strategy,
-          [field]: value
-        }
-      }
-    }));
-  };
+  // No longer need strategy type and param change handlers with the new API
 
   const handleToolConfigChange = (field: string, value: any) => {
     setFormValues((prev) => ({
@@ -258,60 +232,33 @@ const AgentForm: React.FC<AgentFormProps> = ({
                 Sampling Parameters
               </Typography>
             </Grid>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id="strategy-type-label">Sampling Strategy</InputLabel>
-                <Select
-                  labelId="strategy-type-label"
-                  value={formValues.sampling_params?.strategy.type || 'greedy'}
-                  onChange={(e) =>
-                    handleStrategyTypeChange(e.target.value as 'greedy' | 'top_p' | 'top_k')
-                  }
-                  label="Sampling Strategy"
-                >
-                  <MenuItem value="greedy">Greedy</MenuItem>
-                  <MenuItem value="top_p">Top-P</MenuItem>
-                  <MenuItem value="top_k">Top-K</MenuItem>
-                </Select>
-                <FormHelperText>
-                  Greedy: Always select the most likely token. Top-P: Sample from tokens that
-                  comprise the top P probability mass. Top-K: Sample from the top K most likely
-                  tokens.
-                </FormHelperText>
-              </FormControl>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Temperature"
+                value={formValues.sampling_params?.temperature || 0.7}
+                onChange={(e) =>
+                  handleSamplingParamsChange('temperature', parseFloat(e.target.value))
+                }
+                inputProps={{ min: 0, max: 2, step: 0.1 }}
+                helperText="Controls randomness (0.0-2.0). Lower values are more deterministic, higher values more creative."
+              />
             </Grid>
 
-            {formValues.sampling_params?.strategy.type === 'top_p' && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="P Value"
-                  value={formValues.sampling_params?.strategy.p || 0.9}
-                  onChange={(e) =>
-                    handleStrategyParamChange('p', parseFloat(e.target.value))
-                  }
-                  inputProps={{ min: 0, max: 1, step: 0.1 }}
-                  helperText="Value between 0 and 1"
-                />
-              </Grid>
-            )}
-
-            {formValues.sampling_params?.strategy.type === 'top_k' && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="K Value"
-                  value={formValues.sampling_params?.strategy.k || 50}
-                  onChange={(e) =>
-                    handleStrategyParamChange('k', parseInt(e.target.value))
-                  }
-                  inputProps={{ min: 1, step: 1 }}
-                  helperText="Number of tokens to consider"
-                />
-              </Grid>
-            )}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Top P"
+                value={formValues.sampling_params?.top_p || 0.9}
+                onChange={(e) =>
+                  handleSamplingParamsChange('top_p', parseFloat(e.target.value))
+                }
+                inputProps={{ min: 0, max: 1, step: 0.05 }}
+                helperText="Nucleus sampling parameter (0.0-1.0). Controls diversity."
+              />
+            </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
@@ -327,22 +274,7 @@ const AgentForm: React.FC<AgentFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Repetition Penalty"
-                value={formValues.sampling_params?.repetition_penalty || 1}
-                onChange={(e) =>
-                  handleSamplingParamsChange(
-                    'repetition_penalty',
-                    parseFloat(e.target.value)
-                  )
-                }
-                inputProps={{ min: 1, step: 0.1 }}
-                helperText="Penalty for repeating tokens (1.0 = no penalty)"
-              />
-            </Grid>
+            {/* Removed repetition penalty as it's not in the new API */}
 
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
@@ -494,18 +426,13 @@ const AgentForm: React.FC<AgentFormProps> = ({
               <CardContent>
                 <Typography variant="h6">Model Configuration</Typography>
                 <Typography>
-                  <strong>Sampling Strategy:</strong> {formValues.sampling_params?.strategy.type}
-                  {formValues.sampling_params?.strategy.type === 'top_p' &&
-                    ` (p=${formValues.sampling_params?.strategy.p})`}
-                  {formValues.sampling_params?.strategy.type === 'top_k' &&
-                    ` (k=${formValues.sampling_params?.strategy.k})`}
+                  <strong>Temperature:</strong> {formValues.sampling_params?.temperature}
+                </Typography>
+                <Typography>
+                  <strong>Top P:</strong> {formValues.sampling_params?.top_p}
                 </Typography>
                 <Typography>
                   <strong>Max Tokens:</strong> {formValues.sampling_params?.max_tokens}
-                </Typography>
-                <Typography>
-                  <strong>Repetition Penalty:</strong>{' '}
-                  {formValues.sampling_params?.repetition_penalty}
                 </Typography>
                 <Typography>
                   <strong>Max Inference Iterations:</strong> {formValues.max_infer_iters}

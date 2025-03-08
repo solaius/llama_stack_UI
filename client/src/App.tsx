@@ -13,6 +13,8 @@ import {
   NotFoundPage,
   AgentsPage
 } from './pages';
+import AgentDetailsPage from './pages/AgentDetailsPage';
+import AgentChatPage from './pages/AgentChatPage';
 
 function App() {
   return (
@@ -23,9 +25,11 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat/:agentId/:sessionId" element={<AgentChatPage />} />
             <Route path="/models" element={<ModelsPage />} />
             <Route path="/tools" element={<ToolsPage />} />
             <Route path="/agents" element={<AgentsPage />} />
+            <Route path="/agents/:agentId" element={<AgentDetailsPage />} />
             <Route path="/evaluations" element={<EvaluationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
