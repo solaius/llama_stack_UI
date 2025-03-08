@@ -184,9 +184,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             styleOverrides: {
               root: {
                 color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
+                fontWeight: 600, // Bold text for all menu items
                 '&.Mui-selected': {
                   backgroundColor: '#ee0000', // Red Hat red (red-50) as requested
                   color: '#ffffff', // white text for better contrast on red background
+                  fontWeight: 700, // Extra bold for selected menu item
                   '&:hover': {
                     backgroundColor: '#ee0000', // same color on hover
                   },
@@ -211,6 +213,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             styleOverrides: {
               primary: {
                 color: mode === 'light' ? '#151515' : '#ffffff', // dark text for light theme, white text for dark theme
+                fontWeight: 'inherit', // Inherit the font weight from the parent
               },
             },
           },

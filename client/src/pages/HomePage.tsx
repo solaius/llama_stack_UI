@@ -103,7 +103,7 @@ const HomePage: React.FC = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
                 <Paper 
-                  elevation={3}
+                  elevation={2}
                   sx={(theme) => ({ 
                     p: 3, 
                     borderRadius: 2, 
@@ -113,7 +113,7 @@ const HomePage: React.FC = () => {
                     ...(theme.palette.mode === 'light' ? {
                       border: '1px solid rgba(238, 0, 0, 0.2)',
                       background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
-                      boxShadow: '0 4px 12px rgba(238, 0, 0, 0.15)'
+                      boxShadow: 'none'
                     } : {})
                   })}
                 >
@@ -128,7 +128,7 @@ const HomePage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Paper 
-                  elevation={3}
+                  elevation={2}
                   sx={(theme) => ({ 
                     p: 3, 
                     borderRadius: 2, 
@@ -138,7 +138,7 @@ const HomePage: React.FC = () => {
                     ...(theme.palette.mode === 'light' ? {
                       border: '1px solid rgba(0, 102, 204, 0.2)',
                       background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
-                      boxShadow: '0 4px 12px rgba(0, 102, 204, 0.15)'
+                      boxShadow: 'none'
                     } : {})
                   })}
                 >
@@ -153,7 +153,7 @@ const HomePage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Paper 
-                  elevation={3}
+                  elevation={2}
                   sx={(theme) => ({ 
                     p: 3, 
                     borderRadius: 2, 
@@ -163,7 +163,7 @@ const HomePage: React.FC = () => {
                     ...(theme.palette.mode === 'light' ? {
                       border: '1px solid rgba(55, 163, 163, 0.2)',
                       background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
-                      boxShadow: '0 4px 12px rgba(55, 163, 163, 0.15)'
+                      boxShadow: 'none'
                     } : {})
                   })}
                 >
