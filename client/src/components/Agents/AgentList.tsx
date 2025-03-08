@@ -15,7 +15,8 @@ import {
   Button,
   TablePagination,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Chip
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -95,87 +96,182 @@ const AgentList: React.FC<AgentListProps> = ({
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Agents</Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5" fontWeight="bold" color="primary">
+          Agents
+        </Typography>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={onCreateNew}
+          sx={{ 
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            boxShadow: 2,
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: 3
+            }
+          }}
         >
           Create New Agent
         </Button>
       </Box>
 
-      <Box mb={2}>
+      <Box mb={3}>
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Search agents..."
+          placeholder="Search agents by name, ID, or system prompt..."
           value={searchTerm}
           onChange={handleSearchChange}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              transition: 'all 0.2s',
+              '&:hover': {
+                boxShadow: 1
+              },
+              '&.Mui-focused': {
+                boxShadow: 2
+              }
+            }
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon color="primary" />
               </InputAdornment>
             )
           }}
         />
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell align="center">ID</TableCell>
-              <TableCell align="center">System Prompt</TableCell>
-              <TableCell>Created</TableCell>
-              <TableCell>Created By</TableCell>
-              <TableCell align="center">Actions</TableCell>
+            <TableRow sx={{ backgroundColor: (theme) => theme.palette.primary.main }}>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>System Prompt</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Created</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Created By</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredAgents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell 
+                  colSpan={6} 
+                  align="center" 
+                  sx={{ 
+                    py: 5, 
+                    typography: 'subtitle1', 
+                    color: 'text.secondary',
+                    fontStyle: 'italic'
+                  }}
+                >
                   {searchTerm ? 'No agents match your search' : 'No agents available'}
                 </TableCell>
               </TableRow>
             ) : (
               filteredAgents
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((agent) => (
-                  <TableRow key={agent.agent_id || agent.id}>
-                    <TableCell>{agent.name || 'Unnamed Agent'}</TableCell>
+                .map((agent, index) => (
+                  <TableRow 
+                    key={agent.agent_id || agent.id}
+                    sx={{ 
+                      '&:nth-of-type(odd)': { backgroundColor: (theme) => theme.palette.action.hover },
+                      '&:hover': { backgroundColor: (theme) => theme.palette.action.selected },
+                      transition: 'background-color 0.2s ease'
+                    }}
+                  >
+                    <TableCell sx={{ fontWeight: 'medium' }}>{agent.name || 'Unnamed Agent'}</TableCell>
                     <TableCell align="center">
-                      <Tooltip title={agent.agent_id || agent.id}>
+                      <Tooltip title={`Click to copy: ${agent.agent_id || agent.id}`}>
                         <IconButton 
                           onClick={() => {
                             navigator.clipboard.writeText(agent.agent_id || agent.id);
                           }} 
                           size="small"
+                          sx={{ 
+                            bgcolor: 'grey.200',
+                            transition: 'all 0.2s',
+                            '&:hover': { 
+                              bgcolor: 'grey.300',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
                         >
                           <ContentCopyIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
                     <TableCell align="center">
-                      <Tooltip title={agent.instructions}>
-                        <IconButton size="small">
+                      <Tooltip 
+                        title={
+                          <Box sx={{ p: 1, maxWidth: 300 }}>
+                            <Typography variant="subtitle2" gutterBottom>System Prompt:</Typography>
+                            <Typography variant="body2">{agent.instructions}</Typography>
+                          </Box>
+                        }
+                      >
+                        <IconButton 
+                          size="small"
+                          sx={{ 
+                            bgcolor: 'grey.200',
+                            transition: 'all 0.2s',
+                            '&:hover': { 
+                              bgcolor: 'grey.300',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
                           <DescriptionIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      {new Date(agent.created_at).toLocaleDateString()}
+                      <Chip 
+                        label={new Date(agent.created_at).toLocaleDateString()} 
+                        size="small"
+                        variant="outlined"
+                        sx={{ 
+                          fontWeight: 'medium',
+                          borderRadius: 1
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
-                      {agent.created_by || 'System'}
+                      <Chip 
+                        label={agent.created_by || 'System'} 
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ 
+                          fontWeight: 'medium',
+                          borderRadius: 1
+                        }}
+                      />
                     </TableCell>
                     <TableCell align="center">
-                      <Box display="flex" justifyContent="center" gap={1}>
+                      <Box 
+                        display="flex" 
+                        justifyContent="center" 
+                        gap={1}
+                        sx={{
+                          '& .MuiIconButton-root': {
+                            transition: 'transform 0.2s, background-color 0.2s',
+                            '&:hover': {
+                              transform: 'scale(1.15)',
+                            }
+                          }
+                        }}
+                      >
                         <Tooltip title="Chat with Agent">
                           <IconButton 
                             onClick={() => {
@@ -185,6 +281,11 @@ const AgentList: React.FC<AgentListProps> = ({
                             }} 
                             size="small"
                             color="success"
+                            sx={{ 
+                              bgcolor: 'success.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'success.main' } 
+                            }}
                           >
                             <ChatIcon />
                           </IconButton>
@@ -194,17 +295,38 @@ const AgentList: React.FC<AgentListProps> = ({
                             onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
                             size="small"
                             color="primary"
+                            sx={{ 
+                              bgcolor: 'primary.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'primary.main' } 
+                            }}
                           >
                             <VisibilityIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Edit">
-                          <IconButton onClick={() => onEdit(agent)} size="small">
+                          <IconButton 
+                            onClick={() => onEdit(agent)} 
+                            size="small"
+                            sx={{ 
+                              bgcolor: 'info.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'info.main' } 
+                            }}
+                          >
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Duplicate">
-                          <IconButton onClick={() => onDuplicate(agent)} size="small">
+                          <IconButton 
+                            onClick={() => onDuplicate(agent)} 
+                            size="small"
+                            sx={{ 
+                              bgcolor: 'warning.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'warning.main' } 
+                            }}
+                          >
                             <DuplicateIcon />
                           </IconButton>
                         </Tooltip>
@@ -213,6 +335,11 @@ const AgentList: React.FC<AgentListProps> = ({
                             onClick={() => onDelete(agent)} 
                             size="small" 
                             color="error"
+                            sx={{ 
+                              bgcolor: 'error.light', 
+                              color: 'white',
+                              '&:hover': { bgcolor: 'error.main' } 
+                            }}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -232,6 +359,13 @@ const AgentList: React.FC<AgentListProps> = ({
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{ 
+            borderTop: 1, 
+            borderColor: 'divider',
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              fontWeight: 'medium'
+            }
+          }}
         />
       </TableContainer>
     </Box>
