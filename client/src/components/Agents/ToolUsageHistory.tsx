@@ -221,9 +221,9 @@ const ToolUsageHistory: React.FC<ToolUsageHistoryProps> = ({ agentId, isLoading 
                   month: 'long', 
                   day: 'numeric' 
                 })} 
-                secondary={`${dateGroup.sessions.length} sessions, ${dateGroup.sessions.reduce(
-                  (total: number, session: any) => total + session.toolCalls.length, 0
-                )} tool calls`}
+                secondary={`${dateGroup.sessions.length} sessions, ${dateGroup.sessions.map(
+                  (session: any) => session.toolCalls.length
+                ).reduce((a: number, b: number) => a + b, 0)} tool calls`}
               />
               <IconButton
                 edge="end"
