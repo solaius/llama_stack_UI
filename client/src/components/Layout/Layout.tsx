@@ -48,9 +48,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { text: 'Home', path: '/', icon: <HomeIcon /> },
   { text: 'Chat', path: '/chat', icon: <ChatIcon /> },
+  { text: 'Agents', path: '/agents', icon: <AgentIcon /> },
   { text: 'Tools', path: '/tools', icon: <CodeIcon /> },
   { text: 'Models', path: '/models', icon: <StorageIcon /> },
-  { text: 'Agents', path: '/agents', icon: <AgentIcon /> },
   { text: 'Evaluations', path: '/evaluations', icon: <AssessmentIcon /> },
   { text: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];
