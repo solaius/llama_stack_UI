@@ -79,8 +79,8 @@ const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
 
     if (!formValues.toolgroup_id) {
       newErrors.toolgroup_id = 'Tool Group ID is required';
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(formValues.toolgroup_id)) {
-      newErrors.toolgroup_id = 'Tool Group ID can only contain letters, numbers, underscores, and hyphens';
+    } else if (!/^[a-zA-Z0-9_\-:]+$/.test(formValues.toolgroup_id)) {
+      newErrors.toolgroup_id = 'Tool Group ID can only contain letters, numbers, underscores, hyphens, and colons';
     }
 
     if (!formValues.name) {
@@ -124,7 +124,7 @@ const ToolGroupForm: React.FC<ToolGroupFormProps> = ({
               value={formValues.toolgroup_id}
               onChange={(e) => handleChange('toolgroup_id', e.target.value)}
               error={!!errors.toolgroup_id}
-              helperText={errors.toolgroup_id || 'Unique identifier for the tool group (e.g., "search-tools")'}
+              helperText={errors.toolgroup_id || 'Unique identifier for the tool group (e.g., "search-tools" or "builtin::wolfram_alpha")'}
               required
               disabled={isEditing}
             />
