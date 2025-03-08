@@ -38,7 +38,7 @@ const SettingsPage: React.FC = () => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
   useEffect(() => {

@@ -346,7 +346,7 @@ export const apiService = {
     request.stream = true;
     
     // Create event source for streaming
-    const eventSource = new EventSource(`${API_BASE_URL}/v1/inference/chat-completion?${new URLSearchParams({
+    const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?${new URLSearchParams({
       request: JSON.stringify(request)
     })}`);
     
