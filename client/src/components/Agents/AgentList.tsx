@@ -258,7 +258,9 @@ const AgentList: React.FC<AgentListProps> = ({
                         variant="outlined"
                         sx={{ 
                           fontWeight: 'medium',
-                          borderRadius: 1
+                          borderRadius: 1,
+                          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.05)',
+                          color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'text.primary'
                         }}
                       />
                     </TableCell>
@@ -266,11 +268,12 @@ const AgentList: React.FC<AgentListProps> = ({
                       <Chip 
                         label={agent.created_by || 'System'} 
                         size="small"
-                        color="primary"
                         variant="outlined"
                         sx={{ 
                           fontWeight: 'medium',
-                          borderRadius: 1
+                          borderRadius: 1,
+                          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.05)',
+                          color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'text.primary'
                         }}
                       />
                     </TableCell>
