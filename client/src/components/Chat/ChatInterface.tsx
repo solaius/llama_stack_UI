@@ -190,6 +190,9 @@ const ChatInterface: React.FC = () => {
                 // Plain text format
                 assistantMessage.content += data;
                 setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              } else if (data.status === 'streaming') {
+                // This is just the initial response confirming streaming has started
+                console.log('Streaming confirmed with ID:', data.stream_id);
               } else {
                 console.log('Unhandled SSE message format:', data);
               }

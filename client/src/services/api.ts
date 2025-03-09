@@ -395,20 +395,28 @@ export const apiService = {
     // Set stream to true
     request.stream = true;
     
-    // Create event source for streaming
-    const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`);
+    // First, initiate the streaming request with a POST
+    const streamId = Date.now().toString();
+    const streamUrl = `${api.defaults.baseURL}/v1/inference/chat-completion/stream/${streamId}`;
     
-    // Send the request data in a separate fetch call
-    fetch(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`, {
+    // Create a promise to track when the POST request is complete
+    const postPromise = fetch(`${api.defaults.baseURL}/v1/inference/chat-completion`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Stream-ID': streamId
       },
       body: JSON.stringify(request)
     }).catch(error => {
       console.error('Error initiating streaming request:', error);
-      eventSource.close();
+      throw error;
     });
+    
+    // Create event source for streaming after the POST request is initiated
+    const eventSource = new EventSource(streamUrl);
+    
+    // Store the promise on the eventSource object for reference
+    (eventSource as any).postPromise = postPromise;
     
     return eventSource;
   },

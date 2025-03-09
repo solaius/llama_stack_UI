@@ -46,68 +46,74 @@ app.get('/api/v1/*', async (req: Request, res: Response) => {
   }
 });
 
+// Store active streams
+const activeStreams: Record<string, any> = {};
+
 // Proxy POST requests to Llama Stack API
 app.post('/api/v1/*', async (req: Request, res: Response) => {
   try {
     const endpoint = req.path.replace('/api', '');
     const data = req.body;
-    const isStreaming = req.query.stream === 'true';
+    const isStreaming = req.query.stream === 'true' || (data && data.stream === true);
+    const streamId = req.headers['x-stream-id'] as string;
     
     console.log(`Proxying POST request to ${endpoint}`, isStreaming ? '(streaming)' : '');
-    console.log('Request data:', JSON.stringify(data).substring(0, 200) + '...');
     
-    // Set up headers for streaming response if needed
-    if (isStreaming) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.flushHeaders(); // Flush the headers to establish SSE connection with client
-    }
-    
-    // Make sure stream parameter is included in the request to the API
-    const apiEndpoint = `${llamaStackApiUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}stream=${isStreaming}`;
-    
-    // For streaming responses, we need to handle the data differently
-    if (isStreaming) {
+    // Handle streaming requests differently
+    if (isStreaming && streamId) {
+      console.log(`Initiating streaming request with ID: ${streamId}`);
+      
+      // Make sure the request has stream=true
+      if (data && typeof data === 'object') {
+        data.stream = true;
+      }
+      
       // Create a request with proper streaming configuration
-      const response = await axios.post(apiEndpoint, data, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
-        },
-        responseType: 'stream'
-      });
-      
-      // Log the response headers to debug
-      console.log('API response headers:', response.headers);
-      
-      // Process the stream data
-      response.data.on('data', (chunk: Buffer) => {
-        const chunkStr = chunk.toString();
-        console.log('Received chunk:', chunkStr.substring(0, 100) + (chunkStr.length > 100 ? '...' : ''));
+      try {
+        const response = await axios.post(`${llamaStackApiUrl}${endpoint}`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          responseType: 'stream'
+        });
         
-        // Send the chunk to the client
-        res.write(`data: ${chunkStr}\n\n`);
-      });
-      
-      response.data.on('end', () => {
-        console.log('Stream ended');
-        res.end();
-      });
-      
-      response.data.on('error', (err: Error) => {
-        console.error('Stream error:', err);
-        res.end();
-      });
-      
-      // Handle client disconnect
-      req.on('close', () => {
-        console.log('Client closed connection');
-        response.data.destroy();
-      });
+        // Store the stream for later access
+        activeStreams[streamId] = {
+          stream: response.data,
+          timestamp: Date.now(),
+          chunks: []
+        };
+        
+        // Set up event handlers for the stream
+        response.data.on('data', (chunk: Buffer) => {
+          const chunkStr = chunk.toString();
+          console.log(`Stream ${streamId} received chunk:`, chunkStr.substring(0, 50) + (chunkStr.length > 50 ? '...' : ''));
+          
+          // Store the chunk
+          if (activeStreams[streamId]) {
+            activeStreams[streamId].chunks.push(chunkStr);
+          }
+        });
+        
+        response.data.on('end', () => {
+          console.log(`Stream ${streamId} ended`);
+        });
+        
+        response.data.on('error', (err: Error) => {
+          console.error(`Stream ${streamId} error:`, err);
+          delete activeStreams[streamId];
+        });
+        
+        // Return success response
+        res.status(200).json({ status: 'streaming', stream_id: streamId });
+      } catch (error: any) {
+        console.error('Error initiating streaming request:', error.message);
+        res.status(500).json({ error: 'Failed to initiate streaming request', message: error.message });
+      }
     } else {
-      // Regular JSON response
+      // Regular JSON response (non-streaming)
+      const apiEndpoint = `${llamaStackApiUrl}${endpoint}`;
       const response = await axios.post(apiEndpoint, data, {
         headers: {
           'Content-Type': 'application/json'
@@ -120,12 +126,90 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
     console.error('Error proxying POST request:', error.message);
     
     if (error.response) {
-      console.error('API error response:', error.response.status, error.response.data);
+      console.error('API error response:', error.response.status);
       res.status(error.response.status).json(error.response.data);
     } else {
       console.error('API error details:', error);
       res.status(500).json({ error: 'Internal server error', message: error.message });
     }
+  }
+});
+
+// Stream endpoint to get SSE data
+app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res: Response) => {
+  const streamId = req.params.streamId;
+  
+  console.log(`Client connected to stream ${streamId}`);
+  
+  // Check if the stream exists
+  if (!activeStreams[streamId]) {
+    console.error(`Stream ${streamId} not found`);
+    return res.status(404).json({ error: 'Stream not found' });
+  }
+  
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.flushHeaders();
+  
+  // Send any existing chunks
+  const existingChunks = activeStreams[streamId].chunks;
+  if (existingChunks && existingChunks.length > 0) {
+    console.log(`Sending ${existingChunks.length} existing chunks for stream ${streamId}`);
+    existingChunks.forEach((chunk: string) => {
+      res.write(`data: ${chunk}\n\n`);
+    });
+  }
+  
+  // Set up data handler for new chunks
+  const dataHandler = (chunk: Buffer) => {
+    const chunkStr = chunk.toString();
+    res.write(`data: ${chunkStr}\n\n`);
+  };
+  
+  // Set up end handler
+  const endHandler = () => {
+    console.log(`Stream ${streamId} ended, closing client connection`);
+    res.end();
+    cleanup();
+  };
+  
+  // Set up error handler
+  const errorHandler = (err: Error) => {
+    console.error(`Stream ${streamId} error:`, err);
+    res.end();
+    cleanup();
+  };
+  
+  // Add event listeners to the stream
+  const stream = activeStreams[streamId].stream;
+  stream.on('data', dataHandler);
+  stream.on('end', endHandler);
+  stream.on('error', errorHandler);
+  
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log(`Client disconnected from stream ${streamId}`);
+    cleanup();
+  });
+  
+  // Cleanup function
+  function cleanup() {
+    if (stream) {
+      stream.removeListener('data', dataHandler);
+      stream.removeListener('end', endHandler);
+      stream.removeListener('error', errorHandler);
+    }
+    
+    // Remove the stream after 5 minutes
+    setTimeout(() => {
+      if (activeStreams[streamId]) {
+        console.log(`Removing stream ${streamId} after timeout`);
+        delete activeStreams[streamId];
+      }
+    }, 5 * 60 * 1000);
   }
 });
 
