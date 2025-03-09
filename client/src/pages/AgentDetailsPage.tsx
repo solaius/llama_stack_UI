@@ -331,7 +331,8 @@ const AgentDetailsPage: React.FC = () => {
                 padding: '0 12px'
               },
               '& .MuiChip-icon': {
-                marginLeft: '8px'
+                marginLeft: '8px',
+                color: 'inherit'
               }
             } 
           }}>
