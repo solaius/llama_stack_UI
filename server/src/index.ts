@@ -54,7 +54,17 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
     const isStreaming = req.query.stream === 'true' || (data && data.stream === true);
     
     console.log(`Proxying POST request to ${endpoint}`, isStreaming ? '(streaming)' : '');
-    console.log('Request data:', JSON.stringify(data || {}).substring(0, 100) + '...');
+    
+    // For chat completion endpoint, ensure messages have required fields
+    if (endpoint.includes('/inference/chat-completion') && data && data.messages) {
+      // Add stop_reason to assistant messages if missing
+      data.messages = data.messages.map((msg: any) => {
+        if (msg.role === 'assistant' && !msg.stop_reason) {
+          return { ...msg, stop_reason: 'length' };
+        }
+        return msg;
+      });
+    }
     
     // Handle streaming requests directly
     if (isStreaming) {
@@ -99,8 +109,23 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
           const chunkStr = chunk.toString();
           console.log('Received chunk:', chunkStr.substring(0, 50) + (chunkStr.length > 50 ? '...' : ''));
           
-          // Send the chunk to the client
-          res.write(`data: ${chunkStr}\n\n`);
+          try {
+            // Try to parse the chunk as JSON to add stop_reason if needed
+            const jsonData = JSON.parse(chunkStr);
+            
+            // If this is a completion message with no stop_reason, add it
+            if (jsonData.completion_message && !jsonData.completion_message.stop_reason) {
+              jsonData.completion_message.stop_reason = 'length';
+              // Send the modified chunk to the client
+              res.write(`data: ${JSON.stringify(jsonData)}\n\n`);
+            } else {
+              // Send the original chunk to the client
+              res.write(`data: ${chunkStr}\n\n`);
+            }
+          } catch (e) {
+            // Not valid JSON or other error, just send the original chunk
+            res.write(`data: ${chunkStr}\n\n`);
+          }
         });
         
         response.data.on('end', () => {
@@ -133,6 +158,14 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
           'Content-Type': 'application/json'
         }
       });
+      
+      // For chat completion, ensure the response has stop_reason
+      if (endpoint.includes('/inference/chat-completion') && 
+          response.data && 
+          response.data.completion_message && 
+          !response.data.completion_message.stop_reason) {
+        response.data.completion_message.stop_reason = 'length';
+      }
       
       res.status(response.status).json(response.data);
     }

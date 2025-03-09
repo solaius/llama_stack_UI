@@ -70,6 +70,7 @@ export interface Message {
   tool_calls?: ToolCall[];
   call_id?: string;
   tool_name?: string;
+  stop_reason?: string;
 }
 
 export interface ToolCallFunction {
@@ -386,7 +387,23 @@ export const apiService = {
 
   // Chat Completion
   createChatCompletion: async (request: ChatCompletionRequest): Promise<ChatCompletionResponse> => {
+    // Ensure all assistant messages have stop_reason
+    if (request.messages) {
+      request.messages = request.messages.map(msg => {
+        if (msg.role === 'assistant' && !msg.stop_reason) {
+          return { ...msg, stop_reason: 'length' };
+        }
+        return msg;
+      });
+    }
+    
     const response = await api.post('/v1/inference/chat-completion', request);
+    
+    // Ensure the response has stop_reason
+    if (response.data && response.data.completion_message && !response.data.completion_message.stop_reason) {
+      response.data.completion_message.stop_reason = 'length';
+    }
+    
     return response.data;
   },
 
@@ -394,6 +411,16 @@ export const apiService = {
   createStreamingChatCompletion: async (request: ChatCompletionRequest) => {
     // Set stream to true
     request.stream = true;
+    
+    // Ensure all assistant messages have stop_reason
+    if (request.messages) {
+      request.messages = request.messages.map(msg => {
+        if (msg.role === 'assistant' && !msg.stop_reason) {
+          return { ...msg, stop_reason: 'length' };
+        }
+        return msg;
+      });
+    }
     
     console.log('Creating streaming request with direct EventSource');
     
