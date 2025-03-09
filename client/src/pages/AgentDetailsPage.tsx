@@ -332,7 +332,7 @@ const AgentDetailsPage: React.FC = () => {
               onClick={() => handleCopyToClipboard(agent.agent_id, "Agent ID")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : undefined,
                 color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined,
                 cursor: 'pointer',
                 '&:hover': {
@@ -356,7 +356,7 @@ const AgentDetailsPage: React.FC = () => {
               onClick={() => handleCopyToClipboard(agent.model, "Model name")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : undefined,
                 cursor: 'pointer',
                 '&:hover': {
                   boxShadow: 1,
@@ -378,7 +378,7 @@ const AgentDetailsPage: React.FC = () => {
               onClick={() => handleCopyToClipboard(new Date(agent.created_at).toLocaleString(), "Creation date")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : undefined,
                 color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined,
                 cursor: 'pointer',
                 '&:hover': {
