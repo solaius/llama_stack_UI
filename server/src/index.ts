@@ -136,7 +136,7 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
 });
 
 // Stream endpoint to get SSE data
-app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res: Response) => {
+app.get('/api/v1/inference/chat-completion/stream/:streamId', function(req: Request, res: Response) {
   const streamId = req.params.streamId;
   
   console.log(`Client connected to stream ${streamId}`);
@@ -144,7 +144,8 @@ app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res
   // Check if the stream exists
   if (!activeStreams[streamId]) {
     console.error(`Stream ${streamId} not found`);
-    return res.status(404).json({ error: 'Stream not found' });
+    res.status(404).json({ error: 'Stream not found' });
+    return;
   }
   
   // Set up SSE headers
@@ -154,8 +155,12 @@ app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.flushHeaders();
   
+  // Get the stream from active streams
+  const streamData = activeStreams[streamId];
+  const stream = streamData.stream;
+  
   // Send any existing chunks
-  const existingChunks = activeStreams[streamId].chunks;
+  const existingChunks = streamData.chunks;
   if (existingChunks && existingChunks.length > 0) {
     console.log(`Sending ${existingChunks.length} existing chunks for stream ${streamId}`);
     existingChunks.forEach((chunk: string) => {
@@ -164,33 +169,32 @@ app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res
   }
   
   // Set up data handler for new chunks
-  const dataHandler = (chunk: Buffer) => {
+  const dataHandler = function(chunk: Buffer) {
     const chunkStr = chunk.toString();
     res.write(`data: ${chunkStr}\n\n`);
   };
   
   // Set up end handler
-  const endHandler = () => {
+  const endHandler = function() {
     console.log(`Stream ${streamId} ended, closing client connection`);
     res.end();
     cleanup();
   };
   
   // Set up error handler
-  const errorHandler = (err: Error) => {
+  const errorHandler = function(err: Error) {
     console.error(`Stream ${streamId} error:`, err);
     res.end();
     cleanup();
   };
   
   // Add event listeners to the stream
-  const stream = activeStreams[streamId].stream;
   stream.on('data', dataHandler);
   stream.on('end', endHandler);
   stream.on('error', errorHandler);
   
   // Handle client disconnect
-  req.on('close', () => {
+  req.on('close', function() {
     console.log(`Client disconnected from stream ${streamId}`);
     cleanup();
   });
@@ -204,7 +208,7 @@ app.get('/api/v1/inference/chat-completion/stream/:streamId', (req: Request, res
     }
     
     // Remove the stream after 5 minutes
-    setTimeout(() => {
+    setTimeout(function() {
       if (activeStreams[streamId]) {
         console.log(`Removing stream ${streamId} after timeout`);
         delete activeStreams[streamId];
