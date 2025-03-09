@@ -298,7 +298,7 @@ const AgentDetailsPage: React.FC = () => {
           component="h1" 
           sx={{ 
             color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
-            textAlign: 'center'
+            textAlign: 'left'
           }}
         >
           Agent Details
@@ -327,7 +327,7 @@ const AgentDetailsPage: React.FC = () => {
               }
             }}
           >
-            Chat
+            Chat with Agent
           </Button>
         </Box>
       </Box>
