@@ -284,68 +284,73 @@ const AgentDetailsPage: React.FC = () => {
         </Button>
       </Box>
 
-      <Paper sx={{ mb: 3, borderRadius: 2, boxShadow: 3, overflow: 'hidden' }}>
+      <Paper sx={{ mb: 3, borderRadius: 2, boxShadow: 2, overflow: 'hidden' }}>
         <Box 
           p={3} 
           sx={{ 
-            bgcolor: (theme) => theme.palette.primary.main,
-            color: 'white'
+            borderBottom: 1,
+            borderColor: 'divider',
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
           }}
         >
-          <Typography variant="h4" gutterBottom fontWeight="bold">
+          <Typography 
+            variant="h4" 
+            gutterBottom 
+            fontWeight="bold"
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+          >
             {agent.name || 'Unnamed Agent'}
           </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-            ID: {agent.agent_id}
-          </Typography>
+          <Box display="flex" gap={2} flexWrap="wrap">
+            <Chip 
+              label={`ID: ${agent.agent_id}`} 
+              variant="outlined" 
+              size="small"
+              sx={{ fontWeight: 'medium' }}
+            />
+            <Chip 
+              label={`Model: ${agent.model}`} 
+              variant="outlined" 
+              color="primary"
+              size="small"
+              sx={{ fontWeight: 'medium' }}
+            />
+            <Chip 
+              label={`Created: ${new Date(agent.created_at).toLocaleString()}`} 
+              variant="outlined" 
+              size="small"
+              sx={{ fontWeight: 'medium' }}
+            />
+          </Box>
         </Box>
         <Box p={3}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mr: 1 }}>
-                  Model:
-                </Typography>
-                <Chip 
-                  label={agent.model} 
-                  color="primary" 
-                  variant="outlined" 
-                  size="small"
-                  sx={{ fontWeight: 'medium' }}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mr: 1 }}>
-                  Created:
-                </Typography>
-                <Chip 
-                  label={new Date(agent.created_at).toLocaleString()} 
-                  variant="outlined" 
-                  size="small"
-                  sx={{ fontWeight: 'medium' }}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                System Prompt:
-              </Typography>
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 3, 
-                  mt: 1, 
-                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                  borderRadius: 2,
-                  boxShadow: 1
-                }}
-              >
-                <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{agent.instructions}</Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+          <Typography 
+            variant="h6" 
+            gutterBottom 
+            fontWeight="bold"
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+          >
+            System Prompt
+          </Typography>
+          <Paper 
+            variant="outlined" 
+            sx={{ 
+              p: 3, 
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
+              borderRadius: 2,
+              borderColor: 'divider'
+            }}
+          >
+            <Typography 
+              sx={{ 
+                whiteSpace: 'pre-wrap', 
+                lineHeight: 1.6,
+                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'
+              }}
+            >
+              {agent.instructions}
+            </Typography>
+          </Paper>
         </Box>
       </Paper>
 
@@ -389,13 +394,13 @@ const AgentDetailsPage: React.FC = () => {
           sx={{ 
             mb: 3, 
             borderRadius: 2, 
-            boxShadow: 2,
+            boxShadow: 1,
             overflow: 'hidden'
           }}
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -405,7 +410,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Sampling Parameters
             </Typography>
@@ -459,13 +464,13 @@ const AgentDetailsPage: React.FC = () => {
           sx={{ 
             mb: 3, 
             borderRadius: 2, 
-            boxShadow: 2,
+            boxShadow: 1,
             overflow: 'hidden'
           }}
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -475,7 +480,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Tool Configuration
             </Typography>
@@ -518,7 +523,6 @@ const AgentDetailsPage: React.FC = () => {
                       <Chip
                         key={index}
                         label={typeof tg === 'string' ? tg : tg.name}
-                        color="secondary"
                         variant="outlined"
                         size="small"
                         sx={{ fontWeight: 'medium' }}
@@ -538,13 +542,13 @@ const AgentDetailsPage: React.FC = () => {
         <Card 
           sx={{ 
             borderRadius: 2, 
-            boxShadow: 2,
+            boxShadow: 1,
             overflow: 'hidden'
           }}
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(25, 118, 210, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -554,7 +558,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Advanced Settings
             </Typography>
@@ -598,7 +602,7 @@ const AgentDetailsPage: React.FC = () => {
           <Typography 
             variant="h6" 
             fontWeight="bold"
-            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
           >
             Sessions
           </Typography>
@@ -746,7 +750,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.main' }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Tool Usage History
             </Typography>
