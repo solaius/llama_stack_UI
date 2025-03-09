@@ -14,10 +14,12 @@ A comprehensive user interface for interacting with Llama Stack API endpoints.
 
 Comprehensive documentation is available in the [documentation](./documentation) directory:
 
-- [Project Overview](./documentation/project_overview.md) - Introduction to the project
-- [User Guide](./documentation/user_guide.md) - Instructions for using the application
-- [Developer Guide](./documentation/developer_guide.md) - Guide for developers
-- [Installation Guides](./documentation/README.md#installation-guides) - OS-specific installation instructions
+- [Getting Started](./documentation/getting-started/README.md) - Installation guides for different platforms
+- [User Documentation](./documentation/user/README.md) - Guides for end users
+- [Developer Documentation](./documentation/developer/README.md) - Information for developers
+- [Feature Guides](./documentation/guides/README.md) - Detailed guides for specific features
+
+For a quick overview of the project, see the [Documentation Home](./documentation/README.md).
 
 ## Architecture
 
@@ -28,9 +30,9 @@ Comprehensive documentation is available in the [documentation](./documentation)
 
 For detailed installation instructions, please refer to our OS-specific guides:
 
-- [macOS Installation Guide](./documentation/installation_macos.md)
-- [Linux Installation Guide](./documentation/installation_linux.md)
-- [Windows WSL Installation Guide](./documentation/installation_windows_wsl.md)
+- [macOS Installation Guide](./documentation/getting-started/installation_macos.md)
+- [Linux Installation Guide](./documentation/getting-started/installation_linux.md)
+- [Windows WSL Installation Guide](./documentation/getting-started/installation_windows_wsl.md)
 
 ### Prerequisites
 
@@ -77,7 +79,7 @@ This will start both the Express server and the React development server.
 3. Start by exploring the available agents and tools
 4. Try the chat interface to interact with your configured agents
 
-For detailed usage instructions, please refer to the [User Guide](./documentation/user_guide.md).
+For detailed usage instructions, please refer to the [User Guide](./documentation/user/user_guide.md).
 
 ## Configuration
 
@@ -93,7 +95,7 @@ The client configuration is managed through the server. No separate `.env` file 
 
 You can also configure the Llama API URL in the Settings page of the application.
 
-For more detailed configuration options, please refer to the [Developer Guide](./documentation/developer_guide.md).
+For more detailed configuration options, please refer to the [Developer Guide](./documentation/developer/developer_guide.md).
 
 ## License
 
@@ -103,7 +105,7 @@ This project is licensed under the ISC License.
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-For more information on how to contribute, please refer to the [Developer Guide](./documentation/developer_guide.md).
+For more information on how to contribute, please refer to the [Developer Guide](./documentation/developer/developer_guide.md).
 
 ## Acknowledgements
 
