@@ -254,37 +254,21 @@ const AgentDetailsPage: React.FC = () => {
 
   return (
     <Box p={3} sx={{ position: 'relative' }}>
-      {/* Back button tab */}
-      <Box
-        sx={{
-          position: 'fixed',
-          left: 0,
-          top: '50%',
-          zIndex: 100,
-          transform: 'translateY(-50%)',
-          transition: 'all 0.2s ease'
-        }}
-      >
+      {/* Back button - positioned at the top left */}
+      <Box sx={{ position: 'absolute', top: 0, left: 0, mb: 2 }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/agents')}
+          variant="contained"
+          color="primary"
           sx={{ 
-            py: 1.5,
+            borderRadius: '0 0 8px 0',
+            py: 1,
             px: 2,
-            borderRadius: '0 8px 8px 0',
-            boxShadow: 4,
-            backgroundColor: (theme) => 
-              theme.palette.mode === 'dark' 
-                ? theme.palette.primary.dark
-                : theme.palette.primary.main,
-            color: 'white',
-            border: 'none',
+            boxShadow: 2,
             '&:hover': {
-              transform: 'translateX(5px)',
-              backgroundColor: (theme) => 
-                theme.palette.mode === 'dark' 
-                  ? theme.palette.primary.main
-                  : theme.palette.primary.dark,
+              transform: 'translateX(4px)',
+              boxShadow: 3
             }
           }}
         >
@@ -292,7 +276,7 @@ const AgentDetailsPage: React.FC = () => {
         </Button>
       </Box>
       
-      <Box mb={3} sx={{ position: 'relative' }}>
+      <Box mb={3} mt={5} sx={{ position: 'relative' }}>
         <Typography 
           variant="h4" 
           component="h1" 
