@@ -396,9 +396,19 @@ export const apiService = {
     request.stream = true;
     
     // Create event source for streaming
-    const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?${new URLSearchParams({
-      request: JSON.stringify(request)
-    })}`);
+    const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`);
+    
+    // Send the request data in a separate fetch call
+    fetch(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request)
+    }).catch(error => {
+      console.error('Error initiating streaming request:', error);
+      eventSource.close();
+    });
     
     return eventSource;
   },

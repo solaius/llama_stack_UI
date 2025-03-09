@@ -137,39 +137,107 @@ const ChatInterface: React.FC = () => {
         let assistantMessage: Message = { role: 'assistant', content: '' };
         setMessages(prev => [...prev, assistantMessage]);
         
-        // Create a new EventSource for SSE
-        const eventSource = new EventSource(
-          `/api/v1/inference/chat-completion?${new URLSearchParams({
-            request: JSON.stringify(request),
-          })}`
-        );
-        eventSourceRef.current = eventSource;
+        console.log('Starting streaming chat with request:', request);
         
-        eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
+        try {
+          // Use the apiService to create a streaming chat completion
+          const eventSource = apiService.createStreamingChatCompletion(request);
+          eventSourceRef.current = eventSource;
           
-          if (data.event.event_type === 'progress') {
-            // Update the assistant's message with new content
-            assistantMessage.content += data.event.delta.text;
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
-          } else if (data.event.event_type === 'end') {
-            // Complete the message and add any tool calls
-            if (data.completion_message?.tool_calls) {
-              assistantMessage.tool_calls = data.completion_message.tool_calls;
+          // Set up event handlers
+          eventSource.onopen = () => {
+            console.log('SSE connection opened');
+          };
+          
+          eventSource.onmessage = (event) => {
+            console.log('Received SSE message:', event.data);
+            try {
+              const data = JSON.parse(event.data);
+              
+              // Handle different response formats
+              if (data.event && data.event.event_type === 'progress') {
+                // Llama Stack format
+                if (data.event.delta && data.event.delta.text) {
+                  assistantMessage.content += data.event.delta.text;
+                  setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+                }
+              } else if (data.event && data.event.event_type === 'end') {
+                // End of stream in Llama Stack format
+                if (data.completion_message?.tool_calls) {
+                  assistantMessage.tool_calls = data.completion_message.tool_calls;
+                }
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+                setIsLoading(false);
+                eventSource.close();
+                eventSourceRef.current = null;
+              } else if (data.delta) {
+                // Alternative format: direct delta without event wrapper
+                assistantMessage.content += data.delta;
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              } else if (data.completion_message) {
+                // Final message in alternative format
+                if (data.completion_message.content) {
+                  assistantMessage.content = data.completion_message.content;
+                }
+                if (data.completion_message.tool_calls) {
+                  assistantMessage.tool_calls = data.completion_message.tool_calls;
+                }
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+                setIsLoading(false);
+                eventSource.close();
+                eventSourceRef.current = null;
+              } else if (typeof data === 'string') {
+                // Plain text format
+                assistantMessage.content += data;
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              } else {
+                console.log('Unhandled SSE message format:', data);
+              }
+            } catch (error) {
+              console.error('Error parsing SSE message:', error, event.data);
+              // Try to handle plain text if JSON parsing fails
+              try {
+                assistantMessage.content += event.data;
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              } catch (e) {
+                console.error('Failed to handle message as plain text:', e);
+              }
             }
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
-            setIsLoading(false);
+          };
+          
+          eventSource.onerror = (error) => {
+            console.error('EventSource error:', error);
+            
+            // Check if this is the end of the stream
+            if (assistantMessage.content) {
+              // If we have content, assume this might be a normal completion
+              setIsLoading(false);
+            } else {
+              // Otherwise, show an error message
+              setMessages(prev => [
+                ...prev.slice(0, -1),
+                {
+                  role: 'assistant',
+                  content: 'Sorry, there was an error with the streaming connection. Please try again or disable streaming in the settings.',
+                },
+              ]);
+              setIsLoading(false);
+            }
+            
             eventSource.close();
             eventSourceRef.current = null;
-          }
-        };
-        
-        eventSource.onerror = (error) => {
-          console.error('EventSource error:', error);
+          };
+        } catch (error) {
+          console.error('Error setting up streaming:', error);
           setIsLoading(false);
-          eventSource.close();
-          eventSourceRef.current = null;
-        };
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: 'Sorry, there was an error setting up the streaming connection. Please try again or disable streaming in the settings.',
+            },
+          ]);
+        }
       } else {
         // Handle non-streaming response
         const response = await apiService.createChatCompletion(request);

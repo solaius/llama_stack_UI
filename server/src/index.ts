@@ -51,34 +51,79 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
   try {
     const endpoint = req.path.replace('/api', '');
     const data = req.body;
+    const isStreaming = req.query.stream === 'true';
     
-    console.log(`Proxying POST request to ${endpoint}`);
+    console.log(`Proxying POST request to ${endpoint}`, isStreaming ? '(streaming)' : '');
+    console.log('Request data:', JSON.stringify(data).substring(0, 200) + '...');
     
-    const response = await axios.post(`${llamaStackApiUrl}${endpoint}`, data, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      responseType: req.query.stream === 'true' ? 'stream' : 'json'
-    });
-    
-    // Handle streaming responses
-    if (response.headers['content-type']?.includes('text/event-stream')) {
+    // Set up headers for streaming response if needed
+    if (isStreaming) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.flushHeaders(); // Flush the headers to establish SSE connection with client
+    }
+    
+    // Make sure stream parameter is included in the request to the API
+    const apiEndpoint = `${llamaStackApiUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}stream=${isStreaming}`;
+    
+    // For streaming responses, we need to handle the data differently
+    if (isStreaming) {
+      // Create a request with proper streaming configuration
+      const response = await axios.post(apiEndpoint, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        responseType: 'stream'
+      });
       
-      // Forward the streaming response
-      response.data.pipe(res);
+      // Log the response headers to debug
+      console.log('API response headers:', response.headers);
+      
+      // Process the stream data
+      response.data.on('data', (chunk: Buffer) => {
+        const chunkStr = chunk.toString();
+        console.log('Received chunk:', chunkStr.substring(0, 100) + (chunkStr.length > 100 ? '...' : ''));
+        
+        // Send the chunk to the client
+        res.write(`data: ${chunkStr}\n\n`);
+      });
+      
+      response.data.on('end', () => {
+        console.log('Stream ended');
+        res.end();
+      });
+      
+      response.data.on('error', (err: Error) => {
+        console.error('Stream error:', err);
+        res.end();
+      });
+      
+      // Handle client disconnect
+      req.on('close', () => {
+        console.log('Client closed connection');
+        response.data.destroy();
+      });
     } else {
       // Regular JSON response
+      const response = await axios.post(apiEndpoint, data, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
       res.status(response.status).json(response.data);
     }
   } catch (error: any) {
     console.error('Error proxying POST request:', error.message);
     
     if (error.response) {
+      console.error('API error response:', error.response.status, error.response.data);
       res.status(error.response.status).json(error.response.data);
     } else {
+      console.error('API error details:', error);
       res.status(500).json({ error: 'Internal server error', message: error.message });
     }
   }
