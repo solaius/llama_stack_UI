@@ -108,6 +108,16 @@ const AgentDetailsPage: React.FC = () => {
       }
     );
   };
+  
+  // Custom styled copy icon for dark mode
+  const DarkModeContentCopyIcon = () => (
+    <ContentCopyIcon 
+      fontSize="small" 
+      sx={{ 
+        color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined 
+      }} 
+    />
+  );
 
   useEffect(() => {
     const fetchAgentDetails = async () => {
@@ -325,7 +335,7 @@ const AgentDetailsPage: React.FC = () => {
           </Typography>
           <Box display="flex" gap={2} flexWrap="wrap">
             <Chip 
-              icon={<ContentCopyIcon fontSize="small" />}
+              icon={<DarkModeContentCopyIcon />}
               label={`ID: ${agent.agent_id}`} 
               variant="outlined" 
               size="small"
@@ -371,7 +381,7 @@ const AgentDetailsPage: React.FC = () => {
               }}
             />
             <Chip 
-              icon={<ContentCopyIcon fontSize="small" />}
+              icon={<DarkModeContentCopyIcon />}
               label={`Created: ${new Date(agent.created_at).toLocaleString()}`} 
               variant="outlined" 
               size="small"
