@@ -253,57 +253,83 @@ const AgentDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={3}>
-      <Box display="flex" alignItems="center" mb={3}>
+    <Box p={3} sx={{ position: 'relative' }}>
+      {/* Back button tab */}
+      <Box
+        sx={{
+          position: 'fixed',
+          left: 0,
+          top: '50%',
+          zIndex: 100,
+          transform: 'translateY(-50%)',
+          transition: 'all 0.2s ease'
+        }}
+      >
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/agents')}
           sx={{ 
-            mr: 2,
-            borderRadius: 2,
-            transition: 'all 0.2s',
+            py: 1.5,
+            px: 2,
+            borderRadius: '0 8px 8px 0',
+            boxShadow: 4,
+            backgroundColor: (theme) => 
+              theme.palette.mode === 'dark' 
+                ? theme.palette.primary.dark
+                : theme.palette.primary.main,
+            color: 'white',
+            border: 'none',
             '&:hover': {
-              transform: 'translateX(-4px)',
-              boxShadow: 1
+              transform: 'translateX(5px)',
+              backgroundColor: (theme) => 
+                theme.palette.mode === 'dark' 
+                  ? theme.palette.primary.main
+                  : theme.palette.primary.dark,
             }
           }}
         >
           Back
         </Button>
+      </Box>
+      
+      <Box mb={3} sx={{ position: 'relative' }}>
         <Typography 
           variant="h4" 
           component="h1" 
           sx={{ 
-            flexGrow: 1,
-            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary'
+            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+            textAlign: 'center'
           }}
         >
           Agent Details
         </Typography>
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<ChatIcon />}
-          onClick={() => {
-            // Create a new session and navigate to chat
-            const sessionId = `session-${Date.now()}`;
-            navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
-          }}
-          sx={{ 
-            ml: 2,
-            borderRadius: 2,
-            px: 3,
-            py: 1,
-            boxShadow: 2,
-            transition: 'all 0.2s',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: 3
-            }
-          }}
-        >
-          Chat with Agent
-        </Button>
+        
+        {/* Chat button positioned absolutely on the right */}
+        <Box sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<ChatIcon />}
+            onClick={() => {
+              // Create a new session and navigate to chat
+              const sessionId = `session-${Date.now()}`;
+              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+            }}
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              boxShadow: 2,
+              transition: 'all 0.2s',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: 3
+              }
+            }}
+          >
+            Chat
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ mb: 3, borderRadius: 2, boxShadow: 2, overflow: 'hidden' }}>
