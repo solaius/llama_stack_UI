@@ -54,6 +54,7 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
     const isStreaming = req.query.stream === 'true' || (data && data.stream === true);
     
     console.log(`Proxying POST request to ${endpoint}`, isStreaming ? '(streaming)' : '');
+    console.log('Request data:', JSON.stringify(data || {}).substring(0, 100) + '...');
     
     // Handle streaming requests directly
     if (isStreaming) {
@@ -65,15 +66,25 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
       }
       
       // Set up SSE headers
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.flushHeaders();
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+      // Send a test message to confirm the connection is working
+      res.write(`data: ${JSON.stringify({ status: "connected" })}\n\n`);
       
       try {
         // Create a request with proper streaming configuration
-        const response = await axios.post(`${llamaStackApiUrl}${endpoint}`, data, {
+        const apiUrl = `${llamaStackApiUrl}${endpoint}`;
+        console.log(`Sending streaming request to API: ${apiUrl}`);
+        
+        const response = await axios({
+          method: 'post',
+          url: apiUrl,
+          data: data,
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream'
@@ -94,11 +105,13 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
         
         response.data.on('end', () => {
           console.log('Stream ended');
+          res.write(`data: ${JSON.stringify({ status: "completed" })}\n\n`);
           res.end();
         });
         
         response.data.on('error', (err: Error) => {
           console.error('Stream error:', err);
+          res.write(`data: ${JSON.stringify({ error: 'Stream error', message: err.message })}\n\n`);
           res.end();
         });
         
