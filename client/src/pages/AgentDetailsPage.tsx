@@ -290,7 +290,7 @@ const AgentDetailsPage: React.FC = () => {
           sx={{ 
             borderBottom: 1,
             borderColor: 'divider',
-            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
           }}
         >
           <Typography 
@@ -306,20 +306,31 @@ const AgentDetailsPage: React.FC = () => {
               label={`ID: ${agent.agent_id}`} 
               variant="outlined" 
               size="small"
-              sx={{ fontWeight: 'medium' }}
+              sx={{ 
+                fontWeight: 'medium',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined,
+                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined
+              }}
             />
             <Chip 
               label={`Model: ${agent.model}`} 
               variant="outlined" 
               color="primary"
               size="small"
-              sx={{ fontWeight: 'medium' }}
+              sx={{ 
+                fontWeight: 'medium',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined
+              }}
             />
             <Chip 
               label={`Created: ${new Date(agent.created_at).toLocaleString()}`} 
               variant="outlined" 
               size="small"
-              sx={{ fontWeight: 'medium' }}
+              sx={{ 
+                fontWeight: 'medium',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined,
+                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined
+              }}
             />
           </Box>
         </Box>
@@ -400,7 +411,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -470,7 +481,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -548,7 +559,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
