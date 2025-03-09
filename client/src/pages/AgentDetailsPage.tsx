@@ -114,7 +114,8 @@ const AgentDetailsPage: React.FC = () => {
     <ContentCopyIcon 
       fontSize="small" 
       sx={{ 
-        color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined 
+        color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined,
+        fontSize: '0.9rem'
       }} 
     />
   );
@@ -333,7 +334,18 @@ const AgentDetailsPage: React.FC = () => {
           >
             {agent.name || 'Unnamed Agent'}
           </Typography>
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <Box display="flex" gap={2} flexWrap="wrap" sx={{ 
+            '& .MuiChip-root': { 
+              height: '32px',
+              '& .MuiChip-label': {
+                fontSize: '0.875rem',
+                padding: '0 12px'
+              },
+              '& .MuiChip-icon': {
+                marginLeft: '8px'
+              }
+            } 
+          }}>
             <Chip 
               icon={<DarkModeContentCopyIcon />}
               label={`ID: ${agent.agent_id}`} 
