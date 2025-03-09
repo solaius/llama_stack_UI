@@ -46,30 +46,33 @@ app.get('/api/v1/*', async (req: Request, res: Response) => {
   }
 });
 
-// Store active streams
-const activeStreams: Record<string, any> = {};
-
 // Proxy POST requests to Llama Stack API
 app.post('/api/v1/*', async (req: Request, res: Response) => {
   try {
     const endpoint = req.path.replace('/api', '');
     const data = req.body;
     const isStreaming = req.query.stream === 'true' || (data && data.stream === true);
-    const streamId = req.headers['x-stream-id'] as string;
     
     console.log(`Proxying POST request to ${endpoint}`, isStreaming ? '(streaming)' : '');
     
-    // Handle streaming requests differently
-    if (isStreaming && streamId) {
-      console.log(`Initiating streaming request with ID: ${streamId}`);
+    // Handle streaming requests directly
+    if (isStreaming) {
+      console.log('Handling streaming request directly');
       
       // Make sure the request has stream=true
       if (data && typeof data === 'object') {
         data.stream = true;
       }
       
-      // Create a request with proper streaming configuration
+      // Set up SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.flushHeaders();
+      
       try {
+        // Create a request with proper streaming configuration
         const response = await axios.post(`${llamaStackApiUrl}${endpoint}`, data, {
           headers: {
             'Content-Type': 'application/json',
@@ -78,38 +81,36 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
           responseType: 'stream'
         });
         
-        // Store the stream for later access
-        activeStreams[streamId] = {
-          stream: response.data,
-          timestamp: Date.now(),
-          chunks: []
-        };
+        console.log('Streaming response received from API, forwarding to client');
         
-        // Set up event handlers for the stream
+        // Process the stream data
         response.data.on('data', (chunk: Buffer) => {
           const chunkStr = chunk.toString();
-          console.log(`Stream ${streamId} received chunk:`, chunkStr.substring(0, 50) + (chunkStr.length > 50 ? '...' : ''));
+          console.log('Received chunk:', chunkStr.substring(0, 50) + (chunkStr.length > 50 ? '...' : ''));
           
-          // Store the chunk
-          if (activeStreams[streamId]) {
-            activeStreams[streamId].chunks.push(chunkStr);
-          }
+          // Send the chunk to the client
+          res.write(`data: ${chunkStr}\n\n`);
         });
         
         response.data.on('end', () => {
-          console.log(`Stream ${streamId} ended`);
+          console.log('Stream ended');
+          res.end();
         });
         
         response.data.on('error', (err: Error) => {
-          console.error(`Stream ${streamId} error:`, err);
-          delete activeStreams[streamId];
+          console.error('Stream error:', err);
+          res.end();
         });
         
-        // Return success response
-        res.status(200).json({ status: 'streaming', stream_id: streamId });
+        // Handle client disconnect
+        req.on('close', () => {
+          console.log('Client closed connection');
+          response.data.destroy();
+        });
       } catch (error: any) {
-        console.error('Error initiating streaming request:', error.message);
-        res.status(500).json({ error: 'Failed to initiate streaming request', message: error.message });
+        console.error('Error setting up streaming:', error.message);
+        res.write(`data: ${JSON.stringify({ error: 'Error setting up streaming', message: error.message })}\n\n`);
+        res.end();
       }
     } else {
       // Regular JSON response (non-streaming)
@@ -132,88 +133,6 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
       console.error('API error details:', error);
       res.status(500).json({ error: 'Internal server error', message: error.message });
     }
-  }
-});
-
-// Stream endpoint to get SSE data
-app.get('/api/v1/inference/chat-completion/stream/:streamId', function(req: Request, res: Response) {
-  const streamId = req.params.streamId;
-  
-  console.log(`Client connected to stream ${streamId}`);
-  
-  // Check if the stream exists
-  if (!activeStreams[streamId]) {
-    console.error(`Stream ${streamId} not found`);
-    res.status(404).json({ error: 'Stream not found' });
-    return;
-  }
-  
-  // Set up SSE headers
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.flushHeaders();
-  
-  // Get the stream from active streams
-  const streamData = activeStreams[streamId];
-  const stream = streamData.stream;
-  
-  // Send any existing chunks
-  const existingChunks = streamData.chunks;
-  if (existingChunks && existingChunks.length > 0) {
-    console.log(`Sending ${existingChunks.length} existing chunks for stream ${streamId}`);
-    existingChunks.forEach((chunk: string) => {
-      res.write(`data: ${chunk}\n\n`);
-    });
-  }
-  
-  // Set up data handler for new chunks
-  const dataHandler = function(chunk: Buffer) {
-    const chunkStr = chunk.toString();
-    res.write(`data: ${chunkStr}\n\n`);
-  };
-  
-  // Set up end handler
-  const endHandler = function() {
-    console.log(`Stream ${streamId} ended, closing client connection`);
-    res.end();
-    cleanup();
-  };
-  
-  // Set up error handler
-  const errorHandler = function(err: Error) {
-    console.error(`Stream ${streamId} error:`, err);
-    res.end();
-    cleanup();
-  };
-  
-  // Add event listeners to the stream
-  stream.on('data', dataHandler);
-  stream.on('end', endHandler);
-  stream.on('error', errorHandler);
-  
-  // Handle client disconnect
-  req.on('close', function() {
-    console.log(`Client disconnected from stream ${streamId}`);
-    cleanup();
-  });
-  
-  // Cleanup function
-  function cleanup() {
-    if (stream) {
-      stream.removeListener('data', dataHandler);
-      stream.removeListener('end', endHandler);
-      stream.removeListener('error', errorHandler);
-    }
-    
-    // Remove the stream after 5 minutes
-    setTimeout(function() {
-      if (activeStreams[streamId]) {
-        console.log(`Removing stream ${streamId} after timeout`);
-        delete activeStreams[streamId];
-      }
-    }, 5 * 60 * 1000);
   }
 });
 
