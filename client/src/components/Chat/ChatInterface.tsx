@@ -141,15 +141,26 @@ const ChatInterface: React.FC = () => {
         
         try {
           // Use the apiService to create a streaming chat completion
-          const eventSource = apiService.createStreamingChatCompletion(request);
-          eventSourceRef.current = eventSource;
-          
-          // Set up event handlers
-          eventSource.onopen = () => {
-            console.log('SSE connection opened');
+          const setupStreaming = async () => {
+            try {
+              const eventSource = await apiService.createStreamingChatCompletion(request);
+              eventSourceRef.current = eventSource;
+              
+              // Set up event handlers
+              eventSource.onopen = () => {
+                console.log('SSE connection opened');
+              };
+              
+              return eventSource;
+            } catch (error) {
+              console.error('Failed to set up streaming:', error);
+              throw error;
+            }
           };
           
-          eventSource.onmessage = (event) => {
+          setupStreaming().then(eventSource => {
+            // Set up message handler
+            eventSource.onmessage = (event) => {
             console.log('Received SSE message:', event.data);
             try {
               const data = JSON.parse(event.data);
@@ -208,28 +219,40 @@ const ChatInterface: React.FC = () => {
             }
           };
           
-          eventSource.onerror = (error) => {
-            console.error('EventSource error:', error);
-            
-            // Check if this is the end of the stream
-            if (assistantMessage.content) {
-              // If we have content, assume this might be a normal completion
-              setIsLoading(false);
-            } else {
-              // Otherwise, show an error message
-              setMessages(prev => [
-                ...prev.slice(0, -1),
-                {
-                  role: 'assistant',
-                  content: 'Sorry, there was an error with the streaming connection. Please try again or disable streaming in the settings.',
-                },
-              ]);
-              setIsLoading(false);
-            }
-            
-            eventSource.close();
-            eventSourceRef.current = null;
-          };
+            // Set up error handler
+            eventSource.onerror = (error) => {
+              console.error('EventSource error:', error);
+              
+              // Check if this is the end of the stream
+              if (assistantMessage.content) {
+                // If we have content, assume this might be a normal completion
+                setIsLoading(false);
+              } else {
+                // Otherwise, show an error message
+                setMessages(prev => [
+                  ...prev.slice(0, -1),
+                  {
+                    role: 'assistant',
+                    content: 'Sorry, there was an error with the streaming connection. Please try again or disable streaming in the settings.',
+                  },
+                ]);
+                setIsLoading(false);
+              }
+              
+              eventSource.close();
+              eventSourceRef.current = null;
+            };
+          }).catch(error => {
+            console.error('Error in streaming setup:', error);
+            setIsLoading(false);
+            setMessages(prev => [
+              ...prev.slice(0, -1),
+              {
+                role: 'assistant',
+                content: 'Sorry, there was an error setting up the streaming connection. Please try again or disable streaming in the settings.',
+              },
+            ]);
+          });
         } catch (error) {
           console.error('Error setting up streaming:', error);
           setIsLoading(false);
