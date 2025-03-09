@@ -23,7 +23,8 @@ import {
   DialogActions,
   TextField,
   Snackbar,
-  Alert
+  Alert,
+  Tooltip
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -32,7 +33,8 @@ import {
   Edit as EditIcon,
   Refresh as RefreshIcon,
   Chat as ChatIcon,
-  Build as BuildIcon
+  Build as BuildIcon,
+  ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 import ToolUsageHistory from '../components/Agents/ToolUsageHistory';
 import { Agent, SessionInfo, apiService } from '../services/api';
@@ -86,6 +88,26 @@ const AgentDetailsPage: React.FC = () => {
     message: '',
     severity: 'info'
   });
+
+  const handleCopyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setNotification({
+          open: true,
+          message: `${label} copied to clipboard`,
+          severity: 'success'
+        });
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+        setNotification({
+          open: true,
+          message: 'Failed to copy to clipboard',
+          severity: 'error'
+        });
+      }
+    );
+  };
 
   useEffect(() => {
     const fetchAgentDetails = async () => {
@@ -290,7 +312,7 @@ const AgentDetailsPage: React.FC = () => {
           sx={{ 
             borderBottom: 1,
             borderColor: 'divider',
-            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)'
           }}
         >
           <Typography 
@@ -303,46 +325,100 @@ const AgentDetailsPage: React.FC = () => {
           </Typography>
           <Box display="flex" gap={2} flexWrap="wrap">
             <Chip 
+              icon={<ContentCopyIcon fontSize="small" />}
               label={`ID: ${agent.agent_id}`} 
               variant="outlined" 
               size="small"
+              onClick={() => handleCopyToClipboard(agent.agent_id, "Agent ID")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined,
-                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined,
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 1,
+                  '& .MuiChip-icon': {
+                    color: 'primary.main'
+                  }
+                },
+                '& .MuiChip-icon': {
+                  fontSize: '0.75rem',
+                  marginLeft: '4px'
+                }
               }}
             />
             <Chip 
+              icon={<ContentCopyIcon fontSize="small" />}
               label={`Model: ${agent.model}`} 
               variant="outlined" 
               color="primary"
               size="small"
+              onClick={() => handleCopyToClipboard(agent.model, "Model name")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 1,
+                  '& .MuiChip-icon': {
+                    color: 'primary.dark'
+                  }
+                },
+                '& .MuiChip-icon': {
+                  fontSize: '0.75rem',
+                  marginLeft: '4px'
+                }
               }}
             />
             <Chip 
+              icon={<ContentCopyIcon fontSize="small" />}
               label={`Created: ${new Date(agent.created_at).toLocaleString()}`} 
               variant="outlined" 
               size="small"
+              onClick={() => handleCopyToClipboard(new Date(agent.created_at).toLocaleString(), "Creation date")}
               sx={{ 
                 fontWeight: 'medium',
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : undefined,
-                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : undefined,
+                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : undefined,
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 1,
+                  '& .MuiChip-icon': {
+                    color: 'primary.main'
+                  }
+                },
+                '& .MuiChip-icon': {
+                  fontSize: '0.75rem',
+                  marginLeft: '4px'
+                }
               }}
             />
           </Box>
         </Box>
         <Box p={3}>
-          <Typography 
-            variant="h6" 
-            gutterBottom 
-            fontWeight="bold"
-            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
-          >
-            System Prompt
-          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+            >
+              System Prompt
+            </Typography>
+            <Tooltip title="Copy system prompt">
+              <IconButton 
+                size="small" 
+                onClick={() => handleCopyToClipboard(agent.instructions, "System prompt")}
+                sx={{ 
+                  '&:hover': { 
+                    color: 'primary.main',
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                  }
+                }}
+              >
+                <ContentCopyIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Paper 
             variant="outlined" 
             sx={{ 
@@ -411,7 +487,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -481,7 +557,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
@@ -559,7 +635,7 @@ const AgentDetailsPage: React.FC = () => {
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
               borderBottom: 1,
               borderColor: 'divider',
               py: 1.5,
