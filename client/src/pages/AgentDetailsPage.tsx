@@ -254,18 +254,19 @@ const AgentDetailsPage: React.FC = () => {
 
   return (
     <Box p={3} sx={{ position: 'relative' }}>
-      {/* Back button - positioned at the top left */}
-      <Box sx={{ position: 'absolute', top: 0, left: 0, mb: 2 }}>
+      {/* Back button - positioned at the top left, flush with menu */}
+      <Box sx={{ position: 'absolute', top: 0, left: -24, mb: 2 }}>
         <Button
-          startIcon={<ArrowBackIcon />}
+          startIcon={<ArrowBackIcon sx={{ fontWeight: 'bold' }} />}
           onClick={() => navigate('/agents')}
           variant="contained"
           color="primary"
           sx={{ 
-            borderRadius: '0 0 8px 0',
+            borderRadius: '0 8px 8px 0',
             py: 1,
             px: 2,
             boxShadow: 2,
+            fontWeight: 'bold',
             '&:hover': {
               transform: 'translateX(4px)',
               boxShadow: 3
