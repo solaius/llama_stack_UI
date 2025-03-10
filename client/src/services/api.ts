@@ -424,23 +424,30 @@ export const apiService = {
     
     console.log('Creating streaming request with direct EventSource');
     
-    // Create the EventSource directly with the streaming endpoint
-    const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`);
-    
-    // Send the request data in a separate fetch call
-    fetch(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request)
-    }).catch(error => {
+    // First, initiate the streaming request with a POST
+    try {
+      // Make the POST request to start streaming
+      const response = await fetch(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify(request)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to initiate streaming: ${response.status} ${response.statusText}`);
+      }
+      
+      // Create the EventSource to receive the stream
+      const eventSource = new EventSource(`${api.defaults.baseURL}/v1/inference/chat-completion?stream=true`);
+      
+      return eventSource;
+    } catch (error) {
       console.error('Error initiating streaming request:', error);
-      eventSource.close();
       throw error;
-    });
-    
-    return eventSource;
+    }
   },
 
   // Tool Invocation

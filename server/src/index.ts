@@ -46,6 +46,14 @@ app.get('/api/v1/*', async (req: Request, res: Response) => {
   }
 });
 
+// Handle OPTIONS requests for CORS
+app.options('*', (req: Request, res: Response) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.sendStatus(200);
+});
+
 // Proxy POST requests to Llama Stack API
 app.post('/api/v1/*', async (req: Request, res: Response) => {
   try {
@@ -179,6 +187,38 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
       console.error('API error details:', error);
       res.status(500).json({ error: 'Internal server error', message: error.message });
     }
+  }
+});
+
+// Handle GET requests for streaming endpoints
+app.get('/api/v1/inference/chat-completion', (req: Request, res: Response) => {
+  const isStreaming = req.query.stream === 'true';
+  
+  if (isStreaming) {
+    // Set up SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
+    
+    // Send a message to confirm the connection is working
+    res.write(`data: ${JSON.stringify({ status: "connected", message: "Use POST to send your request" })}\n\n`);
+    
+    // Keep the connection open
+    const keepAliveInterval = setInterval(() => {
+      res.write(`data: ${JSON.stringify({ status: "keepalive" })}\n\n`);
+    }, 30000);
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      console.log('Client closed connection');
+      clearInterval(keepAliveInterval);
+      res.end();
+    });
+  } else {
+    res.status(405).json({ error: 'Method Not Allowed', message: 'Use POST to send your request' });
   }
 });
 
