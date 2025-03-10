@@ -60,7 +60,7 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
       // Add stop_reason to assistant messages if missing
       data.messages = data.messages.map((msg: any) => {
         if (msg.role === 'assistant' && !msg.stop_reason) {
-          return { ...msg, stop_reason: 'length' };
+          return { ...msg, stop_reason: 'end_of_turn' };
         }
         return msg;
       });
@@ -115,7 +115,7 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
             
             // If this is a completion message with no stop_reason, add it
             if (jsonData.completion_message && !jsonData.completion_message.stop_reason) {
-              jsonData.completion_message.stop_reason = 'length';
+              jsonData.completion_message.stop_reason = 'end_of_turn';
               // Send the modified chunk to the client
               res.write(`data: ${JSON.stringify(jsonData)}\n\n`);
             } else {
@@ -164,7 +164,7 @@ app.post('/api/v1/*', async (req: Request, res: Response) => {
           response.data && 
           response.data.completion_message && 
           !response.data.completion_message.stop_reason) {
-        response.data.completion_message.stop_reason = 'length';
+        response.data.completion_message.stop_reason = 'end_of_turn';
       }
       
       res.status(response.status).json(response.data);

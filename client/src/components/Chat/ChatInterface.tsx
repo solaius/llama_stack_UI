@@ -137,7 +137,7 @@ const ChatInterface: React.FC = () => {
         let assistantMessage: Message = { 
           role: 'assistant', 
           content: '',
-          stop_reason: 'length' // Default stop reason
+          stop_reason: 'end_of_turn' // Default stop reason
         };
         setMessages(prev => [...prev, assistantMessage]);
         
@@ -236,7 +236,7 @@ const ChatInterface: React.FC = () => {
                 {
                   role: 'assistant',
                   content: 'Sorry, there was an error with the streaming connection. Please try again or disable streaming in the settings.',
-                  stop_reason: 'error',
+                  stop_reason: 'end_of_turn',
                 },
               ]);
               setIsLoading(false);
@@ -253,7 +253,7 @@ const ChatInterface: React.FC = () => {
             {
               role: 'assistant',
               content: 'Sorry, there was an error setting up the streaming connection. Please try again or disable streaming in the settings.',
-              stop_reason: 'error',
+              stop_reason: 'end_of_turn',
             },
           ]);
         }
@@ -282,7 +282,7 @@ const ChatInterface: React.FC = () => {
         {
           role: 'assistant',
           content: 'Sorry, there was an error processing your request. Please try again.',
-          stop_reason: 'error',
+          stop_reason: 'end_of_turn',
         },
       ]);
     }

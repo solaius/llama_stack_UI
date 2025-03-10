@@ -391,7 +391,7 @@ export const apiService = {
     if (request.messages) {
       request.messages = request.messages.map(msg => {
         if (msg.role === 'assistant' && !msg.stop_reason) {
-          return { ...msg, stop_reason: 'length' };
+          return { ...msg, stop_reason: 'end_of_turn' };
         }
         return msg;
       });
@@ -416,7 +416,7 @@ export const apiService = {
     if (request.messages) {
       request.messages = request.messages.map(msg => {
         if (msg.role === 'assistant' && !msg.stop_reason) {
-          return { ...msg, stop_reason: 'length' };
+          return { ...msg, stop_reason: 'end_of_turn' };
         }
         return msg;
       });
