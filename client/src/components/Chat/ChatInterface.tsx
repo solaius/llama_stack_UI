@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import ChatMessage from './ChatMessage';
 import apiService, { Message, Model, Tool, ChatCompletionRequest } from '../../services/api';
+import { SSE } from 'sse.js';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,7 +50,7 @@ const ChatInterface: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef<SSE | null>(null);
 
   // Fetch models and tools on component mount
   useEffect(() => {
@@ -138,11 +139,11 @@ const ChatInterface: React.FC = () => {
         setMessages(prev => [...prev, assistantMessage]);
         
         // Create a new EventSource for SSE
-        const eventSource = new EventSource(
-          `/api/v1/inference/chat-completion?${new URLSearchParams({
-            request: JSON.stringify(request),
-          })}`
-        );
+        const eventSource = new SSE(
+          '/api/v1/inference/chat-completion', {headers: {'Content-Type': 'application/json',
+                'Accept': "text/event-stream"},
+          payload: JSON.stringify(request) });
+
         eventSourceRef.current = eventSource;
         
         eventSource.onmessage = (event) => {
@@ -152,11 +153,13 @@ const ChatInterface: React.FC = () => {
             // Update the assistant's message with new content
             assistantMessage.content += data.event.delta.text;
             setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
-          } else if (data.event.event_type === 'end') {
+          } else if (data.event.event_type === 'complete') {
             // Complete the message and add any tool calls
             if (data.completion_message?.tool_calls) {
               assistantMessage.tool_calls = data.completion_message.tool_calls;
             }
+            assistantMessage.stop_reason = data.event.stop_reason;
+
             setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
             setIsLoading(false);
             eventSource.close();
@@ -178,6 +181,7 @@ const ChatInterface: React.FC = () => {
         const assistantMessage: Message = {
           role: 'assistant',
           content: response.completion_message.content,
+          stop_reason: response.completion_message.stop_reason,
           tool_calls: response.completion_message.tool_calls,
         };
         
