@@ -67,6 +67,7 @@ export interface ToolGroup {
 export interface Message {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  stop_reason?: string;
   tool_calls?: ToolCall[];
   call_id?: string;
   tool_name?: string;
