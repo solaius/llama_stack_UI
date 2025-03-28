@@ -139,8 +139,9 @@ const ChatInterface: React.FC = () => {
         setMessages(prev => [...prev, assistantMessage]);
         
         // Create a new EventSource for SSE
+        
         const eventSource = new SSE(
-          '/api/v1/inference/chat-completion', {headers: {'Content-Type': 'application/json',
+          process.env.REACT_APP_API_URL + '/v1/inference/chat-completion?stream=true', {headers: {'Content-Type': 'application/json',
                 'Accept': "text/event-stream"},
           payload: JSON.stringify(request) });
 

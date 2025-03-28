@@ -3,13 +3,16 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { Request, Response } from 'express';
+import { request as httpRequest } from 'http';
+import { request as httpsRequest } from 'https';
+import { URL } from 'url';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-const llamaStackApiUrl = process.env.LLAMA_STACK_API_URL || 'http://192.168.1.35:53992';
+const llamaStackApiUrl = process.env.LLAMA_STACK_API_URL;
 
 // Middleware
 app.use(cors({
@@ -50,37 +53,52 @@ app.get('/api/v1/*', async (req: Request, res: Response) => {
 app.post('/api/v1/*', async (req: Request, res: Response) => {
   try {
     const endpoint = req.path.replace('/api', '');
-    const data = req.body;
-    
-    console.log(`Proxying POST request to ${endpoint}`);
-    
-    const response = await axios.post(`${llamaStackApiUrl}${endpoint}`, data, {
-      headers: {
-        'Content-Type': 'application/json'
+    const targetUrl = new URL(`${llamaStackApiUrl}${endpoint}`);
+    const isStreaming = req.query.stream === 'true';
+
+    console.log(`Proxying POST request to ${endpoint} (stream=${isStreaming})`);
+
+    const protocolLib = targetUrl.protocol === 'https:' ? httpsRequest : httpRequest;
+
+    const proxyReq = protocolLib(
+      {
+        hostname: targetUrl.hostname,
+        port: targetUrl.port,
+        path: targetUrl.pathname + targetUrl.search,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': isStreaming ? 'text/event-stream' : 'application/json',
+        },
       },
-      responseType: req.query.stream === 'true' ? 'stream' : 'json'
+      (proxyRes) => {
+        if (isStreaming && proxyRes.headers['content-type']?.includes('text/event-stream')) {
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('Connection', 'keep-alive');
+          proxyRes.pipe(res);
+        } else {
+          let data = '';
+          proxyRes.on('data', (chunk) => {
+            data += chunk;
+          });
+          proxyRes.on('end', () => {
+            res.status(proxyRes.statusCode || 200).send(data);
+          });
+        }
+      }
+    );
+
+    proxyReq.on('error', (err) => {
+      console.error('Proxy request error:', err.message);
+      res.status(500).json({ error: 'Internal server error', message: err.message });
     });
-    
-    // Handle streaming responses
-    if (response.headers['content-type']?.includes('text/event-stream')) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      
-      // Forward the streaming response
-      response.data.pipe(res);
-    } else {
-      // Regular JSON response
-      res.status(response.status).json(response.data);
-    }
+
+    proxyReq.write(JSON.stringify(req.body));
+    proxyReq.end();
   } catch (error: any) {
-    console.error('Error proxying POST request:', error.message);
-    
-    if (error.response) {
-      res.status(error.response.status).json(error.response.data);
-    } else {
-      res.status(500).json({ error: 'Internal server error', message: error.message });
-    }
+    console.error('Error in proxy POST handler:', error.message);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
 
