@@ -226,9 +226,32 @@ const AgentChatPage: React.FC = () => {
                 return newMessages;
               });
             }
-          } else if (data.event && data.event.event_type === 'end') {
+          } else if (data.event && (data.event.event_type === 'end' || data.event.event_type === 'complete')) {
             // Handle the end of the stream
             console.log('Stream ended:', data);
+            
+            // If there's a completion message, update the assistant message
+            if (data.completion_message) {
+              assistantMessage = {
+                ...assistantMessage,
+                ...data.completion_message
+              };
+              
+              // Update the message in the UI
+              setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                const lastIndex = newMessages.length - 1;
+                
+                if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                  newMessages[lastIndex] = { ...assistantMessage };
+                } else {
+                  newMessages.push({ ...assistantMessage });
+                }
+                
+                return newMessages;
+              });
+            }
+            
             eventSource.close();
             setIsSending(false);
           }
