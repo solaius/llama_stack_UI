@@ -55,9 +55,24 @@ export function setupApiRoutes(app: express.Application, llamaStackApiUrl: strin
       }
       
       const targetUrl = new URL(`${llamaStackApiUrl}${endpoint}`);
-      const isStreaming = req.query.stream === 'true';
-
+      
+      // Check if this is a turn request and if it should be streaming
+      const isTurnRequest = endpoint.includes('/turn');
+      let isStreaming = req.query.stream === 'true';
+      
+      // If it's a turn request, check the body for the stream flag
+      if (isTurnRequest && req.body && req.body.stream !== undefined) {
+        isStreaming = req.body.stream === true;
+      }
+      
       console.log(`Proxying POST request to ${endpoint} (stream=${isStreaming})`);
+      
+      // Force streaming for turn requests if not explicitly set to false
+      if (isTurnRequest && req.body && req.body.stream !== false) {
+        req.body.stream = true;
+        isStreaming = true;
+        console.log('Forcing streaming for turn request');
+      }
 
       if (isStreaming) {
         // Handle streaming response
