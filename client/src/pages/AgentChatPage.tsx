@@ -171,10 +171,12 @@ const AgentChatPage: React.FC = () => {
       let currentToolCalls: ToolCall[] = [];
       
       // Handle streaming events
+      console.log('Setting up onmessage handler');
       eventSource.onmessage = (event) => {
+        console.log('Received SSE event:', event);
         try {
           const data = JSON.parse(event.data);
-          console.log('Streaming event:', data);
+          console.log('Streaming event data:', data);
           
           if (data.event && data.event.event_type === 'progress') {
             // Update the assistant's message with the new content

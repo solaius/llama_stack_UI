@@ -823,7 +823,10 @@ export const apiService = {
     console.log('Streaming turn request:', { messages, documents, toolgroups });
     
     // Create a new EventSource for SSE
-    const sse = new SSE(`${api.defaults.baseURL}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`, {
+    const url = `${api.defaults.baseURL}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`;
+    console.log('Creating SSE connection to:', url);
+    
+    const sse = new SSE(url, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -836,12 +839,22 @@ export const apiService = {
       })
     });
     
+    // Add event listeners for debugging
+    sse.addEventListener('open', () => {
+      console.log('SSE connection opened');
+    });
+    
+    sse.addEventListener('message', (e) => {
+      console.log('SSE message received:', e);
+    });
+    
     // Start the connection
     sse.addEventListener('error', (e) => {
       console.error('SSE error:', e);
     });
     
     // Return the SSE instance which has the same interface as EventSource
+    console.log('Starting SSE stream');
     sse.stream();
     return sse;
   }
