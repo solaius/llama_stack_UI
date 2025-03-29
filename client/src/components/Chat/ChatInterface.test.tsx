@@ -1,31 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ChatInterface from './ChatInterface';
-import apiService from '../../services/api';
 import { ThemeProvider } from '../../contexts/ThemeContext';
-
-// Mock ChatMessage component to avoid syntax highlighter issues
-jest.mock('./ChatMessage', () => {
-  return {
-    __esModule: true,
-    default: ({ message }) => (
-      <div className="chat-message" data-testid="chat-message">
-        <div className="message-header">
-          <span data-testid="message-role">{message.role}</span>
-        </div>
-        <div className="message-content" data-testid="message-content">
-          {message.content}
-        </div>
-      </div>
-    )
-  };
-});
-
-// Mock scrollIntoView
-if (!window.Element.prototype.scrollIntoView) {
-  window.Element.prototype.scrollIntoView = jest.fn();
-}
+import apiService from '../../services/api';
 
 // Mock the API service
 jest.mock('../../services/api', () => ({
@@ -39,6 +16,56 @@ jest.mock('../../services/api', () => ({
     createChatCompletion: jest.fn(),
   },
 }));
+
+// Mock ChatMessage component to avoid syntax highlighter issues
+jest.mock('./ChatMessage', () => {
+  return {
+    __esModule: true,
+    default: ({ message }: any) => (
+      <div className="chat-message" data-testid="chat-message">
+        <div className="message-header">
+          <span data-testid="message-role">{message.role}</span>
+        </div>
+        <div className="message-content" data-testid="message-content">
+          {message.content}
+        </div>
+      </div>
+    )
+  };
+});
+
+// Mock SSE.js
+jest.mock('sse.js', () => {
+  return {
+    SSE: class MockSSE {
+      constructor(url: string, options: any) {
+        this.url = url;
+        this.options = options;
+      }
+      
+      stream() {
+        return this;
+      }
+      
+      close() {
+        // Do nothing
+      }
+      
+      url: string;
+      options: any;
+      onmessage: ((event: any) => void) | null = null;
+      onerror: ((error: any) => void) | null = null;
+    }
+  };
+});
+
+// Mock scrollIntoView
+if (!window.Element.prototype.scrollIntoView) {
+  window.Element.prototype.scrollIntoView = jest.fn();
+}
+
+// Import the component after all mocks are set up
+import ChatInterface from './ChatInterface';
 
 describe('ChatInterface Component', () => {
   beforeEach(() => {
@@ -104,11 +131,11 @@ describe('ChatInterface Component', () => {
     expect(screen.getByText('Model')).toBeInTheDocument();
     expect(screen.getByText('Temperature')).toBeInTheDocument();
     
-    // Close settings panel
+    // Close setting panel
     const closeButton = screen.getByLabelText('Close');
     fireEvent.click(closeButton);
     
-    // Check that the settings panel is closed
+    // Check that the setting panel is closed
     await waitFor(() => {
       expect(screen.queryByText('Chat Settings')).not.toBeInTheDocument();
     });
@@ -266,7 +293,7 @@ describe('ChatInterface Component', () => {
     });
   });
 
-  it.skip('handles errors gracefully', async () => {
+  it('handles errors gracefully', async () => {
     // Mock API error
     (apiService.createChatCompletion as jest.Mock).mockImplementation(() => {
       throw new Error('API Error');

@@ -7,10 +7,10 @@ import { docco, dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 interface ChatMessageProps {
   message: Message;
-  isLast: boolean;
+  isLast?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false }) => {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -18,14 +18,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
   const isSystem = message.role === 'system';
 
   const renderToolCalls = (toolCalls: ToolCall[]) => {
-    return toolCalls.map((toolCall) => (
-      <Box key={toolCall.call_id} sx={{ mt: 1, mb: 1 }}>
-        <Chip 
-          icon={<CodeIcon />} 
-          label={`Tool: ${toolCall.tool_name}`} 
-          color="primary" 
-          variant="outlined" 
-          size="small" 
+    return toolCalls.map((toolCall, index) => (
+      <Box key={toolCall.id || `tool-call-${index}`} sx={{ mt: 1, mb: 1 }}>
+        <Chip
+          icon={<CodeIcon />}
+          label={`Tool: ${toolCall.tool_name}`}
+          color="primary"
+          variant="outlined"
+          size="small"
           sx={{ mb: 1 }}
         />
         <SyntaxHighlighter
@@ -36,6 +36,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
             padding: '12px',
             fontSize: '0.85rem',
           }}
+          data-testid="syntax-highlighter"
         >
           {JSON.stringify(toolCall.arguments, null, 2)}
         </SyntaxHighlighter>
@@ -46,27 +47,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
   // Function to detect and format code blocks in messages
   const formatMessageContent = (content: string) => {
     if (!content) return null;
-    
+
     // Simple regex to detect code blocks with language specification
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
     const parts = [];
     let lastIndex = 0;
     let match;
-    
+
     while ((match = codeBlockRegex.exec(content)) !== null) {
       // Add text before code block
       if (match.index > lastIndex) {
         parts.push(
-          <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
             {content.substring(lastIndex, match.index)}
           </Typography>
         );
       }
-      
+
       // Add code block
       const language = match[1] || 'text';
       const code = match[2];
-      
+
       parts.push(
         <Box key={`code-${match.index}`} sx={{ my: 1 }}>
           <SyntaxHighlighter
@@ -77,26 +78,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
               padding: '12px',
               fontSize: '0.85rem',
             }}
+            data-testid="syntax-highlighter"
           >
             {code}
           </SyntaxHighlighter>
         </Box>
       );
-      
+
       lastIndex = match.index + match[0].length;
     }
-    
+
     // Add remaining text after last code block
     if (lastIndex < content.length) {
       parts.push(
-        <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+        <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
           {content.substring(lastIndex)}
         </Typography>
       );
     }
-    
+
     return parts.length > 0 ? parts : (
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
         {content}
       </Typography>
     );
@@ -104,6 +106,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
 
   return (
     <Box
+      data-testid="chat-message"
       sx={{
         display: 'flex',
         flexDirection: isUser ? 'row-reverse' : 'row',
@@ -113,17 +116,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
     >
       <Avatar
         sx={{
-          bgcolor: isUser 
-            ? 'primary.main' 
-            : isAssistant 
-              ? 'secondary.main' 
-              : isTool 
-                ? 'info.main' 
+          bgcolor: isUser
+            ? 'primary.main'
+            : isAssistant
+              ? 'secondary.main'
+              : isTool
+                ? 'info.main'
                 : 'text.secondary',
           mr: isUser ? 0 : 1,
           ml: isUser ? 1 : 0,
         }}
       >
+        <span data-testid="message-role" style={{ display: 'none' }}>{message.role}</span>
         {isUser ? (
           <PersonIcon />
         ) : isAssistant ? (
@@ -138,15 +142,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
           p: 2,
           maxWidth: '80%',
           borderRadius: 2,
-          bgcolor: isUser 
-            ? 'primary.light' 
-            : isSystem 
-              ? 'text.disabled' 
+          bgcolor: isUser
+            ? 'primary.light'
+            : isSystem
+              ? 'text.disabled'
               : 'background.paper',
-          color: isUser 
-            ? 'primary.contrastText' 
-            : isSystem 
-              ? 'common.white' 
+          color: isUser
+            ? 'primary.contrastText'
+            : isSystem
+              ? 'common.white'
               : 'text.primary',
           position: 'relative',
           '&::after': isLast && isAssistant ? {
@@ -177,16 +181,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast }) => {
         }}
       >
         {isTool && (
-          <Chip 
-            label={`Tool Response: ${message.tool_name}`} 
-            color="info" 
-            size="small" 
-            sx={{ mb: 1 }} 
+          <Chip
+            label={`Tool Response: ${message.tool_name}`}
+            color="info"
+            size="small"
+            sx={{ mb: 1 }}
           />
         )}
-        
+
         {formatMessageContent(message.content)}
-        
+
         {message.tool_calls && message.tool_calls.length > 0 && renderToolCalls(message.tool_calls)}
       </Paper>
     </Box>
