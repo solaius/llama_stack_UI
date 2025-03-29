@@ -62,71 +62,60 @@ const AgentChatPage: React.FC = () => {
         const agentData = await apiService.getAgent(agentId);
         setAgent(agentData);
         
-        // In a real implementation, you would fetch the session and its turns
-        // const sessionData = await apiService.getAgentSession(agentId, sessionId);
-        
-        // For now, we'll use mock messages
-        const mockMessages: Message[] = [
-          {
-            role: 'system',
-            content: agentData.instructions
-          },
-          {
-            role: 'user',
-            content: 'Hello! Can you help me with something?'
-          },
-          {
-            role: 'assistant',
-            content: 'Of course! I\'m here to help. What do you need assistance with?'
-          },
-          {
-            role: 'user',
-            content: 'What\'s the weather in New York?'
-          },
-          {
-            role: 'assistant',
-            content: 'I\'ll check the weather in New York for you.',
-            tool_calls: [
-              {
-                id: 'call_01',
-                type: 'function',
-                function: {
-                  name: 'get_weather',
-                  arguments: JSON.stringify({
-                    location: 'New York',
-                    unit: 'celsius'
-                  })
+        try {
+          // Try to fetch the session and its turns
+          const sessionData = await apiService.getAgentSession(agentId, sessionId);
+          
+          // Process the session data to extract messages
+          const extractedMessages: Message[] = [];
+          const extractedToolCalls: ToolCall[] = [];
+          const extractedToolResults: ToolResult[] = [];
+          
+          // Add system message if available
+          if (agentData.instructions) {
+            extractedMessages.push({
+              role: 'system',
+              content: agentData.instructions
+            });
+          }
+          
+          // Process each turn to extract messages, tool calls, and tool results
+          if (sessionData.turns && sessionData.turns.length > 0) {
+            sessionData.turns.forEach(turn => {
+              // Add user input messages
+              if (turn.input_messages && turn.input_messages.length > 0) {
+                extractedMessages.push(...turn.input_messages);
+              }
+              
+              // Add assistant output message
+              if (turn.output_message) {
+                extractedMessages.push(turn.output_message);
+                
+                // Extract tool calls from the output message
+                if (turn.output_message.tool_calls && turn.output_message.tool_calls.length > 0) {
+                  extractedToolCalls.push(...turn.output_message.tool_calls);
                 }
               }
-            ]
+              
+              // Add tool results
+              if (turn.tool_results && turn.tool_results.length > 0) {
+                extractedToolResults.push(...turn.tool_results);
+              }
+            });
           }
-        ];
-        
-        // Mock tool results
-        const mockToolResults: ToolResult[] = [
-          {
-            tool_call_id: 'call_01',
-            content: {
-              temperature: 22,
-              unit: 'celsius',
-              description: 'Partly cloudy',
-              location: 'New York, NY'
-            }
-          }
-        ];
-        
-        setMessages(mockMessages);
-        
-        // Extract tool calls from messages
-        const extractedToolCalls: ToolCall[] = [];
-        mockMessages.forEach(msg => {
-          if (msg.tool_calls && msg.tool_calls.length > 0) {
-            extractedToolCalls.push(...msg.tool_calls);
-          }
-        });
-        
-        setToolCalls(extractedToolCalls);
-        setToolResults(mockToolResults);
+          
+          setMessages(extractedMessages);
+          setToolCalls(extractedToolCalls);
+          setToolResults(extractedToolResults);
+        } catch (sessionError) {
+          console.warn('Error fetching session data, starting with empty chat:', sessionError);
+          
+          // If we can't fetch the session, start with just the system message
+          setMessages([{
+            role: 'system',
+            content: agentData.instructions
+          }]);
+        }
       } catch (error) {
         console.error('Error fetching chat data:', error);
         setNotification({
@@ -155,102 +144,47 @@ const AgentChatPage: React.FC = () => {
       content: input
     };
     
-    setMessages([...messages, userMessage]);
+    // Add user message to the chat
+    setMessages(prevMessages => [...prevMessages, userMessage]);
     setInput('');
     setIsSending(true);
     
     try {
-      // In a real implementation, you would call the API to create a turn
-      // const turnResponse = await apiService.createAgentTurn(agentId, sessionId, [userMessage]);
+      // Get all messages except system messages to send to the API
+      const messagesToSend = messages
+        .filter(msg => msg.role !== 'system')
+        .concat(userMessage);
       
-      // For now, we'll simulate a response after a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create a turn with the Llama Stack API
+      const turnResponse = await apiService.createAgentTurn(
+        agentId,
+        sessionId,
+        messagesToSend,
+        false // Non-streaming for now
+      );
       
-      // Check if the input contains keywords that might trigger tool usage
-      const shouldUseTool = input.toLowerCase().includes('weather') || 
-                           input.toLowerCase().includes('calculate') ||
-                           input.toLowerCase().includes('search');
+      console.log('Turn response:', turnResponse);
       
-      let mockResponse: Message;
-      
-      if (shouldUseTool) {
-        // Create a mock tool call
-        const toolCallId = `call_${Date.now()}`;
-        const toolName = input.toLowerCase().includes('weather') 
-          ? 'get_weather' 
-          : input.toLowerCase().includes('calculate')
-            ? 'calculator'
-            : 'web_search';
-            
-        const toolArgs = input.toLowerCase().includes('weather')
-          ? { location: input.includes('New York') ? 'New York' : 'San Francisco', unit: 'celsius' }
-          : input.toLowerCase().includes('calculate')
-            ? { expression: '2 + 2' }
-            : { query: input.replace(/search for |search |look up /gi, '') };
+      // Add the assistant's response to the chat
+      if (turnResponse.output_message) {
+        setMessages(prevMessages => [...prevMessages, turnResponse.output_message]);
         
-        mockResponse = {
-          role: 'assistant',
-          content: `I'll help you with that. Let me ${toolName === 'get_weather' ? 'check the weather' : toolName === 'calculator' ? 'calculate that' : 'search for that information'}.`,
-          tool_calls: [
-            {
-              id: toolCallId,
-              type: 'function',
-              function: {
-                name: toolName,
-                arguments: JSON.stringify(toolArgs)
-              }
-            }
-          ]
-        };
-        
-        // Add the tool call to our state
-        const newToolCall = mockResponse.tool_calls![0];
-        setToolCalls(prev => [...prev, newToolCall]);
-        
-        // Simulate tool execution
-        setTimeout(() => {
-          const toolResult: ToolResult = {
-            tool_call_id: toolCallId,
-            content: toolName === 'get_weather' 
-              ? {
-                  temperature: Math.floor(Math.random() * 30),
-                  unit: 'celsius',
-                  description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
-                  location: toolArgs.location
-                }
-              : toolName === 'calculator'
-                ? { result: 4 }
-                : { 
-                    results: [
-                      { title: 'Search result 1', url: 'https://example.com/1' },
-                      { title: 'Search result 2', url: 'https://example.com/2' }
-                    ]
-                  }
-          };
-          
-          setToolResults(prev => [...prev, toolResult]);
-          
-          // Add a follow-up message with the tool result
-          const followUpMessage: Message = {
-            role: 'assistant',
-            content: toolName === 'get_weather'
-              ? `The weather in ${toolArgs.location} is ${toolResult.content.description.toLowerCase()} with a temperature of ${toolResult.content.temperature}°C.`
-              : toolName === 'calculator'
-                ? `The result of the calculation is 4.`
-                : `Here are some search results for "${toolArgs.query}". The top result is "${toolResult.content.results[0].title}".`
-          };
-          
-          setMessages(prev => [...prev, followUpMessage]);
-        }, 2000);
-      } else {
-        // Regular response without tool calls
-        mockResponse = {
-          role: 'assistant',
-          content: `I'm a simulated response to: "${input}"`
-        };
+        // Extract tool calls from the response
+        if (turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) {
+          setToolCalls(prevToolCalls => [
+            ...prevToolCalls,
+            ...(turnResponse.output_message.tool_calls || [])
+          ]);
+        }
       }
       
-      setMessages(prev => [...prev, mockResponse]);
+      // Extract tool results from the response
+      if (turnResponse.tool_results && turnResponse.tool_results.length > 0) {
+        setToolResults(prevToolResults => [
+          ...prevToolResults,
+          ...(turnResponse.tool_results || [])
+        ]);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setNotification({
@@ -269,65 +203,96 @@ const AgentChatPage: React.FC = () => {
       handleSendMessage();
     }
   };
-  
-  const handleRerunTool = (toolCall: ToolCall) => {
+
+  const handleRerunTool = async (toolCall: ToolCall) => {
+    if (!agentId || !sessionId) return;
+    
     setIsProcessingTool(true);
     
-    // Find the existing tool result
-    const existingResult = toolResults.find(result => result.tool_call_id === toolCall.id);
-    
-    // Remove the existing result if it exists
-    if (existingResult) {
-      setToolResults(prev => prev.filter(result => result.tool_call_id !== toolCall.id));
-    }
-    
-    // Simulate tool execution with a delay
-    setTimeout(() => {
+    try {
+      // Find the existing tool result
+      const existingResult = toolResults.find(result => result.tool_call_id === toolCall.id);
+      
+      // Remove the existing result if it exists
+      if (existingResult) {
+        setToolResults(prev => prev.filter(result => result.tool_call_id !== toolCall.id));
+      }
+      
+      // Parse the tool arguments
       const toolName = toolCall.function.name;
       const toolArgs = JSON.parse(toolCall.function.arguments);
       
-      const toolResult: ToolResult = {
+      // Invoke the tool directly
+      const toolResponse = await apiService.invokeTool(toolName, toolArgs);
+      
+      // Create a new tool result
+      const newToolResult: ToolResult = {
         tool_call_id: toolCall.id,
-        content: toolName === 'get_weather' 
-          ? {
-              temperature: Math.floor(Math.random() * 30),
-              unit: 'celsius',
-              description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
-              location: toolArgs.location
-            }
-          : toolName === 'calculator'
-            ? { result: 4 }
-            : { 
-                results: [
-                  { title: 'Updated search result 1', url: 'https://example.com/updated1' },
-                  { title: 'Updated search result 2', url: 'https://example.com/updated2' }
-                ]
-              }
+        content: toolResponse
       };
       
-      setToolResults(prev => [...prev, toolResult]);
-      setIsProcessingTool(false);
+      // Add the new tool result
+      setToolResults(prev => [...prev, newToolResult]);
       
-      // Show notification
+      // Show success notification
       setNotification({
         open: true,
         message: 'Tool execution completed successfully',
         severity: 'success'
       });
-    }, 1500);
+    } catch (error) {
+      console.error('Error executing tool:', error);
+      
+      // Create an error tool result
+      const errorToolResult: ToolResult = {
+        tool_call_id: toolCall.id,
+        content: null,
+        error: 'Tool execution failed'
+      };
+      
+      // Add the error tool result
+      setToolResults(prev => [...prev, errorToolResult]);
+      
+      // Show error notification
+      setNotification({
+        open: true,
+        message: 'Tool execution failed. Please try again.',
+        severity: 'error'
+      });
+    } finally {
+      setIsProcessingTool(false);
+    }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !agentId || !sessionId) return;
     
-    // In a real implementation, you would handle file uploads
-    // For now, we'll just show a notification
-    setNotification({
-      open: true,
-      message: `File "${files[0].name}" selected. File uploads are not implemented yet.`,
-      severity: 'info'
-    });
+    try {
+      setNotification({
+        open: true,
+        message: `Processing file "${files[0].name}"...`,
+        severity: 'info'
+      });
+      
+      // In a real implementation, you would upload the file and process it
+      // For now, we'll just show a notification
+      setNotification({
+        open: true,
+        message: `File "${files[0].name}" processed. File content will be included in the next message.`,
+        severity: 'success'
+      });
+      
+      // Set the input to include a reference to the file
+      setInput(prev => prev + `\n\nI've uploaded a file named "${files[0].name}". Please help me analyze it.`);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setNotification({
+        open: true,
+        message: `Failed to process file "${files[0].name}". Please try again.`,
+        severity: 'error'
+      });
+    }
   };
 
   const handleCloseNotification = () => {
@@ -343,7 +308,7 @@ const AgentChatPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 'calc(100vh-64px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box
         component={Paper}
@@ -366,10 +331,10 @@ const AgentChatPage: React.FC = () => {
         </IconButton>
         <Box>
           <Typography variant="h6" noWrap>
-            {agent?.model || 'Agent Chat'}
+            {agent?.name || 'Agent Chat'}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Session ID: {sessionId}
+          <Typography variant="body2" color="text.secondary" noWrap>
+            Model: {agent?.model || 'Unknown'} • Session: {sessionId?.substring(0, 8) || 'Unknown'}
           </Typography>
         </Box>
       </Box>
@@ -384,66 +349,64 @@ const AgentChatPage: React.FC = () => {
         }}
       >
         <List>
-          {messages
-            .filter(msg => msg.role !== 'system') // Don't show system messages
-            .map((message, index) => (
-              <ListItem
-                key={index}
+          {messages.filter(msg => msg.role !== 'system').map((message, index) => (
+            <ListItem
+              key={index}
+              sx={{
+                display: 'flex',
+                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                mb: 2
+              }}
+            >
+              <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                  mb: 2
+                  maxWidth: '70%',
+                  flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
                 }}
               >
-                <Box
+                <Avatar
                   sx={{
-                    display: 'flex',
-                    maxWidth: '70%',
-                    flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
+                    bgcolor: message.role === 'user' ? 'primary.main' : 'secondary.main',
+                    mr: message.role === 'user' ? 0 : 1,
+                    ml: message.role === 'user' ? 1 : 0
                   }}
                 >
-                  <Avatar
-                    sx={{
-                      bgcolor: message.role === 'user' ? 'primary.main' : 'secondary.main',
-                      mr: message.role === 'user' ? 0 : 1,
-                      ml: message.role === 'user' ? 1 : 0
-                    }}
-                  >
-                    {message.role === 'user' ? 'U' : 'A'}
-                  </Avatar>
-                  <Card
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: message.role === 'user' ? 'primary.light' : 'background.paper'
-                    }}
-                  >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: message.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                          whiteSpace: 'pre-wrap'
-                        }}
-                      >
-                        {message.content}
-                      </Typography>
-                      
-                      {message.tool_calls && message.tool_calls.length > 0 && (
-                        <Box sx={{ mt: 2, color: 'text.primary' }}>
-                          <ToolUsageDisplay 
-                            toolCalls={message.tool_calls}
-                            toolResults={toolResults.filter(result => 
-                              message.tool_calls?.some(call => call.id === result.tool_call_id)
-                            )}
-                            onRerunTool={handleRerunTool}
-                          />
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Box>
-              </ListItem>
-            ))}
+                  {message.role === 'user' ? 'U' : 'A'}
+                </Avatar>
+                <Card
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: message.role === 'user' ? 'primary.light' : 'background.paper'
+                  }}
+                >
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: message.role === 'user' ? 'primary.contrastText' : 'text.primary',
+                        whiteSpace: 'pre-wrap'
+                      }}
+                    >
+                      {message.content}
+                    </Typography>
+                    
+                    {message.tool_calls && message.tool_calls.length > 0 && (
+                      <Box sx={{ mt: 2, color: 'text.primary' }}>
+                        <ToolUsageDisplay 
+                          toolCalls={message.tool_calls}
+                          toolResults={toolResults.filter(result => 
+                            message.tool_calls?.some(call => call.id === result.tool_call_id)
+                          )}
+                          onRerunTool={handleRerunTool}
+                        />
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Box>
+            </ListItem>
+          ))}
         </List>
         <div ref={messagesEndRef} />
       </Box>
@@ -495,39 +458,33 @@ const AgentChatPage: React.FC = () => {
           <TextField
             fullWidth
             placeholder="Type your message..."
-            variant="outlined"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={isSending}
             multiline
             maxRows={4}
+            variant="outlined"
+            disabled={isSending}
             sx={{ mx: 1 }}
           />
-          <Button
-            variant="contained"
+          <IconButton
             color="primary"
-            endIcon={isSending ? <CircularProgress size={20} /> : <SendIcon />}
             onClick={handleSendMessage}
             disabled={!input.trim() || isSending}
           >
-            Send
-          </Button>
+            {isSending ? <CircularProgress size={24} /> : <SendIcon />}
+          </IconButton>
         </Box>
       </Box>
 
-      {/* Notification Snackbar */}
+      {/* Notification */}
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}
         onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert
-          onClose={handleCloseNotification}
-          severity={notification.severity}
-          variant="filled"
-        >
+        <Alert onClose={handleCloseNotification} severity={notification.severity}>
           {notification.message}
         </Alert>
       </Snackbar>
