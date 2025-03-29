@@ -81,6 +81,43 @@ This will start both the Express server and the React development server.
 
 For detailed usage instructions, please refer to the [User Guide](./documentation/user/user_guide.md).
 
+## Testing
+
+The project includes comprehensive test suites for both client and server components.
+
+### Running Tests
+
+#### Client Tests
+```bash
+cd client
+npm test
+```
+
+#### Server Tests
+```bash
+cd server
+npm test
+```
+
+### Test Coverage
+
+To run tests with coverage reports:
+
+```bash
+# Client coverage
+cd client
+npm test -- --coverage
+
+# Server coverage
+cd server
+npm test -- --coverage
+```
+
+### Known Test Issues
+
+- Some integration tests are currently skipped and need implementation
+- See [Issues Documentation](./documentation/developer/ISSUES.md) for details on test-related issues
+
 ## Configuration
 
 ### Environment Variables
