@@ -315,11 +315,11 @@ describe('ChatInterface Component', () => {
     
     // Check that the user message is displayed
     await waitFor(() => {
-      const userMessage = screen.getByTestId('message-role');
-      expect(userMessage.textContent).toBe('user');
+      const userMessages = screen.getAllByTestId('message-role');
+      expect(userMessages[0].textContent).toBe('user');
       
-      const messageContent = screen.getByTestId('message-content');
-      expect(messageContent.textContent).toBe('This will cause an error');
+      const messageContents = screen.getAllByTestId('message-content');
+      expect(messageContents[0].textContent).toBe('This will cause an error');
     });
     
     // Check that an assistant message is added (which would be the error message)
