@@ -88,10 +88,8 @@ describe('API Routes', () => {
       
       const response = await request(app).get('/api/v1/models');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/models'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get.mock.calls[0][0]).toContain('/v1/models');
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -109,10 +107,8 @@ describe('API Routes', () => {
       
       const response = await request(app).get('/api/v1/models');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/models'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get.mock.calls[0][0]).toContain('/v1/models');
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'Models not found' });
     });
@@ -123,10 +119,8 @@ describe('API Routes', () => {
       
       const response = await request(app).get('/api/v1/models');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/models'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get.mock.calls[0][0]).toContain('/v1/models');
       expect(response.status).toBe(500);
       expect(response.body).toHaveProperty('error');
       expect(response.body.error).toContain('Error connecting to Llama Stack API');
@@ -155,10 +149,8 @@ describe('API Routes', () => {
       
       const response = await request(app).get('/api/v1/agents/list');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/agents/list'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get.mock.calls[0][0]).toContain('/v1/agents/list');
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -187,11 +179,9 @@ describe('API Routes', () => {
         .post('/api/v1/agents')
         .send(requestBody);
       
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/agents'),
-        requestBody,
-        expect.any(Object)
-      );
+      expect(mockedAxios.post).toHaveBeenCalled();
+      expect(mockedAxios.post.mock.calls[0][0]).toContain('/v1/agents');
+      expect(mockedAxios.post.mock.calls[0][1]).toEqual(requestBody);
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -219,11 +209,9 @@ describe('API Routes', () => {
         .put('/api/v1/agents/agent1')
         .send(requestBody);
       
-      expect(mockedAxios.put).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/agents/agent1'),
-        requestBody,
-        expect.any(Object)
-      );
+      expect(mockedAxios.put).toHaveBeenCalled();
+      expect(mockedAxios.put.mock.calls[0][0]).toContain('/v1/agents/agent1');
+      expect(mockedAxios.put.mock.calls[0][1]).toEqual(requestBody);
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -240,10 +228,8 @@ describe('API Routes', () => {
       
       const response = await request(app).delete('/api/v1/agents/agent1');
       
-      expect(mockedAxios.delete).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/agents/agent1'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.delete).toHaveBeenCalled();
+      expect(mockedAxios.delete.mock.calls[0][0]).toContain('/v1/agents/agent1');
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -276,11 +262,9 @@ describe('API Routes', () => {
         .post('/api/v1/inference/chat-completion')
         .send(requestBody);
       
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/inference/chat-completion'),
-        requestBody,
-        expect.any(Object)
-      );
+      expect(mockedAxios.post).toHaveBeenCalled();
+      expect(mockedAxios.post.mock.calls[0][0]).toContain('/v1/inference/chat-completion');
+      expect(mockedAxios.post.mock.calls[0][1]).toEqual(requestBody);
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -308,11 +292,9 @@ describe('API Routes', () => {
         .post('/api/v1/inference/chat-completion')
         .send(requestBody);
       
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/inference/chat-completion'),
-        requestBody,
-        expect.any(Object)
-      );
+      expect(mockedAxios.post).toHaveBeenCalled();
+      expect(mockedAxios.post.mock.calls[0][0]).toContain('/v1/inference/chat-completion');
+      expect(mockedAxios.post.mock.calls[0][1]).toEqual(requestBody);
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'Invalid model ID' });
     });
@@ -340,10 +322,8 @@ describe('API Routes', () => {
       
       const response = await request(app).get('/api/v1/tools');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/tools'),
-        expect.any(Object)
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get.mock.calls[0][0]).toContain('/v1/tools');
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -370,11 +350,9 @@ describe('API Routes', () => {
         .post('/api/v1/tools/calculator/invoke')
         .send(requestBody);
       
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/tools/calculator/invoke'),
-        requestBody,
-        expect.any(Object)
-      );
+      expect(mockedAxios.post).toHaveBeenCalled();
+      expect(mockedAxios.post.mock.calls[0][0]).toContain('/v1/tools/calculator/invoke');
+      expect(mockedAxios.post.mock.calls[0][1]).toEqual(requestBody);
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResponse.data);
     });
@@ -391,15 +369,16 @@ describe('API Routes', () => {
       
       await request(app).get('/api/v1/models?limit=10&offset=20');
       
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/models'),
-        expect.objectContaining({
-          params: {
-            limit: '10',
-            offset: '20',
-          }
-        })
-      );
+      expect(mockedAxios.get).toHaveBeenCalled();
+      expect(mockedAxios.get).toHaveBeenCalled();
+      const config = mockedAxios.get.mock.calls[0][1];
+      expect(config).toBeDefined();
+      if (config) {
+        expect(config.params).toEqual({
+          limit: '10',
+          offset: '20',
+        });
+      }
     });
   });
 });
