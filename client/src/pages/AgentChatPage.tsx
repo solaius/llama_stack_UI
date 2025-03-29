@@ -163,10 +163,14 @@ const AgentChatPage: React.FC = () => {
         messagesToSend
       );
       
+      // Add an empty assistant message to the UI immediately
       let assistantMessage: Message = {
         role: 'assistant',
         content: ''
       };
+      
+      // Add the empty assistant message to the UI
+      setMessages(prevMessages => [...prevMessages, assistantMessage]);
       
       let currentToolCalls: ToolCall[] = [];
       
