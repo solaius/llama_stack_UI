@@ -1,5 +1,5 @@
 import axios from 'axios';
-import SSE from 'sse.js';
+import { SSE } from 'sse.js';
 
 // Get API URL from localStorage or use default
 const getApiBaseUrl = () => {
@@ -844,12 +844,12 @@ export const apiService = {
       console.log('SSE connection opened');
     });
     
-    sse.addEventListener('message', (e) => {
+    sse.addEventListener('message', (e: MessageEvent) => {
       console.log('SSE message received:', e);
     });
     
     // Start the connection
-    sse.addEventListener('error', (e) => {
+    sse.addEventListener('error', (e: Event) => {
       console.error('SSE error:', e);
     });
     
