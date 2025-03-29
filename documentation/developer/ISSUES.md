@@ -75,6 +75,20 @@ This document outlines the current issues and todos that are blocked due to limi
    - Implemented simulated tool execution in the chat interface
    - Added UI components that will work with real API data when available
 
+## Testing Issues
+
+1. **Integration Tests Need Implementation**
+   - Integration tests for `AgentCreationAndChat` are currently skipped
+   - Integration tests for `ToolUsageFlow` are currently skipped
+   - Need to implement proper mocking for complex component interactions
+   - Tests should verify end-to-end user flows
+
+2. **Test Coverage Improvements Needed**
+   - Current test coverage is incomplete
+   - Need more comprehensive unit tests for components
+   - Need to add tests for error handling scenarios
+   - Should add tests for streaming functionality
+
 ## Next Steps Once API Issues Are Resolved
 
 1. **Replace Mock Data**
@@ -92,3 +106,8 @@ This document outlines the current issues and todos that are blocked due to limi
 4. **Improve Error Handling**
    - Add more specific error messages based on API responses
    - Implement recovery mechanisms for API failures
+
+5. **Complete Agent Chat Functionality**
+   - Implement full agent chat functionality
+   - AgentChatPage is currently a placeholder and needs to be fully implemented
+   - Add support for agent-specific tools and configurations

@@ -16,6 +16,12 @@ The project follows a client-server architecture:
 
 The application has been significantly enhanced with improved API integration, agent management features, and a dedicated chat interface. The proxy connection issues have been resolved, and the application now supports direct communication with the Llama Stack API.
 
+### Key Functionality Working
+- Streaming and non-streaming chat with models is fully functional
+- Agent management (create, read, update, delete) is working
+- Tool discovery and basic tool usage in chat is implemented
+- Theme switching and UI customization is complete
+
 ## Completed Tasks
 
 - [x] **Project Structure**
@@ -221,11 +227,34 @@ The application has been significantly enhanced with improved API integration, a
 
 ## Next Steps
 
-1. Complete the agent session management features
-2. Implement advanced chat features (file uploads, tool usage)
-3. Add unit and integration tests
-4. Improve documentation and help features
-5. Prepare for production deployment
+1. **Implement Agent Chat Functionality**
+   - The AgentChatPage is currently a placeholder and needs to be fully implemented
+   - Add support for agent-specific sessions and conversation history
+   - Implement agent-specific tool usage and configurations
+
+2. **Complete the agent session management features**
+   - Add proper session creation, listing, and management
+   - Implement session persistence options
+
+3. **Implement advanced chat features**
+   - Add support for file uploads and processing
+   - Enhance tool usage with better UI feedback
+   - Implement chat history export and sharing
+
+4. **Add unit and integration tests**
+   - Fix skipped integration tests for AgentCreationAndChat and ToolUsageFlow
+   - Improve test coverage for components
+   - Add tests for error handling scenarios
+
+5. **Improve documentation and help features**
+   - Add more comprehensive user documentation
+   - Implement in-app help and tooltips
+   - Create developer documentation for API integration
+
+6. **Prepare for production deployment**
+   - Optimize bundle size and performance
+   - Add proper error logging and monitoring
+   - Configure CI/CD pipeline for automated deployment
 
 ## Conclusion
 
