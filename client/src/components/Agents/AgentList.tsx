@@ -30,7 +30,7 @@ import {
   Description as DescriptionIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { Agent } from '../../services/api';
+import { Agent, apiService } from '../../services/api';
 
 interface AgentListProps {
   agents: Agent[];
@@ -293,10 +293,19 @@ const AgentList: React.FC<AgentListProps> = ({
                       >
                         <Tooltip title="Chat with Agent">
                           <IconButton 
-                            onClick={() => {
-                              // Create a new session and navigate to chat
-                              const sessionId = `session-${Date.now()}`;
-                              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                            onClick={async () => {
+                              try {
+                                // Create a new session using the API
+                                const sessionName = `Chat with ${agent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                                const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, sessionName);
+                                console.log(`Created session with ID: ${sessionId}`);
+                                
+                                // Navigate to chat with the new session
+                                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                              } catch (error) {
+                                console.error('Error creating session:', error);
+                                alert('Failed to create session. Please try again.');
+                              }
                             }} 
                             size="small"
                             color="success"

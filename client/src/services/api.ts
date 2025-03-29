@@ -826,7 +826,19 @@ export const apiService = {
     const url = `${api.defaults.baseURL}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`;
     console.log('Creating SSE connection to:', url);
     
-    const sse = new SSE(url, {
+    // Create a custom EventSource-like object
+    const eventSource = {
+      onmessage: null as ((event: any) => void) | null,
+      onerror: null as ((error: any) => void) | null,
+      close: () => {
+        if (source) {
+          source.close();
+        }
+      }
+    };
+    
+    // Create the SSE instance
+    const source = new SSE(url, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -840,23 +852,32 @@ export const apiService = {
     });
     
     // Add event listeners for debugging
-    sse.addEventListener('open', () => {
+    source.addEventListener('open', () => {
       console.log('SSE connection opened');
     });
     
-    sse.addEventListener('message', (e: any) => {
+    // Forward SSE messages to the EventSource-like object
+    source.addEventListener('message', (e: any) => {
       console.log('SSE message received:', e);
+      if (eventSource.onmessage) {
+        eventSource.onmessage(e);
+      }
+    });
+    
+    // Forward SSE errors to the EventSource-like object
+    source.addEventListener('error', (e: any) => {
+      console.error('SSE error:', e);
+      if (eventSource.onerror) {
+        eventSource.onerror(e);
+      }
     });
     
     // Start the connection
-    sse.addEventListener('error', (e: any) => {
-      console.error('SSE error:', e);
-    });
-    
-    // Return the SSE instance which has the same interface as EventSource
     console.log('Starting SSE stream');
-    sse.stream();
-    return sse;
+    source.stream();
+    
+    // Return the EventSource-like object
+    return eventSource as unknown as EventSource;
   }
   
 };
