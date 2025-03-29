@@ -58,7 +58,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://192.168.1.17:8321",
+  "proxy": "http://localhost:8000",
   "devDependencies": {
     "jest-mock-axios": "^4.8.0",
     "react-router-dom": "^7.4.1"

@@ -1,10 +1,16 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
+require('dotenv').config();
+
+// Get the Llama Stack API URL from environment variable or use a default
+const LLAMA_STACK_API_URL = process.env.REACT_APP_LLAMA_STACK_API_URL || 'http://localhost:8000';
+
+console.log('Using Llama Stack API URL:', LLAMA_STACK_API_URL);
 
 module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://192.168.1.17:8321',
+      target: LLAMA_STACK_API_URL,
       changeOrigin: true,
       pathRewrite: {
         '^/api': '', // remove /api prefix when forwarding to target
@@ -27,7 +33,7 @@ module.exports = function(app) {
   app.use(
     '/v1',
     createProxyMiddleware({
-      target: 'http://192.168.1.17:8321',
+      target: LLAMA_STACK_API_URL,
       changeOrigin: true,
       onProxyReq: (proxyReq, req, res) => {
         // Log proxy requests
