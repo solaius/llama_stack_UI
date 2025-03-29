@@ -172,7 +172,7 @@ const AgentChatPage: React.FC = () => {
       
       // Handle streaming events
       console.log('Setting up onmessage handler');
-      eventSource.onmessage = (event: MessageEvent) => {
+      eventSource.onmessage = (event: any) => {
         console.log('Received SSE event:', event);
         try {
           const data = JSON.parse(event.data);
@@ -263,7 +263,7 @@ const AgentChatPage: React.FC = () => {
         }
       };
       
-      eventSource.onerror = (error: Event) => {
+      eventSource.onerror = (error: any) => {
         console.error('Streaming error:', error);
         eventSource.close();
         setIsSending(false);

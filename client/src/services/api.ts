@@ -844,12 +844,12 @@ export const apiService = {
       console.log('SSE connection opened');
     });
     
-    sse.addEventListener('message', (e: MessageEvent) => {
+    sse.addEventListener('message', (e: any) => {
       console.log('SSE message received:', e);
     });
     
     // Start the connection
-    sse.addEventListener('error', (e: Event) => {
+    sse.addEventListener('error', (e: any) => {
       console.error('SSE error:', e);
     });
     
