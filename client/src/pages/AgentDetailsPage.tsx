@@ -118,24 +118,15 @@ const AgentDetailsPage: React.FC = () => {
         const agentData = await apiService.getAgent(agentId);
         setAgent(agentData);
         
-        // For now, we'll use mock sessions since the API doesn't support listing sessions
-        // In a real implementation, you would fetch sessions from the API
-        const mockSessions: SessionInfo[] = [
-          {
-            session_id: 'session-1',
-            session_name: 'Test Session 1',
-            turns: [],
-            started_at: new Date().toISOString()
-          },
-          {
-            session_id: 'session-2',
-            session_name: 'Test Session 2',
-            turns: [],
-            started_at: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-          }
-        ];
-        
-        setSessions(mockSessions);
+        // Fetch sessions from the API
+        try {
+          const sessionsList = await apiService.listAgentSessions(agentId);
+          setSessions(sessionsList);
+        } catch (error) {
+          console.error('Error fetching sessions:', error);
+          // If there's an error, set an empty array
+          setSessions([]);
+        }
       } catch (error) {
         console.error('Error fetching agent details:', error);
         setNotification({

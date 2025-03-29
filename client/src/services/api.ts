@@ -756,6 +756,20 @@ export const apiService = {
     }
   },
   
+  // List all sessions for an agent
+  listAgentSessions: async (agentId: string): Promise<SessionInfo[]> => {
+    try {
+      console.log(`Listing sessions for agent ${agentId}`);
+      const response = await api.get(`/v1/agents/${agentId}/sessions`);
+      console.log('List sessions response:', response.data);
+      return response.data.sessions || [];
+    } catch (error) {
+      console.error(`Error listing sessions for agent ${agentId}:`, error);
+      // If the API doesn't support listing sessions yet, return an empty array
+      return [];
+    }
+  },
+  
   // Delete a session
   deleteAgentSession: async (agentId: string, sessionId: string): Promise<void> => {
     try {
