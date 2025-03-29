@@ -13,8 +13,15 @@ export function setupApiRoutes(app: express.Application, llamaStackApiUrl: strin
   // Proxy GET requests to Llama Stack API
   app.get('/api/v1/*', async (req: Request, res: Response) => {
     try {
-      const endpoint = req.path.replace('/api', '');
+      let endpoint = req.path.replace('/api', '');
       const params = req.query;
+      
+      // Fix for session/sessions issue - rewrite URLs with 'sessions' to use 'session'
+      if (endpoint.includes('/agents/') && endpoint.includes('/sessions/')) {
+        const newEndpoint = endpoint.replace('/sessions/', '/session/');
+        console.log(`Rewriting path from ${endpoint} to ${newEndpoint}`);
+        endpoint = newEndpoint;
+      }
       
       console.log(`Proxying GET request to ${endpoint}`);
       
@@ -38,7 +45,15 @@ export function setupApiRoutes(app: express.Application, llamaStackApiUrl: strin
   // Proxy POST requests to Llama Stack API
   app.post('/api/v1/*', async (req: Request, res: Response) => {
     try {
-      const endpoint = req.path.replace('/api', '');
+      let endpoint = req.path.replace('/api', '');
+      
+      // Fix for session/sessions issue - rewrite URLs with 'sessions' to use 'session'
+      if (endpoint.includes('/agents/') && endpoint.includes('/sessions/')) {
+        const newEndpoint = endpoint.replace('/sessions/', '/session/');
+        console.log(`Rewriting path from ${endpoint} to ${newEndpoint}`);
+        endpoint = newEndpoint;
+      }
+      
       const targetUrl = new URL(`${llamaStackApiUrl}${endpoint}`);
       const isStreaming = req.query.stream === 'true';
 
