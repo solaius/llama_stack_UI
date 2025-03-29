@@ -449,6 +449,7 @@ const AgentChatPage: React.FC = () => {
                 message={message} 
                 isLast={index === messages.length - 1 && message.role === 'assistant'} 
               />
+            </ListItem>
           ))}
         </List>
         <div ref={messagesEndRef} />
