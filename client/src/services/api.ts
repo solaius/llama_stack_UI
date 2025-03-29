@@ -1,4 +1,5 @@
 import axios from 'axios';
+import SSE from 'sse.js';
 
 // Get API URL from localStorage or use default
 const getApiBaseUrl = () => {
@@ -821,86 +822,28 @@ export const apiService = {
     console.log(`Creating streaming turn for session ${sessionId}, agent ${agentId}`);
     console.log('Streaming turn request:', { messages, documents, toolgroups });
     
-    // We need to use fetch with POST instead of EventSource directly
-    // because EventSource only supports GET requests
-    const controller = new AbortController();
-    const signal = controller.signal;
-    
-    // Create a custom EventSource-like object
-    const customEventSource = {
-      onmessage: null as ((event: any) => void) | null,
-      onerror: null as ((error: any) => void) | null,
-      close: () => {
-        controller.abort();
-      }
-    };
-    
-    // Make the fetch request
-    fetch(`${api.defaults.baseURL}/v1/agents/${agentId}/session/${sessionId}/turn`, {
-      method: 'POST',
+    // Create a new EventSource for SSE
+    const sse = new SSE(`${api.defaults.baseURL}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`, {
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream'
       },
-      body: JSON.stringify({
+      method: 'POST',
+      payload: JSON.stringify({
         messages,
         stream: true,
         documents,
         toolgroups
-      }),
-      signal
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Get the reader from the response body
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
-      
-      // Read the stream
-      function read() {
-        reader.read().then(({ done, value }) => {
-          if (done) {
-            return;
-          }
-          
-          // Decode the chunk
-          const chunk = decoder.decode(value, { stream: true });
-          
-          // Split the chunk into lines
-          const lines = chunk.split('\n');
-          
-          // Process each line
-          for (const line of lines) {
-            if (line.startsWith('data:')) {
-              const data = line.substring(5).trim();
-              if (data && customEventSource.onmessage) {
-                customEventSource.onmessage({ data });
-              }
-            }
-          }
-          
-          // Continue reading
-          read();
-        }).catch(error => {
-          if (customEventSource.onerror) {
-            customEventSource.onerror(error);
-          }
-        });
-      }
-      
-      // Start reading
-      read();
-    })
-    .catch(error => {
-      if (customEventSource.onerror) {
-        customEventSource.onerror(error);
-      }
+      })
     });
     
-    return customEventSource as unknown as EventSource;
+    // Start the connection
+    sse.addEventListener('error', (e) => {
+      console.error('SSE error:', e);
+    });
+    
+    // Return the SSE instance which has the same interface as EventSource
+    sse.stream();
+    return sse;
   }
   
 };
