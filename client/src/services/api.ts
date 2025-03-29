@@ -731,7 +731,7 @@ export const apiService = {
   createAgentSession: async (agentId: string, sessionName: string): Promise<string> => {
     try {
       console.log(`Creating session for agent ${agentId} with name "${sessionName}"`);
-      const response = await api.post(`/v1/agents/${agentId}/session`, {
+      const response = await api.post(`/v1/agents/${agentId}/sessions`, {
         session_name: sessionName
       });
       
@@ -747,7 +747,7 @@ export const apiService = {
   getAgentSession: async (agentId: string, sessionId: string): Promise<SessionInfo> => {
     try {
       console.log(`Getting session ${sessionId} for agent ${agentId}`);
-      const response = await api.get(`/v1/agents/${agentId}/session/${sessionId}`);
+      const response = await api.get(`/v1/agents/${agentId}/sessions/${sessionId}`);
       console.log('Get session response:', response.data);
       return response.data;
     } catch (error) {
@@ -760,7 +760,7 @@ export const apiService = {
   deleteAgentSession: async (agentId: string, sessionId: string): Promise<void> => {
     try {
       console.log(`Deleting session ${sessionId} for agent ${agentId}`);
-      await api.delete(`/v1/agents/${agentId}/session/${sessionId}`);
+      await api.delete(`/v1/agents/${agentId}/sessions/${sessionId}`);
       console.log(`Session ${sessionId} deleted successfully`);
     } catch (error) {
       console.error(`Error deleting session ${sessionId} for agent ${agentId}:`, error);
@@ -781,7 +781,7 @@ export const apiService = {
       console.log(`Creating turn for session ${sessionId}, agent ${agentId}`);
       console.log('Turn request:', { messages, stream, documents, toolgroups });
       
-      const response = await api.post(`/v1/agents/${agentId}/session/${sessionId}/turn`, {
+      const response = await api.post(`/v1/agents/${agentId}/sessions/${sessionId}/turn`, {
         messages,
         stream,
         documents,
