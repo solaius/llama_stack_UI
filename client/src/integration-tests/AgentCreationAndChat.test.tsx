@@ -15,8 +15,8 @@ jest.mock('../pages/AgentChatPage', () => ({
 }));
 
 // Import the mocked components
-import AgentsPage from '../pages/AgentsPage';
-import AgentChatPage from '../pages/AgentChatPage';
+const AgentsPage = jest.requireMock('../pages/AgentsPage').default;
+const AgentChatPage = jest.requireMock('../pages/AgentChatPage').default;
 
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = jest.fn();
