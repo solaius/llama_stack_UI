@@ -155,36 +155,99 @@ const AgentChatPage: React.FC = () => {
         .filter(msg => msg.role !== 'system')
         .concat(userMessage);
       
-      // Create a turn with the Llama Stack API
-      const turnResponse = await apiService.createAgentTurn(
+      // Create a streaming event source for the agent turn
+      const eventSource = apiService.createStreamingAgentTurn(
         agentId,
         sessionId,
-        messagesToSend,
-        false // Non-streaming for now
+        messagesToSend
       );
       
-      console.log('Turn response:', turnResponse);
+      let assistantMessage: Message = {
+        role: 'assistant',
+        content: ''
+      };
       
-      // Add the assistant's response to the chat
-      if (turnResponse.output_message) {
-        setMessages(prevMessages => [...prevMessages, turnResponse.output_message]);
-        
-        // Extract tool calls from the response
-        if (turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) {
-          setToolCalls(prevToolCalls => [
-            ...prevToolCalls,
-            ...(turnResponse.output_message.tool_calls || [])
-          ]);
+      let currentToolCalls: ToolCall[] = [];
+      
+      // Handle streaming events
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Streaming event:', data);
+          
+          if (data.event && data.event.event_type === 'progress') {
+            // Update the assistant's message with the new content
+            if (data.event.delta && data.event.delta.text) {
+              assistantMessage.content += data.event.delta.text;
+              
+              // Update the message in the UI
+              setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                const lastIndex = newMessages.length - 1;
+                
+                // If the last message is from the assistant, update it
+                // Otherwise, add a new assistant message
+                if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                  newMessages[lastIndex] = { ...assistantMessage };
+                } else {
+                  newMessages.push({ ...assistantMessage });
+                }
+                
+                return newMessages;
+              });
+            }
+            
+            // Handle tool calls
+            if (data.event.delta && data.event.delta.tool_calls) {
+              currentToolCalls = [...currentToolCalls, ...data.event.delta.tool_calls];
+              
+              // Update the assistant's message with the tool calls
+              assistantMessage.tool_calls = currentToolCalls;
+              
+              // Update the tool calls in the UI
+              setToolCalls(prevToolCalls => [
+                ...prevToolCalls,
+                ...data.event.delta.tool_calls
+              ]);
+              
+              // Update the message in the UI
+              setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                const lastIndex = newMessages.length - 1;
+                
+                // If the last message is from the assistant, update it
+                // Otherwise, add a new assistant message
+                if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                  newMessages[lastIndex] = { ...assistantMessage };
+                } else {
+                  newMessages.push({ ...assistantMessage });
+                }
+                
+                return newMessages;
+              });
+            }
+          } else if (data.event && data.event.event_type === 'end') {
+            // Handle the end of the stream
+            console.log('Stream ended:', data);
+            eventSource.close();
+            setIsSending(false);
+          }
+        } catch (error) {
+          console.error('Error parsing streaming event:', error);
         }
-      }
+      };
       
-      // Extract tool results from the response
-      if (turnResponse.tool_results && turnResponse.tool_results.length > 0) {
-        setToolResults(prevToolResults => [
-          ...prevToolResults,
-          ...(turnResponse.tool_results || [])
-        ]);
-      }
+      eventSource.onerror = (error) => {
+        console.error('Streaming error:', error);
+        eventSource.close();
+        setIsSending(false);
+        
+        setNotification({
+          open: true,
+          message: 'Error in streaming response. Please try again.',
+          severity: 'error'
+        });
+      };
     } catch (error) {
       console.error('Error sending message:', error);
       setNotification({
@@ -192,7 +255,6 @@ const AgentChatPage: React.FC = () => {
         message: 'Failed to send message. Please try again.',
         severity: 'error'
       });
-    } finally {
       setIsSending(false);
     }
   };
