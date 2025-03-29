@@ -4,28 +4,29 @@ import ChatMessage from './ChatMessage';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import { Message, ToolCall } from '../../services/api';
 
-// Mock the SyntaxHighlighter component
-jest.mock('react-syntax-highlighter', () => {
-  return {
-    __esModule: true,
-    default: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid="syntax-highlighter">{children}</div>
-    ),
-  };
-});
+// Mock the SyntaxHighlighter component and styles
+jest.mock('react-syntax-highlighter', () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="syntax-highlighter">{children}</div>
+  ),
+}));
+
+jest.mock('react-syntax-highlighter/dist/esm/styles/hljs', () => ({
+  docco: {},
+  dark: {},
+}));
 
 // Mock the useTheme hook
-jest.mock('../../contexts/ThemeContext', () => {
-  return {
-    useTheme: () => ({
-      mode: 'light',
-      toggleColorMode: jest.fn(),
-    }),
-    ThemeProvider: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid="theme-provider">{children}</div>
-    ),
-  };
-});
+jest.mock('../../contexts/ThemeContext', () => ({
+  useTheme: () => ({
+    mode: 'light',
+    toggleColorMode: jest.fn(),
+  }),
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
+}));
 
 describe('ChatMessage Component', () => {
   const renderChatMessage = (message: Message, isLast: boolean = false) => {

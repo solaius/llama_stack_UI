@@ -8,6 +8,9 @@ import { setupApiRoutes } from './api';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+// Set a default base URL for tests
+const TEST_API_URL = 'http://mock-llama-api.com';
+
 describe('API Routes', () => {
   let app: express.Application;
 
@@ -17,11 +20,40 @@ describe('API Routes', () => {
     app.use(cors());
     app.use(express.json());
     
-    // Set up the API routes
-    setupApiRoutes(app);
+    // Set up the API routes with our test URL
+    setupApiRoutes(app, TEST_API_URL);
     
     // Reset all mocks
     jest.clearAllMocks();
+    
+    // Set default mock implementations
+    mockedAxios.get.mockImplementation((url, config) => {
+      return Promise.resolve({
+        status: 200,
+        data: { success: true }
+      });
+    });
+    
+    mockedAxios.post.mockImplementation((url, data, config) => {
+      return Promise.resolve({
+        status: 200,
+        data: { success: true }
+      });
+    });
+    
+    mockedAxios.put.mockImplementation((url, data, config) => {
+      return Promise.resolve({
+        status: 200,
+        data: { success: true }
+      });
+    });
+    
+    mockedAxios.delete.mockImplementation((url, config) => {
+      return Promise.resolve({
+        status: 200,
+        data: { success: true }
+      });
+    });
   });
 
   describe('Health Check Endpoint', () => {
