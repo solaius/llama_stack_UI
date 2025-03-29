@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
+import ChatMessage from '../components/Chat/ChatMessage';
 
 const AgentChatPage: React.FC = () => {
   const { agentId, sessionId } = useParams<{ agentId: string; sessionId: string }>();
@@ -438,59 +439,16 @@ const AgentChatPage: React.FC = () => {
             <ListItem
               key={index}
               sx={{
-                display: 'flex',
-                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                mb: 2
+                display: 'block',
+                width: '100%',
+                mb: 1
               }}
             >
-              <Box
-                sx={{
-                  display: 'flex',
-                  maxWidth: '70%',
-                  flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
-                }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: message.role === 'user' ? 'primary.main' : 'secondary.main',
-                    mr: message.role === 'user' ? 0 : 1,
-                    ml: message.role === 'user' ? 1 : 0
-                  }}
-                >
-                  {message.role === 'user' ? 'U' : 'A'}
-                </Avatar>
-                <Card
-                  sx={{
-                    borderRadius: 2,
-                    bgcolor: message.role === 'user' ? 'primary.light' : 'background.paper'
-                  }}
-                >
-                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: message.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                        whiteSpace: 'pre-wrap'
-                      }}
-                    >
-                      {message.content}
-                    </Typography>
-                    
-                    {message.tool_calls && message.tool_calls.length > 0 && (
-                      <Box sx={{ mt: 2, color: 'text.primary' }}>
-                        <ToolUsageDisplay 
-                          toolCalls={message.tool_calls}
-                          toolResults={toolResults.filter(result => 
-                            message.tool_calls?.some(call => call.id === result.tool_call_id)
-                          )}
-                          onRerunTool={handleRerunTool}
-                        />
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Box>
-            </ListItem>
+              {/* Use the ChatMessage component */}
+              <ChatMessage 
+                message={message} 
+                isLast={index === messages.length - 1 && message.role === 'assistant'} 
+              />
           ))}
         </List>
         <div ref={messagesEndRef} />
