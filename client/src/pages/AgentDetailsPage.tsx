@@ -161,12 +161,13 @@ const AgentDetailsPage: React.FC = () => {
     try {
       setIsCreatingSession(true);
       
-      // In a real implementation, you would call the API to create a session
-      // const sessionId = await apiService.createAgentSession(agentId, newSessionName);
+      // Call the API to create a session
+      const sessionId = await apiService.createAgentSession(agentId, newSessionName);
+      console.log(`Created session with ID: ${sessionId}`);
       
-      // For now, we'll create a mock session
+      // Create a session object with the returned session ID
       const newSession: SessionInfo = {
-        session_id: `session-${Date.now()}`,
+        session_id: sessionId,
         session_name: newSessionName,
         turns: [],
         started_at: new Date().toISOString()
@@ -295,10 +296,23 @@ const AgentDetailsPage: React.FC = () => {
             variant="contained"
             color="success"
             startIcon={<ChatIcon />}
-            onClick={() => {
-              // Create a new session and navigate to chat
-              const sessionId = `session-${Date.now()}`;
-              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+            onClick={async () => {
+              try {
+                // Create a new session using the API
+                const sessionName = `Chat with ${agent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, sessionName);
+                console.log(`Created session with ID: ${sessionId}`);
+                
+                // Navigate to chat with the new session
+                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              } catch (error) {
+                console.error('Error creating session:', error);
+                setNotification({
+                  open: true,
+                  message: 'Failed to create session. Please try again.',
+                  severity: 'error'
+                });
+              }
             }}
             sx={{ 
               borderRadius: 2,
@@ -758,10 +772,23 @@ const AgentDetailsPage: React.FC = () => {
               variant="contained"
               color="success"
               startIcon={<ChatIcon />}
-              onClick={() => {
-                // Create a new session and navigate to chat
-                const sessionId = `session-${Date.now()}`;
-                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              onClick={async () => {
+                try {
+                  // Create a new session using the API
+                  const sessionName = `Chat with ${agent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                  const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, sessionName);
+                  console.log(`Created session with ID: ${sessionId}`);
+                  
+                  // Navigate to chat with the new session
+                  navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                } catch (error) {
+                  console.error('Error creating session:', error);
+                  setNotification({
+                    open: true,
+                    message: 'Failed to create session. Please try again.',
+                    severity: 'error'
+                  });
+                }
               }}
               sx={{ 
                 borderRadius: 2,
@@ -794,10 +821,23 @@ const AgentDetailsPage: React.FC = () => {
                 variant="contained"
                 color="success"
                 startIcon={<ChatIcon />}
-                onClick={() => {
-                  // Create a new session and navigate to chat
-                  const sessionId = `session-${Date.now()}`;
-                  navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                onClick={async () => {
+                  try {
+                    // Create a new session using the API
+                    const sessionName = `Chat with ${agent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                    const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, sessionName);
+                    console.log(`Created session with ID: ${sessionId}`);
+                    
+                    // Navigate to chat with the new session
+                    navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                  } catch (error) {
+                    console.error('Error creating session:', error);
+                    setNotification({
+                      open: true,
+                      message: 'Failed to create session. Please try again.',
+                      severity: 'error'
+                    });
+                  }
                 }}
               >
                 Start chatting now
