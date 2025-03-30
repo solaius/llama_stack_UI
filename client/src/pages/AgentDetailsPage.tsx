@@ -399,19 +399,67 @@ const AgentDetailsPage: React.FC = () => {
             />
           </Box>
         </Box>
-        <Box p={3}>
+
+      </Paper>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          aria-label="agent details tabs"
+          sx={{
+            '& .MuiTab-root': {
+              fontWeight: 'bold',
+              transition: 'all 0.2s',
+              '&:hover': {
+                color: 'primary.main',
+                opacity: 1
+              }
+            },
+            '& .Mui-selected': {
+              color: 'primary.main',
+              fontWeight: 'bold'
+            },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: '3px 3px 0 0'
+            }
+          }}
+        >
+          <Tab label="Configuration" {...a11yProps(0)} />
+          <Tab label="JSON" {...a11yProps(1)} />
+          <Tab label="Sessions" {...a11yProps(2)} />
+          <Tab 
+            label="Tool Usage" 
+            {...a11yProps(3)} 
+            icon={<BuildIcon fontSize="small" />} 
+            iconPosition="start" 
+          />
+        </Tabs>
+      </Box>
+
+      <TabPanel value={tabValue} index={0}>
+        <Card 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2, 
+            boxShadow: 1,
+            overflow: 'hidden'
+          }}
+        >
           <Box 
             display="flex" 
             alignItems="center" 
             justifyContent="space-between" 
             mb={1}
             sx={{
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
               p: 2,
-              borderRadius: 1,
+              borderBottom: 1,
+              borderColor: 'divider',
               cursor: 'pointer',
               '&:hover': {
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)',
               }
             }}
             onClick={() => setSystemPromptExpanded(!systemPromptExpanded)}
@@ -455,16 +503,7 @@ const AgentDetailsPage: React.FC = () => {
             </Box>
           </Box>
           <Collapse in={systemPromptExpanded}>
-            <Paper 
-              variant="outlined" 
-              sx={{ 
-                p: 3, 
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
-                borderRadius: 2,
-                borderColor: 'divider',
-                mt: 1
-              }}
-            >
+            <Box p={3}>
               <Typography 
                 sx={{ 
                   whiteSpace: 'pre-wrap', 
@@ -474,63 +513,10 @@ const AgentDetailsPage: React.FC = () => {
               >
                 {agent.instructions}
               </Typography>
-            </Paper>
+            </Box>
           </Collapse>
-        </Box>
-      </Paper>
-
-      <Box 
-        sx={{ 
-          borderBottom: 2, 
-          borderColor: 'primary.main', 
-          mb: 3,
-          mt: 4,
-          boxShadow: (theme) => `0 4px 6px -1px ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.1)'}`,
-          borderRadius: '4px 4px 0 0',
-          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-        }}
-      >
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          aria-label="agent details tabs"
-          variant="fullWidth"
-          sx={{
-            '& .MuiTab-root': {
-              fontWeight: 'bold',
-              transition: 'all 0.2s',
-              py: 2,
-              fontSize: '0.95rem',
-              '&:hover': {
-                color: 'primary.main',
-                opacity: 1,
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-              }
-            },
-            '& .Mui-selected': {
-              color: 'primary.main',
-              fontWeight: 'bold',
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)'
-            },
-            '& .MuiTabs-indicator': {
-              height: 4,
-              borderRadius: '4px 4px 0 0'
-            }
-          }}
-        >
-          <Tab label="Configuration" {...a11yProps(0)} />
-          <Tab label="JSON" {...a11yProps(1)} />
-          <Tab label="Sessions" {...a11yProps(2)} />
-          <Tab 
-            label="Tool Usage" 
-            {...a11yProps(3)} 
-            icon={<BuildIcon fontSize="small" />} 
-            iconPosition="start" 
-          />
-        </Tabs>
-      </Box>
-
-      <TabPanel value={tabValue} index={0}>
+        </Card>
+        
         <Card 
           sx={{ 
             mb: 3, 
@@ -551,13 +537,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ 
-                color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
-                borderLeft: '4px solid',
-                borderColor: 'primary.main',
-                pl: 2,
-                py: 0.5
-              }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Sampling Parameters
             </Typography>
@@ -746,19 +726,7 @@ const AgentDetailsPage: React.FC = () => {
 
       <TabPanel value={tabValue} index={1}>
         <Box p={3}>
-          <Typography 
-            variant="h6" 
-            gutterBottom 
-            fontWeight="bold"
-            sx={{ 
-              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
-              borderLeft: '4px solid',
-              borderColor: 'primary.main',
-              pl: 2,
-              py: 0.5,
-              mb: 2
-            }}
-          >
+          <Typography variant="h6" gutterBottom fontWeight="bold">
             Agent Configuration JSON
           </Typography>
           <Paper 
@@ -800,13 +768,7 @@ const AgentDetailsPage: React.FC = () => {
           <Typography 
             variant="h6" 
             fontWeight="bold"
-            sx={{ 
-              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
-              borderLeft: '4px solid',
-              borderColor: 'primary.main',
-              pl: 2,
-              py: 0.5
-            }}
+            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
           >
             Sessions
           </Typography>
@@ -950,13 +912,7 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ 
-                color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
-                borderLeft: '4px solid',
-                borderColor: 'primary.main',
-                pl: 2,
-                py: 0.5
-              }}
+              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
               Tool Usage History
             </Typography>
