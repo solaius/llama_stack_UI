@@ -517,13 +517,15 @@ export const apiService = {
   createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
     try {
       // Format the sampling_params to match the API's expected structure
+      // The API accepts 'greedy', 'top_p', or 'top_k' as strategy types
       const formattedConfig = {
         ...agentConfig,
         sampling_params: {
+          // Use top_p strategy since we have temperature and top_p values
           strategy: {
-            type: "sample",
-            temperature: agentConfig.sampling_params?.temperature || 0.7,
-            top_p: agentConfig.sampling_params?.top_p || 0.9
+            type: "top_p",
+            p: agentConfig.sampling_params?.top_p || 0.9,
+            temperature: agentConfig.sampling_params?.temperature || 0.7
           },
           max_tokens: agentConfig.sampling_params?.max_tokens || 1024,
           repetition_penalty: agentConfig.sampling_params?.repetition_penalty || 1.0,
@@ -650,13 +652,15 @@ export const apiService = {
   updateAgent: async (agentId: string, agentConfig: Partial<AgentConfig>): Promise<Agent> => {
     try {
       // Format the sampling_params to match the API's expected structure
+      // The API accepts 'greedy', 'top_p', or 'top_k' as strategy types
       const formattedConfig = {
         ...agentConfig,
         sampling_params: agentConfig.sampling_params ? {
+          // Use top_p strategy since we have temperature and top_p values
           strategy: {
-            type: "sample",
-            temperature: agentConfig.sampling_params?.temperature || 0.7,
-            top_p: agentConfig.sampling_params?.top_p || 0.9
+            type: "top_p",
+            p: agentConfig.sampling_params?.top_p || 0.9,
+            temperature: agentConfig.sampling_params?.temperature || 0.7
           },
           max_tokens: agentConfig.sampling_params?.max_tokens || 1024,
           repetition_penalty: agentConfig.sampling_params?.repetition_penalty || 1.0,
