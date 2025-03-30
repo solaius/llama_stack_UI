@@ -24,7 +24,8 @@ import {
   TextField,
   Snackbar,
   Alert,
-  Tooltip
+  Tooltip,
+  Collapse
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -34,7 +35,8 @@ import {
   Refresh as RefreshIcon,
   Chat as ChatIcon,
   Build as BuildIcon,
-  ContentCopy as ContentCopyIcon
+  ContentCopy as ContentCopyIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import ToolUsageHistory from '../components/Agents/ToolUsageHistory';
 import { Agent, SessionInfo, apiService } from '../services/api';
@@ -79,6 +81,7 @@ const AgentDetailsPage: React.FC = () => {
   const [createSessionDialogOpen, setCreateSessionDialogOpen] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [systemPromptExpanded, setSystemPromptExpanded] = useState(false);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -304,7 +307,11 @@ const AgentDetailsPage: React.FC = () => {
             variant="h4" 
             gutterBottom 
             fontWeight="bold"
-            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+            sx={{ 
+              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+              textShadow: (theme) => theme.palette.mode === 'dark' ? '0 0 8px rgba(255, 255, 255, 0.3)' : '0 0 1px rgba(0, 0, 0, 0.3)',
+              letterSpacing: '0.5px'
+            }}
           >
             {agent.name || 'Unnamed Agent'}
           </Typography>
@@ -393,72 +400,121 @@ const AgentDetailsPage: React.FC = () => {
           </Box>
         </Box>
         <Box p={3}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+          <Box 
+            display="flex" 
+            alignItems="center" 
+            justifyContent="space-between" 
+            mb={1}
+            sx={{
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+              p: 2,
+              borderRadius: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+              }
+            }}
+            onClick={() => setSystemPromptExpanded(!systemPromptExpanded)}
+          >
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
-            >
-              System Prompt
-            </Typography>
-            <Tooltip title="Copy system prompt">
-              <IconButton 
-                size="small" 
-                onClick={() => handleCopyToClipboard(agent.instructions, "System prompt")}
-                sx={{ 
-                  '&:hover': { 
-                    color: 'primary.main',
-                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                  }
-                }}
-              >
-                <ContentCopyIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-          <Paper 
-            variant="outlined" 
-            sx={{ 
-              p: 3, 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
-              borderRadius: 2,
-              borderColor: 'divider'
-            }}
-          >
-            <Typography 
               sx={{ 
-                whiteSpace: 'pre-wrap', 
-                lineHeight: 1.6,
-                color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'
+                color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+                display: 'flex',
+                alignItems: 'center'
               }}
             >
-              {agent.instructions}
+              System Prompt
+              <ExpandMoreIcon 
+                sx={{ 
+                  ml: 1, 
+                  transform: systemPromptExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.3s'
+                }} 
+              />
             </Typography>
-          </Paper>
+            <Box>
+              <Tooltip title="Copy system prompt">
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyToClipboard(agent.instructions, "System prompt");
+                  }}
+                  sx={{ 
+                    '&:hover': { 
+                      color: 'primary.main',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+          <Collapse in={systemPromptExpanded}>
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                p: 3, 
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
+                borderRadius: 2,
+                borderColor: 'divider',
+                mt: 1
+              }}
+            >
+              <Typography 
+                sx={{ 
+                  whiteSpace: 'pre-wrap', 
+                  lineHeight: 1.6,
+                  color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                {agent.instructions}
+              </Typography>
+            </Paper>
+          </Collapse>
         </Box>
       </Paper>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+      <Box 
+        sx={{ 
+          borderBottom: 2, 
+          borderColor: 'primary.main', 
+          mb: 3,
+          mt: 4,
+          boxShadow: (theme) => `0 4px 6px -1px ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.1)'}`,
+          borderRadius: '4px 4px 0 0',
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+        }}
+      >
         <Tabs 
           value={tabValue} 
           onChange={handleTabChange} 
           aria-label="agent details tabs"
+          variant="fullWidth"
           sx={{
             '& .MuiTab-root': {
               fontWeight: 'bold',
               transition: 'all 0.2s',
+              py: 2,
+              fontSize: '0.95rem',
               '&:hover': {
                 color: 'primary.main',
-                opacity: 1
+                opacity: 1,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
               }
             },
             '& .Mui-selected': {
               color: 'primary.main',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)'
             },
             '& .MuiTabs-indicator': {
-              height: 3,
-              borderRadius: '3px 3px 0 0'
+              height: 4,
+              borderRadius: '4px 4px 0 0'
             }
           }}
         >
@@ -495,7 +551,13 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+              sx={{ 
+                color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
+                borderLeft: '4px solid',
+                borderColor: 'primary.main',
+                pl: 2,
+                py: 0.5
+              }}
             >
               Sampling Parameters
             </Typography>
@@ -684,7 +746,19 @@ const AgentDetailsPage: React.FC = () => {
 
       <TabPanel value={tabValue} index={1}>
         <Box p={3}>
-          <Typography variant="h6" gutterBottom fontWeight="bold">
+          <Typography 
+            variant="h6" 
+            gutterBottom 
+            fontWeight="bold"
+            sx={{ 
+              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
+              borderLeft: '4px solid',
+              borderColor: 'primary.main',
+              pl: 2,
+              py: 0.5,
+              mb: 2
+            }}
+          >
             Agent Configuration JSON
           </Typography>
           <Paper 
@@ -726,7 +800,13 @@ const AgentDetailsPage: React.FC = () => {
           <Typography 
             variant="h6" 
             fontWeight="bold"
-            sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+            sx={{ 
+              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
+              borderLeft: '4px solid',
+              borderColor: 'primary.main',
+              pl: 2,
+              py: 0.5
+            }}
           >
             Sessions
           </Typography>
@@ -870,7 +950,13 @@ const AgentDetailsPage: React.FC = () => {
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
+              sx={{ 
+                color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'primary.dark',
+                borderLeft: '4px solid',
+                borderColor: 'primary.main',
+                pl: 2,
+                py: 0.5
+              }}
             >
               Tool Usage History
             </Typography>
