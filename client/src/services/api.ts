@@ -592,19 +592,43 @@ export const apiService = {
 
   getAgent: async (agentId: string): Promise<Agent> => {
     try {
-      // In the current API, there's no direct endpoint to get a single agent
-      // So we'll get all agents and filter
-      const agents = await apiService.getAgents();
-      const agent = agents.find(agent => agent.agent_id === agentId || agent.id === agentId);
+      // Use the direct endpoint to get a single agent
+      const response = await api.get(`/v1/agents/${agentId}`);
+      console.log('Agent details response:', response.data);
       
-      if (agent) {
-        return agent;
+      // Convert the API response to our Agent type
+      const agentData = response.data;
+      const agentConfig = agentData.agent_config || {};
+      
+      const agent: Agent = {
+        agent_id: agentData.agent_id,
+        id: agentData.agent_id, // For backward compatibility
+        name: agentConfig.name || '',
+        model: agentConfig.model || '',
+        instructions: agentConfig.instructions || '',
+        created_at: agentData.created_at || new Date().toISOString(),
+        updated_at: agentData.updated_at || agentData.created_at || new Date().toISOString(),
+        created_by: agentData.created_by || 'System',
+        config: agentConfig
+      };
+      
+      return agent;
+    } catch (error) {
+      console.error(`Error fetching agent ${agentId}:`, error);
+      
+      // Fallback to the old method if the direct endpoint fails
+      try {
+        const agents = await apiService.getAgents();
+        const agent = agents.find(agent => agent.agent_id === agentId || agent.id === agentId);
+        
+        if (agent) {
+          return agent;
+        }
+      } catch (fallbackError) {
+        console.error('Fallback method also failed:', fallbackError);
       }
       
       throw new Error(`Agent ${agentId} not found`);
-    } catch (error) {
-      console.error(`Error fetching agent ${agentId}:`, error);
-      throw error;
     }
   },
 

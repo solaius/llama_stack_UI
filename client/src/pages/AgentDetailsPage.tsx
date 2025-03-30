@@ -118,24 +118,9 @@ const AgentDetailsPage: React.FC = () => {
         const agentData = await apiService.getAgent(agentId);
         setAgent(agentData);
         
-        // For now, we'll use mock sessions since the API doesn't support listing sessions
-        // In a real implementation, you would fetch sessions from the API
-        const mockSessions: SessionInfo[] = [
-          {
-            session_id: 'session-1',
-            session_name: 'Test Session 1',
-            turns: [],
-            started_at: new Date().toISOString()
-          },
-          {
-            session_id: 'session-2',
-            session_name: 'Test Session 2',
-            turns: [],
-            started_at: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-          }
-        ];
-        
-        setSessions(mockSessions);
+        // Initialize with empty sessions array
+        // When the API supports listing sessions, we can fetch them here
+        setSessions([]);
       } catch (error) {
         console.error('Error fetching agent details:', error);
         setNotification({
@@ -161,27 +146,20 @@ const AgentDetailsPage: React.FC = () => {
     try {
       setIsCreatingSession(true);
       
-      // In a real implementation, you would call the API to create a session
-      // const sessionId = await apiService.createAgentSession(agentId, newSessionName);
-      
-      // For now, we'll create a mock session
-      const newSession: SessionInfo = {
-        session_id: `session-${Date.now()}`,
-        session_name: newSessionName,
-        turns: [],
-        started_at: new Date().toISOString()
-      };
-      
-      setSessions([newSession, ...sessions]);
+      // Generate a session ID and navigate directly to chat
+      const sessionId = `session-${Date.now()}`;
       
       setNotification({
         open: true,
-        message: 'Session created successfully',
-        severity: 'success'
+        message: 'Starting new chat session...',
+        severity: 'info'
       });
       
       setCreateSessionDialogOpen(false);
       setNewSessionName('');
+      
+      // Navigate to the chat page with the new session
+      navigate(`/chat/${agentId}/${sessionId}`);
     } catch (error) {
       console.error('Error creating session:', error);
       setNotification({
@@ -198,16 +176,12 @@ const AgentDetailsPage: React.FC = () => {
     if (!agentId) return;
     
     try {
-      // In a real implementation, you would call the API to delete the session
-      // await apiService.deleteAgentSession(agentId, sessionId);
-      
-      // For now, we'll just remove it from the local state
-      setSessions(sessions.filter(session => session.session_id !== sessionId));
-      
+      // When the API supports session deletion, we can implement it here
+      // For now, just show a message that this feature is not yet available
       setNotification({
         open: true,
-        message: 'Session deleted successfully',
-        severity: 'success'
+        message: 'Session management is not yet available in the API',
+        severity: 'info'
       });
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -779,17 +753,13 @@ const AgentDetailsPage: React.FC = () => {
 
         {sessions.length === 0 ? (
           <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
-              No sessions found for this agent.
+            <Typography variant="body1" color="text.secondary" gutterBottom>
+              Session management is not yet available in the API.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              You can start a new chat session with this agent using the button below.
             </Typography>
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={() => setCreateSessionDialogOpen(true)}
-              >
-                Create a new session
-              </Button>
               <Button
                 variant="contained"
                 color="success"
