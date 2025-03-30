@@ -189,15 +189,6 @@ const AgentsPage: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box my={4}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom
-          sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
-        >
-          Agent Management
-        </Typography>
-
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}

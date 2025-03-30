@@ -118,62 +118,69 @@ const AgentList: React.FC<AgentListProps> = ({
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography 
-          variant="h5" 
-          fontWeight="bold" 
-          sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
-        >
-          Agents
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={onCreateNew}
-          sx={{ 
-            borderRadius: 2,
-            px: 3,
-            py: 1,
-            boxShadow: 2,
-            transition: 'all 0.2s',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: 3
-            }
-          }}
-        >
-          Create New Agent
-        </Button>
-      </Box>
-
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        gutterBottom
+        sx={{ 
+          color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+          mb: 3,
+          fontWeight: 'bold'
+        }}
+      >
+        Agent Management
+      </Typography>
+      
       <Box mb={3}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Search agents by name, ID, or system prompt..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              transition: 'all 0.2s',
-              '&:hover': {
-                boxShadow: 1
-              },
-              '&.Mui-focused': {
-                boxShadow: 2
+        <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+          <TextField
+            variant="outlined"
+            placeholder="Search agents by name, ID, or system prompt..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            sx={{
+              flexGrow: 1,
+              maxWidth: '70%',
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  boxShadow: 1
+                },
+                '&.Mui-focused': {
+                  boxShadow: 2
+                }
               }
-            }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="primary" />
-              </InputAdornment>
-            )
-          }}
-        />
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              )
+            }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={onCreateNew}
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              boxShadow: 2,
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: 3
+              }
+            }}
+          >
+            Create New Agent
+          </Button>
+        </Box>
       </Box>
 
       <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
