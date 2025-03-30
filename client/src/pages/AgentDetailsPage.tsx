@@ -463,10 +463,11 @@ const AgentDetailsPage: React.FC = () => {
           }}
         >
           <Tab label="Configuration" {...a11yProps(0)} />
-          <Tab label="Sessions" {...a11yProps(1)} />
+          <Tab label="JSON" {...a11yProps(1)} />
+          <Tab label="Sessions" {...a11yProps(2)} />
           <Tab 
             label="Tool Usage" 
-            {...a11yProps(2)} 
+            {...a11yProps(3)} 
             icon={<BuildIcon fontSize="small" />} 
             iconPosition="start" 
           />
@@ -682,6 +683,45 @@ const AgentDetailsPage: React.FC = () => {
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
+        <Box p={3}>
+          <Typography variant="h6" gutterBottom fontWeight="bold">
+            Agent Configuration JSON
+          </Typography>
+          <Paper 
+            variant="outlined" 
+            sx={{ 
+              p: 3, 
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
+              borderRadius: 2,
+              borderColor: 'divider',
+              maxHeight: '600px',
+              overflow: 'auto'
+            }}
+          >
+            <pre style={{ 
+              whiteSpace: 'pre-wrap', 
+              wordBreak: 'break-word',
+              margin: 0,
+              fontFamily: 'monospace',
+              fontSize: '0.875rem',
+              lineHeight: 1.5
+            }}>
+              {JSON.stringify(agent, null, 2)}
+            </pre>
+          </Paper>
+          <Box display="flex" justifyContent="flex-end" mt={2}>
+            <Button
+              variant="outlined"
+              startIcon={<ContentCopyIcon />}
+              onClick={() => handleCopyToClipboard(JSON.stringify(agent, null, 2), "Agent JSON")}
+            >
+              Copy JSON
+            </Button>
+          </Box>
+        </Box>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography 
             variant="h6" 
@@ -824,7 +864,7 @@ const AgentDetailsPage: React.FC = () => {
         )}
       </TabPanel>
 
-      <TabPanel value={tabValue} index={2}>
+      <TabPanel value={tabValue} index={3}>
         <Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography 
