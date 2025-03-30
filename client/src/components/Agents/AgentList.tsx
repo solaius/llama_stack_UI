@@ -25,7 +25,11 @@ import {
   InputLabel,
   useTheme,
   useMediaQuery,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -41,7 +45,8 @@ import {
   NavigateNext as NavigateNextIcon,
   NavigateBefore as NavigateBeforeIcon,
   FirstPage as FirstPageIcon,
-  LastPage as LastPageIcon
+  LastPage as LastPageIcon,
+  MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
@@ -70,6 +75,17 @@ const AgentList: React.FC<AgentListProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, agent: Agent) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedAgent(agent);
+  };
+  
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -373,92 +389,22 @@ const AgentList: React.FC<AgentListProps> = ({
                       />
                     </TableCell>
                     <TableCell align="center">
-                      <Box 
-                        display="flex" 
-                        justifyContent="center" 
-                        gap={1}
-                        sx={{
-                          '& .MuiIconButton-root': {
-                            transition: 'transform 0.2s, background-color 0.2s',
-                            '&:hover': {
-                              transform: 'scale(1.15)',
+                      <Tooltip title="Actions">
+                        <IconButton 
+                          onClick={(event) => handleMenuOpen(event, agent)}
+                          size="small"
+                          sx={{ 
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                            transition: 'all 0.2s',
+                            '&:hover': { 
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+                              transform: 'scale(1.1)'
                             }
-                          }
-                        }}
-                      >
-                        <Tooltip title="Chat with Agent">
-                          <IconButton 
-                            onClick={() => {
-                              // Create a new session and navigate to chat
-                              const sessionId = `session-${Date.now()}`;
-                              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
-                            }} 
-                            size="small"
-                            color="success"
-                            sx={{ 
-                              bgcolor: 'success.light', 
-                              color: 'white',
-                              '&:hover': { bgcolor: 'success.main' } 
-                            }}
-                          >
-                            <ChatIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View Details">
-                          <IconButton 
-                            onClick={() => navigate(`/agents/${agent.agent_id || agent.id}`)} 
-                            size="small"
-                            color="primary"
-                            sx={{ 
-                              bgcolor: 'primary.light', 
-                              color: 'white',
-                              '&:hover': { bgcolor: 'primary.main' } 
-                            }}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton 
-                            onClick={() => onEdit(agent)} 
-                            size="small"
-                            sx={{ 
-                              bgcolor: 'info.light', 
-                              color: 'white',
-                              '&:hover': { bgcolor: 'info.main' } 
-                            }}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Duplicate">
-                          <IconButton 
-                            onClick={() => onDuplicate(agent)} 
-                            size="small"
-                            sx={{ 
-                              bgcolor: 'warning.light', 
-                              color: 'white',
-                              '&:hover': { bgcolor: 'warning.main' } 
-                            }}
-                          >
-                            <DuplicateIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton 
-                            onClick={() => onDelete(agent)} 
-                            size="small" 
-                            color="error"
-                            sx={{ 
-                              bgcolor: 'error.light', 
-                              color: 'white',
-                              '&:hover': { bgcolor: 'error.main' } 
-                            }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
+                          }}
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))
@@ -589,6 +535,110 @@ const AgentList: React.FC<AgentListProps> = ({
           </Stack>
         </Box>
       </TableContainer>
+      
+      {/* Actions Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            borderRadius: 2,
+            minWidth: 200,
+            overflow: 'visible',
+            mt: 1.5,
+            '&:before': {
+              content: '""',
+              display: 'block',
+              position: 'absolute',
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: 'background.paper',
+              transform: 'translateY(-50%) rotate(45deg)',
+              zIndex: 0,
+            },
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        {selectedAgent && (
+          <>
+            <MenuItem 
+              onClick={() => {
+                const sessionId = `session-${Date.now()}`;
+                navigate(`/chat/${selectedAgent.agent_id || selectedAgent.id}/${sessionId}`);
+                handleMenuClose();
+              }}
+              sx={{ color: 'success.main' }}
+            >
+              <ListItemIcon sx={{ color: 'success.main' }}>
+                <ChatIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Chat with Agent" />
+            </MenuItem>
+            
+            <MenuItem 
+              onClick={() => {
+                navigate(`/agents/${selectedAgent.agent_id || selectedAgent.id}`);
+                handleMenuClose();
+              }}
+              sx={{ color: 'primary.main' }}
+            >
+              <ListItemIcon sx={{ color: 'primary.main' }}>
+                <VisibilityIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="View Details" />
+            </MenuItem>
+            
+            <Divider />
+            
+            <MenuItem 
+              onClick={() => {
+                onEdit(selectedAgent);
+                handleMenuClose();
+              }}
+              sx={{ color: 'info.main' }}
+            >
+              <ListItemIcon sx={{ color: 'info.main' }}>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Edit" />
+            </MenuItem>
+            
+            <MenuItem 
+              onClick={() => {
+                onDuplicate(selectedAgent);
+                handleMenuClose();
+              }}
+              sx={{ color: 'warning.main' }}
+            >
+              <ListItemIcon sx={{ color: 'warning.main' }}>
+                <DuplicateIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Duplicate" />
+            </MenuItem>
+            
+            <Divider />
+            
+            <MenuItem 
+              onClick={() => {
+                onDelete(selectedAgent);
+                handleMenuClose();
+              }}
+              sx={{ color: 'error.main' }}
+            >
+              <ListItemIcon sx={{ color: 'error.main' }}>
+                <DeleteIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Delete" />
+            </MenuItem>
+          </>
+        )}
+      </Menu>
     </Box>
   );
 };
