@@ -516,10 +516,25 @@ export const apiService = {
 
   createAgent: async (agentConfig: AgentConfig): Promise<Agent> => {
     try {
-      console.log('Creating agent with config:', agentConfig);
+      // Format the sampling_params to match the API's expected structure
+      const formattedConfig = {
+        ...agentConfig,
+        sampling_params: {
+          strategy: {
+            type: "sample",
+            temperature: agentConfig.sampling_params?.temperature || 0.7,
+            top_p: agentConfig.sampling_params?.top_p || 0.9
+          },
+          max_tokens: agentConfig.sampling_params?.max_tokens || 1024,
+          repetition_penalty: agentConfig.sampling_params?.repetition_penalty || 1.0,
+          stop: null
+        }
+      };
+      
+      console.log('Creating agent with config:', formattedConfig);
       
       // Call the API to create the agent
-      const response = await api.post('/v1/agents', { agent_config: agentConfig });
+      const response = await api.post('/v1/agents', { agent_config: formattedConfig });
       console.log('Create agent response:', response.data);
       
       // Generate a new agent object with the response data
@@ -634,9 +649,26 @@ export const apiService = {
 
   updateAgent: async (agentId: string, agentConfig: Partial<AgentConfig>): Promise<Agent> => {
     try {
+      // Format the sampling_params to match the API's expected structure
+      const formattedConfig = {
+        ...agentConfig,
+        sampling_params: agentConfig.sampling_params ? {
+          strategy: {
+            type: "sample",
+            temperature: agentConfig.sampling_params?.temperature || 0.7,
+            top_p: agentConfig.sampling_params?.top_p || 0.9
+          },
+          max_tokens: agentConfig.sampling_params?.max_tokens || 1024,
+          repetition_penalty: agentConfig.sampling_params?.repetition_penalty || 1.0,
+          stop: null
+        } : undefined
+      };
+      
+      console.log('Updating agent with config:', formattedConfig);
+      
       // Try to update via API (this might not work if the endpoint doesn't exist)
       try {
-        await api.put(`/v1/agents/${agentId}`, { agent_config: agentConfig });
+        await api.put(`/v1/agents/${agentId}`, { agent_config: formattedConfig });
       } catch (error) {
         console.warn(`API update failed for agent ${agentId}, updating local storage only:`, error);
       }
