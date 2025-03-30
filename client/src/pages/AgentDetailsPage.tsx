@@ -110,30 +110,49 @@ const AgentDetailsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Use a ref to track if the component is mounted
+    // This helps prevent duplicate API calls and state updates
+    let isMounted = true;
+    
     const fetchAgentDetails = async () => {
       if (!agentId) return;
       
       try {
         setLoading(true);
+        console.log(`Fetching agent details for ${agentId}...`);
         const agentData = await apiService.getAgent(agentId);
-        setAgent(agentData);
         
-        // Initialize with empty sessions array
-        // When the API supports listing sessions, we can fetch them here
-        setSessions([]);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          console.log(`Setting agent data for ${agentId}`);
+          setAgent(agentData);
+          
+          // Initialize with empty sessions array
+          // When the API supports listing sessions, we can fetch them here
+          setSessions([]);
+        }
       } catch (error) {
         console.error('Error fetching agent details:', error);
-        setNotification({
-          open: true,
-          message: 'Failed to load agent details. Please try again.',
-          severity: 'error'
-        });
+        if (isMounted) {
+          setNotification({
+            open: true,
+            message: 'Failed to load agent details. Please try again.',
+            severity: 'error'
+          });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchAgentDetails();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [agentId]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {

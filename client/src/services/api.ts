@@ -617,6 +617,30 @@ export const apiService = {
       const agentData = response.data;
       const agentConfig = agentData.agent_config || {};
       
+      // Extract temperature and top_p from the strategy object if present
+      let temperature = undefined;
+      let top_p = undefined;
+      
+      if (agentConfig.sampling_params?.strategy) {
+        const strategy = agentConfig.sampling_params.strategy;
+        if (strategy.type === 'top_p') {
+          temperature = strategy.temperature;
+          top_p = strategy.p || strategy.top_p; // Handle both formats
+        } else if (strategy.temperature) {
+          temperature = strategy.temperature;
+        }
+      }
+      
+      // Create a modified config with temperature and top_p at the top level
+      const modifiedConfig = {
+        ...agentConfig,
+        sampling_params: {
+          ...agentConfig.sampling_params,
+          temperature: temperature,
+          top_p: top_p,
+        }
+      };
+      
       const agent: Agent = {
         agent_id: agentData.agent_id,
         id: agentData.agent_id, // For backward compatibility
@@ -626,7 +650,7 @@ export const apiService = {
         created_at: agentData.created_at || new Date().toISOString(),
         updated_at: agentData.updated_at || agentData.created_at || new Date().toISOString(),
         created_by: agentData.created_by || 'System',
-        config: agentConfig
+        config: modifiedConfig
       };
       
       return agent;
