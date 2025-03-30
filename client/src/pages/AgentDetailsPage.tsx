@@ -79,6 +79,10 @@ const AgentDetailsPage: React.FC = () => {
   const [createSessionDialogOpen, setCreateSessionDialogOpen] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  
+  // Use a ref to track if the API call has been made
+  const apiCallMadeRef = React.useRef(false);
+  
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -110,48 +114,41 @@ const AgentDetailsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Use a ref to track if the component is mounted
-    // This helps prevent duplicate API calls and state updates
-    let isMounted = true;
+    // Skip if no agentId or if the API call has already been made for this agentId
+    if (!agentId || apiCallMadeRef.current) return;
+    
+    // Mark that we're making the API call
+    apiCallMadeRef.current = true;
     
     const fetchAgentDetails = async () => {
-      if (!agentId) return;
-      
       try {
         setLoading(true);
         console.log(`Fetching agent details for ${agentId}...`);
         const agentData = await apiService.getAgent(agentId);
         
-        // Only update state if component is still mounted
-        if (isMounted) {
-          console.log(`Setting agent data for ${agentId}`);
-          setAgent(agentData);
-          
-          // Initialize with empty sessions array
-          // When the API supports listing sessions, we can fetch them here
-          setSessions([]);
-        }
+        console.log(`Setting agent data for ${agentId}`);
+        setAgent(agentData);
+        
+        // Initialize with empty sessions array
+        // When the API supports listing sessions, we can fetch them here
+        setSessions([]);
       } catch (error) {
         console.error('Error fetching agent details:', error);
-        if (isMounted) {
-          setNotification({
-            open: true,
-            message: 'Failed to load agent details. Please try again.',
-            severity: 'error'
-          });
-        }
+        setNotification({
+          open: true,
+          message: 'Failed to load agent details. Please try again.',
+          severity: 'error'
+        });
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchAgentDetails();
     
-    // Cleanup function to prevent state updates after unmount
+    // Reset the ref when the component unmounts or agentId changes
     return () => {
-      isMounted = false;
+      apiCallMadeRef.current = false;
     };
   }, [agentId]);
 
@@ -493,75 +490,103 @@ const AgentDetailsPage: React.FC = () => {
       </Box>
 
       <TabPanel value={tabValue} index={0}>
-        <Card 
+        <Paper 
+          elevation={0}
           sx={{ 
             mb: 3, 
             borderRadius: 2, 
-            boxShadow: 1,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Box 
             sx={{ 
-              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)',
-              borderBottom: 1,
-              borderColor: 'divider',
+              bgcolor: (theme) => theme.palette.primary.main,
               py: 1.5,
-              px: 3
+              px: 3,
+              color: 'white'
             }}
           >
             <Typography 
               variant="h6" 
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary' }}
             >
-              Sampling Parameters
+              Agent Configuration
             </Typography>
           </Box>
-          <CardContent sx={{ p: 3 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
-                    Temperature
+          
+          {/* Sampling Parameters Section */}
+          <Box sx={{ p: 0 }}>
+            <Box 
+              sx={{ 
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                py: 1,
+                px: 3,
+                borderBottom: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                Sampling Parameters
+              </Typography>
+            </Box>
+            
+            <Box sx={{ p: 2 }}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={4} sm={3} md={2}>
+                  <Typography variant="body2" fontWeight="medium" color="text.secondary">
+                    Temperature:
                   </Typography>
+                </Grid>
+                <Grid item xs={8} sm={9} md={4}>
                   <Chip 
                     label={agent.config?.sampling_params?.temperature || 'Default'} 
                     variant="outlined" 
                     size="small"
-                    sx={{ alignSelf: 'flex-start' }}
+                    sx={{ 
+                      height: '24px',
+                      '& .MuiChip-label': { px: 1, py: 0.5, fontSize: '0.75rem' }
+                    }}
                   />
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
-                    Top P
+                </Grid>
+                
+                <Grid item xs={4} sm={3} md={2}>
+                  <Typography variant="body2" fontWeight="medium" color="text.secondary">
+                    Top P:
                   </Typography>
+                </Grid>
+                <Grid item xs={8} sm={9} md={4}>
                   <Chip 
                     label={agent.config?.sampling_params?.top_p || 'Default'} 
                     variant="outlined" 
                     size="small"
-                    sx={{ alignSelf: 'flex-start' }}
+                    sx={{ 
+                      height: '24px',
+                      '& .MuiChip-label': { px: 1, py: 0.5, fontSize: '0.75rem' }
+                    }}
                   />
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
-                    Max Tokens
+                </Grid>
+                
+                <Grid item xs={4} sm={3} md={2}>
+                  <Typography variant="body2" fontWeight="medium" color="text.secondary">
+                    Max Tokens:
                   </Typography>
+                </Grid>
+                <Grid item xs={8} sm={9} md={4}>
                   <Chip 
                     label={agent.config?.sampling_params?.max_tokens || 'Default'} 
                     variant="outlined" 
                     size="small"
-                    sx={{ alignSelf: 'flex-start' }}
+                    sx={{ 
+                      height: '24px',
+                      '& .MuiChip-label': { px: 1, py: 0.5, fontSize: '0.75rem' }
+                    }}
                   />
-                </Box>
+                </Grid>
               </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+            </Box>
+          </Box>
 
         <Card 
           sx={{ 
