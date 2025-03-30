@@ -27,7 +27,8 @@ import {
   Visibility as VisibilityIcon,
   Chat as ChatIcon,
   ContentCopy as ContentCopyIcon,
-  Description as DescriptionIcon
+  Description as DescriptionIcon,
+  Build as BuildIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
@@ -161,6 +162,7 @@ const AgentList: React.FC<AgentListProps> = ({
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
               <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>ID</TableCell>
               <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>System Prompt</TableCell>
+              <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>Tools</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Created</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Created By</TableCell>
               <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
@@ -170,7 +172,7 @@ const AgentList: React.FC<AgentListProps> = ({
             {filteredAgents.length === 0 ? (
               <TableRow>
                 <TableCell 
-                  colSpan={6} 
+                  colSpan={7} 
                   align="center" 
                   sx={{ 
                     py: 5, 
@@ -250,6 +252,73 @@ const AgentList: React.FC<AgentListProps> = ({
                           <DescriptionIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                    </TableCell>
+                    <TableCell align="center">
+                      {((agent.config?.toolgroups && agent.config.toolgroups.length > 0) || 
+                        (agent.config?.client_tools && agent.config.client_tools.length > 0)) ? (
+                        <Tooltip 
+                          title={
+                            <Box sx={{ p: 1, maxWidth: 300 }}>
+                              <Typography variant="subtitle2" gutterBottom>Tools:</Typography>
+                              {agent.config?.toolgroups && agent.config.toolgroups.length > 0 && (
+                                <>
+                                  <Typography variant="body2" fontWeight="medium" sx={{ mt: 1 }}>Tool Groups:</Typography>
+                                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                                    {agent.config.toolgroups.map((tool, idx) => (
+                                      <li key={idx}>
+                                        <Typography variant="body2">
+                                          {typeof tool === 'string' ? tool : tool.name}
+                                        </Typography>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                              
+                              {agent.config?.client_tools && agent.config.client_tools.length > 0 && (
+                                <>
+                                  <Typography variant="body2" fontWeight="medium" sx={{ mt: 1 }}>Client Tools:</Typography>
+                                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                                    {agent.config.client_tools.map((tool, idx) => (
+                                      <li key={idx}>
+                                        <Typography variant="body2">
+                                          {tool.tool_name}
+                                        </Typography>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+                            </Box>
+                          }
+                        >
+                          <IconButton 
+                            size="small"
+                            sx={{ 
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
+                              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                              transition: 'all 0.2s',
+                              '&:hover': { 
+                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
+                          >
+                            <BuildIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <IconButton 
+                          size="small"
+                          disabled
+                          sx={{ 
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'grey.100',
+                            color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'grey.400',
+                          }}
+                        >
+                          <BuildIcon fontSize="small" />
+                        </IconButton>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Chip 
