@@ -100,3 +100,4 @@ const AgentDetailsPage: React.FC = () => {
 
 export default AgentDetailsPage;
 // Updated with full functionality - v1
+// Added enhanced styling - v3
