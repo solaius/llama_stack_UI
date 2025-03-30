@@ -44,22 +44,22 @@ const AgentsPage: React.FC = () => {
       console.error('Error fetching agents:', err);
       setError('Failed to load agents. Please try again later.');
       // For demo purposes, create some mock agents if the API fails
+      // We'll use a simpler mock data structure now that we have a real API
       setAgents([
         {
           agent_id: 'meeting-minutes-agent',
           id: 'meeting-minutes-agent',
           name: 'Meeting Minutes Assistant',
-          model: 'meta-llama/Llama-3.1-8B-Instruct',
+          model: 'meta-llama/Llama-3.2-3B-Instruct',
           instructions: 'You are a meeting minutes assistant. Help users create meeting minutes from notes or transcripts.',
           config: {
-            model: 'meta-llama/Llama-3.1-8B-Instruct',
+            model: 'meta-llama/Llama-3.2-3B-Instruct',
             instructions: 'You are a meeting minutes assistant. Help users create meeting minutes from notes or transcripts.',
             sampling_params: {
-              temperature: 0.2,
-              top_p: 0.95,
-              max_tokens: 1000
+              strategy: { type: "greedy" },
+              max_tokens: 1024,
+              repetition_penalty: 1.0
             },
-            toolgroups: ['summarization-tools'],
             max_infer_iters: 10,
             enable_session_persistence: false,
             name: 'Meeting Minutes Assistant'
@@ -67,29 +67,6 @@ const AgentsPage: React.FC = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           created_by: 'Admin'
-        },
-        {
-          agent_id: 'customer-support-agent',
-          id: 'customer-support-agent',
-          name: 'Customer Support Agent',
-          model: 'meta-llama/Llama-3.1-8B-Instruct',
-          instructions: 'You are a customer support assistant. Help users with their questions and issues.',
-          config: {
-            model: 'meta-llama/Llama-3.1-8B-Instruct',
-            instructions: 'You are a customer support assistant. Help users with their questions and issues.',
-            sampling_params: {
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 500
-            },
-            toolgroups: ['knowledge-base-tools'],
-            max_infer_iters: 5,
-            enable_session_persistence: true,
-            name: 'Customer Support Agent'
-          },
-          created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          updated_at: new Date(Date.now() - 86400000).toISOString(),
-          created_by: 'System'
         }
       ]);
     } finally {

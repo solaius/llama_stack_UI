@@ -65,8 +65,8 @@ const AgentList: React.FC<AgentListProps> = ({
           (agent) =>
             (agent.name || '').toLowerCase().includes(lowercasedSearch) ||
             (agent.id || agent.agent_id || '').toLowerCase().includes(lowercasedSearch) ||
-            agent.instructions.toLowerCase().includes(lowercasedSearch) ||
-            agent.model.toLowerCase().includes(lowercasedSearch)
+            (agent.instructions || '').toLowerCase().includes(lowercasedSearch) ||
+            (agent.model || '').toLowerCase().includes(lowercasedSearch)
         )
       );
     }
@@ -231,7 +231,7 @@ const AgentList: React.FC<AgentListProps> = ({
                         title={
                           <Box sx={{ p: 1, maxWidth: 300 }}>
                             <Typography variant="subtitle2" gutterBottom>System Prompt:</Typography>
-                            <Typography variant="body2">{agent.instructions}</Typography>
+                            <Typography variant="body2">{agent.instructions || 'No system prompt provided'}</Typography>
                           </Box>
                         }
                       >

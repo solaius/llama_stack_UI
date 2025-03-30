@@ -548,77 +548,44 @@ export const apiService = {
 
   getAgents: async (): Promise<Agent[]> => {
     try {
-      // Try the new list endpoint first
-      try {
-        const response = await api.get('/v1/agents/list');
-        console.log('Agents list response:', response.data);
+      // Use the new /v1/agents endpoint
+      const response = await api.get('/v1/agents');
+      console.log('Agents response:', response.data);
+      
+      if (response.data && response.data.data) {
+        // Convert the response data to Agent objects
+        const apiAgents = response.data.data.map((agentData: any) => {
+          const agentConfig = agentData.agent_config || {};
+          const instructions = agentConfig.instructions || '';
+          const model = agentConfig.model || '';
+          
+          return {
+            agent_id: agentData.agent_id,
+            id: agentData.agent_id, // For backward compatibility
+            name: agentConfig.name || '', // Name might be in the config
+            model: model,
+            instructions: instructions,
+            created_at: agentData.created_at || new Date().toISOString(),
+            updated_at: agentData.updated_at || agentData.created_at || new Date().toISOString(),
+            created_by: agentData.created_by || 'System',
+            config: {
+              ...agentConfig,
+              name: agentConfig.name || '' // Ensure name is in the config
+            }
+          };
+        });
         
-        // Convert AgentInfo[] to Agent[]
-        const apiAgents = response.data.agents.map((agentInfo: any) => ({
-          agent_id: agentInfo.agent_id,
-          id: agentInfo.agent_id, // For backward compatibility
-          name: agentInfo.name || agentInfo.config?.name || '',
-          model: agentInfo.config?.model || '',
-          instructions: agentInfo.config?.instructions || '',
-          created_at: new Date().toISOString(),
-          created_by: 'System',
-          config: {
-            ...agentInfo.config,
-            // Ensure these fields exist with default values if not provided
-            sampling_params: agentInfo.config?.sampling_params || {
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 1024
-            },
-            max_infer_iters: agentInfo.config?.max_infer_iters || 10,
-            enable_session_persistence: agentInfo.config?.enable_session_persistence || false,
-            name: agentInfo.name || agentInfo.config?.name || ''
-          }
-        }));
-        
-        // Also save to local storage as backup
+        // Save to local storage as backup
         apiService._saveAgentsToStorage(apiAgents);
         
         return apiAgents;
-      } catch (listError) {
-        console.warn('List endpoint failed, trying to get agents individually:', listError);
-        
-        // If the list endpoint fails, try to get agents from local storage
-        // and verify they exist by making individual GET requests
-        const storedAgents = apiService._getAgentsFromStorage();
-        const verifiedAgents: Agent[] = [];
-        
-        for (const agent of storedAgents) {
-          try {
-            // Try to verify the agent exists by creating a session
-            // This is a workaround since there's no direct GET endpoint
-            const sessionName = `verify_session_${Date.now()}`;
-            const sessionResponse = await api.post(`/v1/agents/${agent.agent_id || agent.id}/session`, {
-              session_name: sessionName
-            });
-            
-            if (sessionResponse.data.session_id) {
-              // Agent exists, add to verified list
-              verifiedAgents.push(agent);
-              
-              // Clean up the verification session
-              try {
-                await api.delete(`/v1/agents/${agent.agent_id || agent.id}/session/${sessionResponse.data.session_id}`);
-              } catch (deleteError) {
-                console.warn(`Could not delete verification session for agent ${agent.agent_id || agent.id}:`, deleteError);
-              }
-            }
-          } catch (verifyError) {
-            console.warn(`Agent ${agent.agent_id || agent.id} verification failed, may not exist:`, verifyError);
-          }
-        }
-        
-        return verifiedAgents;
+      } else {
+        throw new Error('Invalid response format from /v1/agents endpoint');
       }
     } catch (error) {
       console.error('Error fetching agents:', error);
       
-      // Fallback to local storage if all API methods fail
+      // Fallback to local storage if API call fails
       return apiService._getAgentsFromStorage();
     }
   },
