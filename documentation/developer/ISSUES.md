@@ -7,9 +7,9 @@ This document outlines the current issues and todos that are blocked due to limi
 ### Agent Management
 
 1. **Agent Listing API Incomplete**
-   - The `/v1/agents/list` endpoint is not functioning properly
-   - Currently using mock data and fallback mechanisms
-   - Need to implement proper pagination and filtering once API is available
+   - The `/v1/agents` endpoint is not functioning properly in meta/llama-stack github
+   - Using solaius/llama-stack with working endpoints
+   - Need to implement proper pagination
 
 2. **Agent Creation/Update Limitations**
    - Some fields in the agent creation form may not match the actual API requirements
