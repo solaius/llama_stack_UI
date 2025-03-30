@@ -11,8 +11,7 @@ import {
   Divider,
   Chip,
   Grid,
-  Card,
-  CardContent,
+
   List,
   ListItem,
   ListItemText,
@@ -588,7 +587,7 @@ const AgentDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-        <Card 
+        <Paper 
           sx={{ 
             mb: 3, 
             borderRadius: 2, 
@@ -613,7 +612,7 @@ const AgentDetailsPage: React.FC = () => {
               Tool Configuration
             </Typography>
           </Box>
-          <CardContent sx={{ p: 3 }}>
+          <Box sx={{ p: 3 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -664,10 +663,10 @@ const AgentDetailsPage: React.FC = () => {
                 </Box>
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
 
-        <Card 
+        <Paper 
           sx={{ 
             borderRadius: 2, 
             boxShadow: 1,
@@ -691,7 +690,7 @@ const AgentDetailsPage: React.FC = () => {
               Advanced Settings
             </Typography>
           </Box>
-          <CardContent sx={{ p: 3 }}>
+          <Box sx={{ p: 3 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -721,8 +720,8 @@ const AgentDetailsPage: React.FC = () => {
                 </Box>
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
