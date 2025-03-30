@@ -962,4 +962,4 @@ const AgentDetailsPage: React.FC = () => {
   );
 };
 
-export default AgentDetailsPage;
+export default AgentDetailsPage;// Updated file
