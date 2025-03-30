@@ -16,7 +16,15 @@ import {
   TablePagination,
   TextField,
   InputAdornment,
-  Chip
+  Chip,
+  Pagination,
+  Stack,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -28,7 +36,11 @@ import {
   Chat as ChatIcon,
   ContentCopy as ContentCopyIcon,
   Description as DescriptionIcon,
-  Build as BuildIcon
+  Build as BuildIcon,
+  NavigateNext as NavigateNextIcon,
+  NavigateBefore as NavigateBeforeIcon,
+  FirstPage as FirstPageIcon,
+  LastPage as LastPageIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Agent } from '../../services/api';
@@ -51,6 +63,8 @@ const AgentList: React.FC<AgentListProps> = ({
   onCreateNew
 }) => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,13 +88,19 @@ const AgentList: React.FC<AgentListProps> = ({
   }, [agents, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPage(newPage - 1); // Pagination component is 1-indexed, but our state is 0-indexed
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  
+  // Calculate pagination values
+  const pageCount = Math.ceil(filteredAgents.length / rowsPerPage);
+  const startIndex = page * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, filteredAgents.length);
+  const currentPageItems = filteredAgents.slice(startIndex, endIndex);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -185,9 +205,7 @@ const AgentList: React.FC<AgentListProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAgents
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((agent, index) => (
+              currentPageItems.map((agent, index) => (
                   <TableRow 
                     key={agent.agent_id || agent.id}
                     sx={{ 
@@ -439,22 +457,129 @@ const AgentList: React.FC<AgentListProps> = ({
             )}
           </TableBody>
         </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredAgents.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+        <Box 
           sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            p: 2,
             borderTop: 1, 
             borderColor: 'divider',
-            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-              fontWeight: 'medium'
-            }
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 2 : 0
           }}
-        />
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" color="text.secondary" fontWeight="medium">
+              Showing {startIndex + 1}-{endIndex} of {filteredAgents.length} agents
+            </Typography>
+            
+            <FormControl size="small" variant="outlined" sx={{ minWidth: 80 }}>
+              <Select
+                value={rowsPerPage.toString()}
+                onChange={handleChangeRowsPerPage}
+                sx={{ 
+                  height: 32,
+                  '& .MuiSelect-select': { 
+                    py: 0.5,
+                    px: 1.5
+                  }
+                }}
+              >
+                {[5, 10, 25, 50].map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option} per page
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          
+          <Stack direction="row" spacing={1} alignItems="center">
+            <IconButton 
+              size="small" 
+              disabled={page === 0}
+              onClick={() => setPage(0)}
+              sx={{ 
+                bgcolor: page === 0 ? 'transparent' : (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': { 
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <FirstPageIcon fontSize="small" />
+            </IconButton>
+            
+            <IconButton 
+              size="small" 
+              disabled={page === 0}
+              onClick={() => setPage(Math.max(0, page - 1))}
+              sx={{ 
+                bgcolor: page === 0 ? 'transparent' : (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': { 
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <NavigateBeforeIcon fontSize="small" />
+            </IconButton>
+            
+            <Pagination
+              count={pageCount}
+              page={page + 1} // Pagination is 1-indexed
+              onChange={handleChangePage}
+              size="small"
+              siblingCount={isMobile ? 0 : 1}
+              boundaryCount={isMobile ? 1 : 2}
+              showFirstButton={false}
+              showLastButton={false}
+              hidePrevButton
+              hideNextButton
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  borderRadius: 1,
+                  fontWeight: 'medium',
+                  '&.Mui-selected': {
+                    fontWeight: 'bold',
+                    bgcolor: (theme) => theme.palette.primary.main,
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: (theme) => theme.palette.primary.dark,
+                    }
+                  }
+                }
+              }}
+            />
+            
+            <IconButton 
+              size="small" 
+              disabled={page >= pageCount - 1}
+              onClick={() => setPage(Math.min(pageCount - 1, page + 1))}
+              sx={{ 
+                bgcolor: page >= pageCount - 1 ? 'transparent' : (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': { 
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <NavigateNextIcon fontSize="small" />
+            </IconButton>
+            
+            <IconButton 
+              size="small" 
+              disabled={page >= pageCount - 1}
+              onClick={() => setPage(pageCount - 1)}
+              sx={{ 
+                bgcolor: page >= pageCount - 1 ? 'transparent' : (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': { 
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <LastPageIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        </Box>
       </TableContainer>
     </Box>
   );
