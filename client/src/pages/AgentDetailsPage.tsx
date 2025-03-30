@@ -963,3 +963,4 @@ const AgentDetailsPage: React.FC = () => {
 };
 
 export default AgentDetailsPage;// Updated file
+// Updated with simplified structure - v3
