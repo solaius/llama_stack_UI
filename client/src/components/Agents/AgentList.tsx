@@ -200,7 +200,15 @@ const AgentList: React.FC<AgentListProps> = ({
       </Box>
 
       <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <Table sx={{ minWidth: 650 }}>
+        <Table 
+          sx={{ 
+            minWidth: 650,
+            '& .MuiTableCell-root': {
+              py: 1.5, // Reduce vertical padding for all cells
+            }
+          }}
+          size="small" // Use the small size variant for more compact rows
+        >
           <TableHead>
             <TableRow sx={{ backgroundColor: (theme) => theme.palette.primary.main }}>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
@@ -260,13 +268,14 @@ const AgentList: React.FC<AgentListProps> = ({
                             bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
                             color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
                             transition: 'all 0.2s',
+                            padding: '4px',
                             '&:hover': { 
                               bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
                               transform: 'scale(1.1)'
                             }
                           }}
                         >
-                          <ContentCopyIcon fontSize="small" />
+                          <ContentCopyIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -285,13 +294,14 @@ const AgentList: React.FC<AgentListProps> = ({
                             bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
                             color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
                             transition: 'all 0.2s',
+                            padding: '4px',
                             '&:hover': { 
                               bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
                               transform: 'scale(1.1)'
                             }
                           }}
                         >
-                          <DescriptionIcon fontSize="small" />
+                          <DescriptionIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -340,13 +350,14 @@ const AgentList: React.FC<AgentListProps> = ({
                               bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
                               color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'inherit',
                               transition: 'all 0.2s',
+                              padding: '4px',
                               '&:hover': { 
                                 bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'grey.300',
                                 transform: 'scale(1.1)'
                               }
                             }}
                           >
-                            <BuildIcon fontSize="small" />
+                            <BuildIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                           </IconButton>
                         </Tooltip>
                       ) : (
@@ -356,9 +367,10 @@ const AgentList: React.FC<AgentListProps> = ({
                           sx={{ 
                             bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'grey.100',
                             color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'grey.400',
+                            padding: '4px',
                           }}
                         >
-                          <BuildIcon fontSize="small" />
+                          <BuildIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                         </IconButton>
                       )}
                     </TableCell>
@@ -370,6 +382,12 @@ const AgentList: React.FC<AgentListProps> = ({
                         sx={{ 
                           fontWeight: 'medium',
                           borderRadius: 1,
+                          height: '24px',
+                          '& .MuiChip-label': {
+                            px: 1,
+                            py: 0.5,
+                            fontSize: '0.75rem'
+                          },
                           bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.05)',
                           color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'text.primary'
                         }}
@@ -383,6 +401,12 @@ const AgentList: React.FC<AgentListProps> = ({
                         sx={{ 
                           fontWeight: 'medium',
                           borderRadius: 1,
+                          height: '24px',
+                          '& .MuiChip-label': {
+                            px: 1,
+                            py: 0.5,
+                            fontSize: '0.75rem'
+                          },
                           bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.05)',
                           color: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'text.primary'
                         }}
@@ -396,13 +420,14 @@ const AgentList: React.FC<AgentListProps> = ({
                           sx={{ 
                             bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)',
                             transition: 'all 0.2s',
+                            padding: '4px',
                             '&:hover': { 
                               bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.08)',
                               transform: 'scale(1.1)'
                             }
                           }}
                         >
-                          <MoreVertIcon />
+                          <MoreVertIcon sx={{ fontSize: '1.1rem' }} />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
