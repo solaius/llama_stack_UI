@@ -562,108 +562,106 @@ const AgentList: React.FC<AgentListProps> = ({
       </TableContainer>
       
       {/* Actions Menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            borderRadius: 2,
-            minWidth: 200,
-            overflow: 'visible',
-            mt: 1.5,
-            '&:before': {
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: 'background.paper',
-              transform: 'translateY(-50%) rotate(45deg)',
-              zIndex: 0,
+      {selectedAgent && (
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            elevation: 3,
+            sx: {
+              borderRadius: 2,
+              minWidth: 200,
+              overflow: 'visible',
+              mt: 1.5,
+              '&:before': {
+                content: '""',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                right: 14,
+                width: 10,
+                height: 10,
+                bgcolor: 'background.paper',
+                transform: 'translateY(-50%) rotate(45deg)',
+                zIndex: 0,
+              },
             },
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        {selectedAgent && (
-          <>
-            <MenuItem 
-              onClick={() => {
-                const sessionId = `session-${Date.now()}`;
-                navigate(`/chat/${selectedAgent.agent_id || selectedAgent.id}/${sessionId}`);
-                handleMenuClose();
-              }}
-              sx={{ color: 'success.main' }}
-            >
-              <ListItemIcon sx={{ color: 'success.main' }}>
-                <ChatIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Chat with Agent" />
-            </MenuItem>
-            
-            <MenuItem 
-              onClick={() => {
-                navigate(`/agents/${selectedAgent.agent_id || selectedAgent.id}`);
-                handleMenuClose();
-              }}
-              sx={{ color: 'primary.main' }}
-            >
-              <ListItemIcon sx={{ color: 'primary.main' }}>
-                <VisibilityIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="View Details" />
-            </MenuItem>
-            
-            <Divider />
-            
-            <MenuItem 
-              onClick={() => {
-                onEdit(selectedAgent);
-                handleMenuClose();
-              }}
-              sx={{ color: 'info.main' }}
-            >
-              <ListItemIcon sx={{ color: 'info.main' }}>
-                <EditIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Edit" />
-            </MenuItem>
-            
-            <MenuItem 
-              onClick={() => {
-                onDuplicate(selectedAgent);
-                handleMenuClose();
-              }}
-              sx={{ color: 'warning.main' }}
-            >
-              <ListItemIcon sx={{ color: 'warning.main' }}>
-                <DuplicateIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Duplicate" />
-            </MenuItem>
-            
-            <Divider />
-            
-            <MenuItem 
-              onClick={() => {
-                onDelete(selectedAgent);
-                handleMenuClose();
-              }}
-              sx={{ color: 'error.main' }}
-            >
-              <ListItemIcon sx={{ color: 'error.main' }}>
-                <DeleteIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Delete" />
-            </MenuItem>
-          </>
-        )}
-      </Menu>
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <MenuItem 
+            onClick={() => {
+              const sessionId = `session-${Date.now()}`;
+              navigate(`/chat/${selectedAgent.agent_id || selectedAgent.id}/${sessionId}`);
+              handleMenuClose();
+            }}
+            sx={{ color: 'success.main' }}
+          >
+            <ListItemIcon sx={{ color: 'success.main' }}>
+              <ChatIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Chat with Agent" />
+          </MenuItem>
+          
+          <MenuItem 
+            onClick={() => {
+              navigate(`/agents/${selectedAgent.agent_id || selectedAgent.id}`);
+              handleMenuClose();
+            }}
+            sx={{ color: 'primary.main' }}
+          >
+            <ListItemIcon sx={{ color: 'primary.main' }}>
+              <VisibilityIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="View Details" />
+          </MenuItem>
+          
+          <Divider />
+          
+          <MenuItem 
+            onClick={() => {
+              onEdit(selectedAgent);
+              handleMenuClose();
+            }}
+            sx={{ color: 'info.main' }}
+          >
+            <ListItemIcon sx={{ color: 'info.main' }}>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Edit" />
+          </MenuItem>
+          
+          <MenuItem 
+            onClick={() => {
+              onDuplicate(selectedAgent);
+              handleMenuClose();
+            }}
+            sx={{ color: 'warning.main' }}
+          >
+            <ListItemIcon sx={{ color: 'warning.main' }}>
+              <DuplicateIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Duplicate" />
+          </MenuItem>
+          
+          <Divider />
+          
+          <MenuItem 
+            onClick={() => {
+              onDelete(selectedAgent);
+              handleMenuClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon sx={{ color: 'error.main' }}>
+              <DeleteIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Delete" />
+          </MenuItem>
+        </Menu>
+      )}
     </Box>
   );
 };

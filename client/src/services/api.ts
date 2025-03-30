@@ -666,12 +666,16 @@ export const apiService = {
       
       console.log('Updating agent with config:', formattedConfig);
       
-      // Try to update via API (this might not work if the endpoint doesn't exist)
-      try {
-        await api.put(`/v1/agents/${agentId}`, { agent_config: formattedConfig });
-      } catch (error) {
-        console.warn(`API update failed for agent ${agentId}, updating local storage only:`, error);
-      }
+      // The API doesn't support PUT for agent updates
+      // Instead, we'll delete and recreate the agent if needed in the future
+      
+      // For now, just update the local storage and inform the user
+      console.warn(`API update not supported for agent ${agentId}, updating local storage only`);
+      
+      // In a future version, we could implement:
+      // 1. Delete the existing agent
+      // 2. Create a new agent with the same ID (if the API allows specifying IDs)
+      // 3. Or create a new agent and inform the user of the new ID
       
       // Update in localStorage regardless of API success
       const agents = apiService._getAgentsFromStorage();

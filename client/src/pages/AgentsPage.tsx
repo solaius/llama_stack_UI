@@ -123,15 +123,28 @@ const AgentsPage: React.FC = () => {
       if (isEditing && currentAgent) {
         // Update existing agent
         const agentId = currentAgent.agent_id || currentAgent.id;
+        
+        // Show a warning that updates are not fully supported by the API
+        setNotification({
+          open: true,
+          message: `Note: The API doesn't support direct updates. Changes are saved locally only.`,
+          severity: 'warning'
+        });
+        
+        // Still try to update in case the API supports it in the future
         const updatedAgent = await apiService.updateAgent(agentId, {
           ...configValues,
           name: name // Include name in the update
         });
-        setNotification({
-          open: true,
-          message: `Agent "${name}" updated successfully`,
-          severity: 'success'
-        });
+        
+        // Show success message after the warning
+        setTimeout(() => {
+          setNotification({
+            open: true,
+            message: `Agent "${name}" updated in local storage`,
+            severity: 'success'
+          });
+        }, 3000);
       } else {
         // Create new agent
         const newAgent = await apiService.createAgent({
