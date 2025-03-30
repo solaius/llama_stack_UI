@@ -24,7 +24,8 @@ import {
   FormControl,
   InputLabel,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -91,7 +92,7 @@ const AgentList: React.FC<AgentListProps> = ({
     setPage(newPage - 1); // Pagination component is 1-indexed, but our state is 0-indexed
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChangeRowsPerPage = (event: SelectChangeEvent) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
