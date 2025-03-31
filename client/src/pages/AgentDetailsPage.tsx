@@ -402,7 +402,13 @@ const AgentDetailsPage: React.FC = () => {
 
       </Paper>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+      <Box sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider', 
+          mb: 3,
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)',
+          borderRadius: '4px 4px 0 0',
+        }}>
         <Tabs 
           value={tabValue} 
           onChange={handleTabChange} 
@@ -411,14 +417,17 @@ const AgentDetailsPage: React.FC = () => {
             '& .MuiTab-root': {
               fontWeight: 'bold',
               transition: 'all 0.2s',
+              py: 1.5,
               '&:hover': {
                 color: 'primary.main',
-                opacity: 1
+                opacity: 1,
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
               }
             },
             '& .Mui-selected': {
               color: 'primary.main',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)'
             },
             '& .MuiTabs-indicator': {
               height: 3,
