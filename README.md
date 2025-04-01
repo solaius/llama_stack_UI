@@ -63,6 +63,9 @@ cd ../client && npm install
 # Start server
 cd server && npm run dev
 
+# set the environment variable for the proxy
+export REACT_APP_API_URL=http://localhost:3001/api
+
 # Start client (in a new terminal)
 cd client && npm start
 ```
