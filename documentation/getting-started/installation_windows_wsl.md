@@ -120,6 +120,9 @@ npm run dev
 In another terminal window:
 
 ```bash
+# set the environment variable for the proxy
+export REACT_APP_API_URL=http://localhost:3001/api
+
 cd client
 npm start
 ```
