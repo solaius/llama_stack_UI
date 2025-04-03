@@ -829,44 +829,45 @@ const AgentChatPage: React.FC = () => {
             background: theme.palette.mode === 'dark' ? 'rgba(20, 20, 20, 0.5)' : 'rgba(245, 245, 245, 0.5)'
           }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isStreaming}
-                    onChange={(e) => setIsStreaming(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Streaming Responses
-                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
-                      Show responses as they are generated
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                {/* Streaming Responses Toggle */}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isStreaming}
+                      onChange={(e) => setIsStreaming(e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      Streaming Responses
+                      <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
+                        Show responses as they are generated
+                      </Typography>
                     </Typography>
+                  }
+                />
+                
+                {/* Text Size Slider */}
+                <Box sx={{ width: '40%' }}>
+                  <Typography variant="body2" gutterBottom>
+                    Text Size: {Math.round(textSize * 12)}pt
                   </Typography>
-                }
-              />
-              
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="body2" gutterBottom>
-                  Text Size: {textSize.toFixed(1)}rem
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="caption">Small</Typography>
-                  <Slider
-                    value={textSize}
-                    min={0.7}
-                    max={1.4}
-                    step={0.1}
-                    onChange={(_event: Event, value: number | number[]) => setTextSize(typeof value === 'number' ? value : value[0])}
-                    aria-labelledby="text-size-slider"
-                    sx={{ mx: 1 }}
-                  />
-                  <Typography variant="caption">Large</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>A</Typography>
+                    <Slider
+                      value={textSize}
+                      min={0.7}
+                      max={1.4}
+                      step={0.1}
+                      onChange={(_event: Event, value: number | number[]) => setTextSize(typeof value === 'number' ? value : value[0])}
+                      aria-labelledby="text-size-slider"
+                      size="small"
+                    />
+                    <Typography variant="caption" sx={{ fontSize: '1.1rem' }}>A</Typography>
+                  </Box>
                 </Box>
-                <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
-                  Adjust the size of chat messages
-                </Typography>
               </Box>
               
               {agent && (
