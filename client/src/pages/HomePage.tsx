@@ -73,21 +73,21 @@ const HomePage: React.FC = () => {
       link: '/chat'
     },
     { 
-      title: 'Tool Integration', 
-      description: 'Explore and test available tools with the Llama models', 
-      icon: <CodeIcon fontSize="large" color="secondary" />,
-      link: '/tools'
-    },
-    { 
       title: 'Agent Creation', 
       description: 'Create and manage specialized agents for different tasks', 
-      icon: <AgentIcon fontSize="large" color="info" />,
+      icon: <AgentIcon fontSize="large" color="success" />,
       link: '/agents'
+    },
+    { 
+      title: 'Tool Integration', 
+      description: 'Explore and test available tools with the Llama models', 
+      icon: <CodeIcon fontSize="large" color="info" />,
+      link: '/tools'
     },
     { 
       title: 'Evaluations', 
       description: 'Run and view evaluations on model performance', 
-      icon: <AssessmentIcon fontSize="large" color="success" />,
+      icon: <AssessmentIcon fontSize="large" color="secondary" />,
       link: '/evaluations'
     }
   ];
@@ -178,13 +178,13 @@ const HomePage: React.FC = () => {
                       },
                       ...(theme.palette.mode === 'light' 
                         ? {
-                            border: '1px solid rgba(0, 102, 204, 0.2)',
-                            background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
+                            border: '1px solid rgba(240, 86, 29, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #ffeee6)',
                             boxShadow: 'none'
                           } 
                         : {
-                            border: '1px solid rgba(0, 102, 204, 0.2)',
-                            background: 'linear-gradient(to bottom, #202020, #002952)',
+                            border: '1px solid rgba(240, 86, 29, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #3d1a0e)',
                             boxShadow: 'none'
                           }
                       )
@@ -198,7 +198,7 @@ const HomePage: React.FC = () => {
                         minWidth: '40px', 
                         height: '40px',
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(0, 102, 204, 0.1)'
+                        backgroundColor: 'rgba(240, 86, 29, 0.1)'
                       }}>
                         <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
                       </Box>
@@ -206,55 +206,6 @@ const HomePage: React.FC = () => {
                     </Box>
                     <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
                       {modelCount}
-                    </Typography>
-                  </Paper>
-                </Tooltip>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Tooltip title="Number of available tools for model integration" arrow placement="top">
-                  <Paper 
-                    elevation={2}
-                    sx={(theme) => ({ 
-                      p: 3, 
-                      borderRadius: 2, 
-                      height: '100%', 
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
-                      },
-                      ...(theme.palette.mode === 'light' 
-                        ? {
-                            border: '1px solid rgba(55, 163, 163, 0.2)',
-                            background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
-                            boxShadow: 'none'
-                          } 
-                        : {
-                            border: '1px solid rgba(55, 163, 163, 0.2)',
-                            background: 'linear-gradient(to bottom, #202020, #003636)',
-                            boxShadow: 'none'
-                          }
-                      )
-                    })}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        minWidth: '40px', 
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(55, 163, 163, 0.1)'
-                      }}>
-                        <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
-                      </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Tools</Typography>
-                    </Box>
-                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
-                      {toolCount}
                     </Typography>
                   </Paper>
                 </Tooltip>
@@ -304,6 +255,55 @@ const HomePage: React.FC = () => {
                     </Box>
                     <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'success.main', textAlign: 'center' }}>
                       {agentCount}
+                    </Typography>
+                  </Paper>
+                </Tooltip>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Tooltip title="Number of available tools for model integration" arrow placement="top">
+                  <Paper 
+                    elevation={2}
+                    sx={(theme) => ({ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
+                      },
+                      ...(theme.palette.mode === 'light' 
+                        ? {
+                            border: '1px solid rgba(55, 163, 163, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
+                            boxShadow: 'none'
+                          } 
+                        : {
+                            border: '1px solid rgba(55, 163, 163, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #003636)',
+                            boxShadow: 'none'
+                          }
+                      )
+                    })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        minWidth: '40px', 
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(55, 163, 163, 0.1)'
+                      }}>
+                        <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Tools</Typography>
+                    </Box>
+                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
+                      {toolCount}
                     </Typography>
                   </Paper>
                 </Tooltip>
