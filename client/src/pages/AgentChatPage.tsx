@@ -768,7 +768,9 @@ const AgentChatPage: React.FC = () => {
           maxWidth: '1200px', // Match the max-width of the content area
           width: '100%',
           mx: 'auto', // Center the box
-          p: 2
+          p: 2,
+          pr: 3, // Add right padding/margin
+          marginRight: '24px' // Add specific margin to the right
         }}>
           <Box sx={{ 
             display: 'flex', 
