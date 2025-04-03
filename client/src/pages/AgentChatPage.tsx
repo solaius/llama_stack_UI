@@ -329,7 +329,6 @@ const AgentChatPage: React.FC = () => {
           console.log('SSE message received:', event.data);
           const data = JSON.parse(event.data);
           
-          // Handle progress events (streaming tokens)
           if (data.event && data.event.event_type === 'progress') {
             // Update the assistant's message with new content
             if (data.event.delta && data.event.delta.text) {
@@ -359,41 +358,7 @@ const AgentChatPage: React.FC = () => {
               // Force scroll to bottom with each update
               setTimeout(scrollToBottom, 10);
             }
-          } 
-          // Handle turn_complete events
-          else if (data.event && data.event.event_type === 'turn_complete') {
-            console.log('Turn complete event received:', data);
-            
-            // Extract the output message from the turn data
-            if (data.event.payload && data.event.payload.turn && data.event.payload.turn.output_message) {
-              const outputMessage = data.event.payload.turn.output_message;
-              console.log('Output message from turn_complete:', outputMessage);
-              
-              // Update the state with the final message
-              setMessages(prevMessages => {
-                const newMessages = [...prevMessages];
-                if (newMessages.length > 0) {
-                  // Replace the last message with the output message
-                  newMessages[newMessages.length - 1] = outputMessage;
-                } else {
-                  // If there are no messages, add the output message
-                  newMessages.push(outputMessage);
-                }
-                console.log('Final messages state:', newMessages);
-                return [...newMessages]; // Return a new array to ensure React detects the change
-              });
-              
-              // Clean up
-              setIsSending(false);
-              eventSource.close();
-              eventSourceRef.current = null;
-              
-              // Final scroll to bottom
-              setTimeout(scrollToBottom, 50);
-            }
-          }
-          // Handle complete events (for compatibility)
-          else if (data.event && data.event.event_type === 'complete') {
+          } else if (data.event && data.event.event_type === 'complete') {
             console.log('Stream complete event received:', data);
             
             // Create the final message with all data
@@ -503,9 +468,6 @@ const AgentChatPage: React.FC = () => {
       );
       
       console.log('Received turn response:', turnResponse);
-      
-      // Force a re-render to ensure the UI updates
-      setMessages(prevMessages => [...prevMessages]);
       
       // Add assistant message from the response
       if (turnResponse && turnResponse.output_message) {
@@ -932,9 +894,6 @@ const AgentChatPage: React.FC = () => {
                 <Typography variant="caption" component="div">
                   Is sending: {isSending ? 'true' : 'false'}
                 </Typography>
-                <Typography variant="caption" component="div">
-                  Messages: {JSON.stringify(messages.map(m => ({ role: m.role, content_length: m.content.length })))}
-                </Typography>
               </Box>
             )}
             
@@ -945,41 +904,9 @@ const AgentChatPage: React.FC = () => {
                   console.log(`Rendering message ${index}:`, message);
                   const isLastMessage = index === filteredArray.length - 1;
                   
-                  // Render a simple message for debugging
-                  if (process.env.NODE_ENV === 'development') {
-                    return (
-                      <ListItem
-                        key={`message-${index}-${message.role}-${Date.now()}`}
-                        sx={{
-                          display: 'flex',
-                          justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                          p: 0,
-                          mb: 2,
-                          width: '100%'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            maxWidth: '80%',
-                            p: 2,
-                            borderRadius: 2,
-                            bgcolor: message.role === 'user' ? 'primary.main' : 'background.paper',
-                            color: message.role === 'user' ? 'white' : 'text.primary',
-                            boxShadow: 1
-                          }}
-                        >
-                          <Typography variant="body1">
-                            <strong>{message.role}:</strong> {message.content}
-                          </Typography>
-                        </Box>
-                      </ListItem>
-                    );
-                  }
-                  
-                  // Use the ChatMessage component for production
                   return (
                     <ListItem
-                      key={`message-${index}-${message.role}-${Date.now()}`}
+                      key={`message-${index}-${message.role}`}
                       sx={{
                         display: 'flex',
                         justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
