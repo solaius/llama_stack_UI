@@ -338,25 +338,36 @@ const AgentChatPage: React.FC = () => {
               console.log('Updating message with new content:', newText);
               console.log('Current total content:', currentContent);
               
-              // Force update the message with the current content
-              const updatedMessage: Message = { 
-                role: 'assistant', 
-                content: currentContent 
-              };
-              
-              // Update the state with the new message and force a re-render
-              setMessages(prevMessages => {
-                // Create a new array with all messages except the last one
-                const newMessages = [...prevMessages];
-                // Replace the last message with our updated one
-                if (newMessages.length > 0) {
-                  newMessages[newMessages.length - 1] = updatedMessage;
-                }
-                return [...newMessages]; // Return a new array to ensure React detects the change
-              });
+              // Update the assistant's message with new content - similar to ChatInterface.tsx
+              assistantMessage.content += data.event.delta.text;
+              setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
               
               // Force scroll to bottom with each update
               setTimeout(scrollToBottom, 10);
+            }
+          } else if (data.event && data.event.event_type === 'turn_complete') {
+            console.log('Turn complete event received:', data);
+            
+            // Extract the output message from the turn data
+            if (data.event.payload && data.event.payload.turn && data.event.payload.turn.output_message) {
+              const outputMessage = data.event.payload.turn.output_message;
+              console.log('Output message from turn_complete:', outputMessage);
+              
+              // Update the state with the final message
+              setMessages(prevMessages => {
+                const newMessages = [...prevMessages];
+                if (newMessages.length > 0) {
+                  // Replace the last message with the output message
+                  newMessages[newMessages.length - 1] = outputMessage;
+                }
+                console.log('Final messages state:', newMessages);
+                return newMessages;
+              });
+              
+              // Clean up
+              setIsSending(false);
+              eventSource.close();
+              eventSourceRef.current = null;
             }
           } else if (data.event && data.event.event_type === 'complete') {
             console.log('Stream complete event received:', data);
