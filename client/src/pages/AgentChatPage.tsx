@@ -329,10 +329,10 @@ const AgentChatPage: React.FC = () => {
           console.log('SSE message received:', event.data);
           const data = JSON.parse(event.data);
           
-          if (data.event && data.event.event_type === 'progress') {
+          if (data.event && data.event.payload && data.event.payload.event_type === 'step_progress') {
             // Update the assistant's message with new content
-            if (data.event.delta && data.event.delta.text) {
-              const newText = data.event.delta.text;
+            if (data.event.payload.delta && data.event.payload.delta.text) {
+              const newText = data.event.payload.delta.text;
               currentContent += newText;
               
               console.log('Updating message with new content:', newText);
@@ -340,18 +340,23 @@ const AgentChatPage: React.FC = () => {
               
               // Update the state immutably by creating a new object based on the last message
               setMessages(prev => {
+                // Grab the last message
                 const lastMessage = prev[prev.length - 1];
+                
+                // Create a new object with updated content
                 const updatedMessage = {
                   ...lastMessage,
-                  content: lastMessage.content + data.event.delta.text,
+                  content: lastMessage.content + newText,
                 };
+                
+                // Return a brand-new array
                 return [...prev.slice(0, -1), updatedMessage];
               });
               
               // Force scroll to bottom with each update
               setTimeout(scrollToBottom, 10);
             }
-          } else if (data.event && data.event.event_type === 'turn_complete') {
+          } else if (data.event && data.event.payload && data.event.payload.event_type === 'turn_complete') {
             console.log('Turn complete event received:', data);
             
             // Extract the output message from the turn data
@@ -376,41 +381,46 @@ const AgentChatPage: React.FC = () => {
               eventSource.close();
               eventSourceRef.current = null;
             }
-          } else if (data.event && data.event.event_type === 'complete') {
-            console.log('Stream complete event received:', data);
+          } else if (data.event && data.event.payload && data.event.payload.event_type === 'step_complete') {
+            console.log('Step complete event received:', data);
             
-            // Create the final message with all data
-            const finalMessage: Message = {
-              role: 'assistant',
-              content: currentContent,
-              stop_reason: data.event.stop_reason || undefined
-            };
-            
-            // Add tool calls if present
-            if (data.completion_message?.tool_calls) {
-              console.log('Tool calls received:', data.completion_message.tool_calls);
-              finalMessage.tool_calls = data.completion_message.tool_calls;
-            }
-            
-            // Update the state with the final message using immutable approach
-            setMessages(prevMessages => {
-              if (prevMessages.length > 0) {
-                // Create a new array with all messages except the last one
-                const allButLast = prevMessages.slice(0, -1);
-                // Return a new array with the final message appended
-                return [...allButLast, finalMessage];
+            // Check if there's a model response in the step details
+            if (data.event.payload.step_details && data.event.payload.step_details.model_response) {
+              const modelResponse = data.event.payload.step_details.model_response;
+              
+              // Create the final message with all data
+              const finalMessage: Message = {
+                role: 'assistant',
+                content: modelResponse.content || currentContent,
+                stop_reason: modelResponse.stop_reason || undefined
+              };
+              
+              // Add tool calls if present
+              if (modelResponse.tool_calls) {
+                console.log('Tool calls received:', modelResponse.tool_calls);
+                finalMessage.tool_calls = modelResponse.tool_calls;
               }
-              // If there are no messages, just return an array with the final message
-              return [finalMessage];
-            });
-            
-            // Clean up
-            setIsSending(false);
-            eventSource.close();
-            eventSourceRef.current = null;
-            
-            // Final scroll to bottom
-            setTimeout(scrollToBottom, 50);
+              
+              // Update the state with the final message using immutable approach
+              setMessages(prevMessages => {
+                if (prevMessages.length > 0) {
+                  // Create a new array with all messages except the last one
+                  const allButLast = prevMessages.slice(0, -1);
+                  // Return a new array with the final message appended
+                  return [...allButLast, finalMessage];
+                }
+                // If there are no messages, just return an array with the final message
+                return [finalMessage];
+              });
+              
+              // Clean up
+              setIsSending(false);
+              eventSource.close();
+              eventSourceRef.current = null;
+              
+              // Final scroll to bottom
+              setTimeout(scrollToBottom, 50);
+            }
           }
         } catch (error) {
           console.error('Error parsing SSE message:', error, event.data);
