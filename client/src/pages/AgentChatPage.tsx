@@ -766,10 +766,9 @@ const AgentChatPage: React.FC = () => {
       >
         <Box sx={{ 
           maxWidth: '1100px', // Slightly narrower to create gap on both sides
-          width: 'calc(100% - 48px)', // Create larger gap on both sides
+          width: 'calc(100% - 32px)', // Create gap on both sides
           mx: 'auto', // Center the box
-          p: 2,
-          pr: { xs: 4, sm: 5, md: 6 } // Progressively larger right padding for different screen sizes
+          p: 2
         }}>
           <Box sx={{ 
             display: 'flex', 
