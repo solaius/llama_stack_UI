@@ -504,8 +504,8 @@ const AgentChatPage: React.FC = () => {
   };
 
   // Handle key press (Enter to send)
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -969,7 +969,7 @@ const AgentChatPage: React.FC = () => {
             variant="standard" // Changed to standard for cleaner look
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={isSending}
             multiline
             maxRows={4}
