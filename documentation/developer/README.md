@@ -27,6 +27,12 @@ The Llama Stack UI follows a client-server architecture:
 - **Routing**: React Router
 - **State Management**: React Context API
 
+### Detailed Architecture Guides
+
+- [Agent Chat Architecture](./agent_chat_architecture.md) - Overview of the agent chat system
+- [Session and Turn Management](./session_turn_management.md) - How sessions and turns are managed
+- [Streaming Implementation Guide](./streaming_implementation_guide.md) - Implementing streaming responses
+
 ## Development Workflow
 
 1. Set up your development environment following the installation guides
