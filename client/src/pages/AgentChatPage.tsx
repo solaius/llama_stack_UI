@@ -165,50 +165,108 @@ const AgentChatPage: React.FC = () => {
     };
   }, [agentId, sessionId]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
+  // Function to scroll to bottom of messages
+  const scrollToBottom = () => {
+    console.log('Scrolling to bottom of messages');
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    console.log('Messages changed, scrolling to bottom');
+    scrollToBottom();
   }, [messages]);
 
   // Handle sending a message
   const handleSendMessage = async () => {
-    if (!input.trim() || !agentId || !sessionId) return;
+    if (!input.trim() || !agentId || !sessionId || isSending) return;
     
+    console.log('Sending message, current state:', { 
+      input, 
+      isSending, 
+      isStreaming, 
+      agentId, 
+      sessionId 
+    });
+    
+    // Create user message
     const userMessage: Message = {
       role: 'user',
-      content: input
+      content: input.trim()
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    // Add file if one is selected
+    if (selectedFile) {
+      userMessage.file = {
+        name: selectedFile.name,
+        content: selectedFileContent || '',
+        type: selectedFile.type
+      };
+    }
+    
+    console.log('Created user message:', userMessage);
+    
+    // Add user message to the chat
+    setMessages(prevMessages => {
+      console.log('Adding user message to state, previous messages:', prevMessages);
+      const newMessages = [...prevMessages, userMessage];
+      console.log('New messages state after adding user message:', newMessages);
+      return newMessages;
+    });
+    
+    // Clear input and file
     setInput('');
+    setSelectedFile(null);
+    setSelectedFileContent(null);
+    
+    // Set sending state
     setIsSending(true);
     
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
     try {
+      // Handle response based on streaming preference
       if (isStreaming) {
-        // Handle streaming response
+        console.log('Using streaming response handler');
         await handleStreamingResponse(userMessage);
       } else {
-        // Handle non-streaming response
+        console.log('Using non-streaming response handler');
         await handleNonStreamingResponse(userMessage);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in handleSendMessage:', error);
+      setIsSending(false);
+      
       setNotification({
         open: true,
-        message: 'Failed to send message. Please try again.',
+        message: 'An unexpected error occurred. Please try again.',
         severity: 'error'
       });
-      setIsSending(false);
     }
+    
+    // Force a scroll to bottom after response is received
+    setTimeout(() => {
+      scrollToBottom();
+    }, 200);
   };
 
   // Handle streaming response
   const handleStreamingResponse = async (userMessage: Message) => {
-    // Add a placeholder assistant message that will be updated with streaming content
-    let assistantMessage: Message = { role: 'assistant', content: '' };
-    setMessages(prev => [...prev, assistantMessage]);
+    console.log('Starting streaming response for message:', userMessage);
+    
+    // Create a new assistant message object that we'll update with streaming content
+    const assistantMessage: Message = { role: 'assistant', content: '' };
+    
+    // Add the placeholder message to the state
+    setMessages(prevMessages => {
+      console.log('Adding placeholder assistant message to state');
+      return [...prevMessages, assistantMessage];
+    });
     
     try {
       // Ensure agentId and sessionId are defined
@@ -218,41 +276,80 @@ const AgentChatPage: React.FC = () => {
       
       // Create a new EventSource for SSE
       const url = `${apiService.getCurrentBaseUrl()}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`;
+      console.log('Streaming URL:', url);
+      
+      const payload = {
+        messages: [userMessage],
+        stream: true
+      };
+      console.log('Streaming payload:', payload);
       
       const eventSource = new SSE(url, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream'
         },
-        payload: JSON.stringify({
-          messages: [userMessage],
-          stream: true
-        })
+        payload: JSON.stringify(payload)
       });
       
       eventSourceRef.current = eventSource;
       
+      // Track content to avoid duplicate updates
+      let currentContent = '';
+      
       eventSource.onmessage = (event) => {
         try {
+          console.log('SSE message received:', event.data);
           const data = JSON.parse(event.data);
           
           if (data.event && data.event.event_type === 'progress') {
             // Update the assistant's message with new content
             if (data.event.delta && data.event.delta.text) {
-              assistantMessage.content += data.event.delta.text;
-              setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              const newText = data.event.delta.text;
+              currentContent += newText;
+              
+              console.log('Updating message with new content:', newText);
+              console.log('Current total content:', currentContent);
+              
+              // Create a new message object with updated content
+              const updatedMessage = { 
+                ...assistantMessage, 
+                content: currentContent 
+              };
+              
+              // Update the state with the new message
+              setMessages(prevMessages => {
+                // Find the last message (which should be our placeholder)
+                const newMessages = [...prevMessages];
+                newMessages[newMessages.length - 1] = updatedMessage;
+                return newMessages;
+              });
             }
           } else if (data.event && data.event.event_type === 'complete') {
-            // Complete the message and add any tool calls
+            console.log('Stream complete event received:', data);
+            
+            // Create the final message with all data
+            const finalMessage: Message = {
+              role: 'assistant',
+              content: currentContent,
+              stop_reason: data.event.stop_reason || undefined
+            };
+            
+            // Add tool calls if present
             if (data.completion_message?.tool_calls) {
-              assistantMessage.tool_calls = data.completion_message.tool_calls;
+              console.log('Tool calls received:', data.completion_message.tool_calls);
+              finalMessage.tool_calls = data.completion_message.tool_calls;
             }
             
-            if (data.event.stop_reason) {
-              assistantMessage.stop_reason = data.event.stop_reason;
-            }
+            // Update the state with the final message
+            setMessages(prevMessages => {
+              const newMessages = [...prevMessages];
+              newMessages[newMessages.length - 1] = finalMessage;
+              console.log('Final messages state:', newMessages);
+              return newMessages;
+            });
             
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+            // Clean up
             setIsSending(false);
             eventSource.close();
             eventSourceRef.current = null;
@@ -268,6 +365,17 @@ const AgentChatPage: React.FC = () => {
         eventSource.close();
         eventSourceRef.current = null;
         
+        // Update the message with an error
+        setMessages(prevMessages => {
+          const newMessages = [...prevMessages];
+          const errorMessage = {
+            role: 'assistant',
+            content: 'Sorry, there was an error with the streaming connection. Please try again.'
+          };
+          newMessages[newMessages.length - 1] = errorMessage;
+          return newMessages;
+        });
+        
         // Add error notification
         setNotification({
           open: true,
@@ -277,6 +385,7 @@ const AgentChatPage: React.FC = () => {
       };
       
       // Open the connection
+      console.log('Starting SSE stream');
       eventSource.stream();
       
     } catch (error) {
@@ -284,8 +393,15 @@ const AgentChatPage: React.FC = () => {
       setIsSending(false);
       
       // Update the placeholder message with an error
-      assistantMessage.content = 'Sorry, there was an error processing your request.';
-      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
+      setMessages(prevMessages => {
+        const newMessages = [...prevMessages];
+        const errorMessage = {
+          role: 'assistant',
+          content: 'Sorry, there was an error processing your request.'
+        };
+        newMessages[newMessages.length - 1] = errorMessage;
+        return newMessages;
+      });
       
       setNotification({
         open: true,
@@ -303,6 +419,8 @@ const AgentChatPage: React.FC = () => {
         throw new Error('Agent ID or Session ID is undefined');
       }
       
+      console.log('Sending non-streaming message:', userMessage);
+      
       // Call the API to create a turn
       const turnResponse = await apiService.createAgentTurn(
         agentId,
@@ -311,10 +429,22 @@ const AgentChatPage: React.FC = () => {
         false // non-streaming
       );
       
+      console.log('Received turn response:', turnResponse);
+      
       // Add assistant message from the response
       if (turnResponse && turnResponse.output_message) {
-        setMessages(prev => [...prev, turnResponse.output_message]);
+        console.log('Adding assistant message to state:', turnResponse.output_message);
+        
+        // Use a callback function to ensure we're working with the latest state
+        setMessages(prevMessages => {
+          console.log('Previous messages:', prevMessages);
+          const newMessages = [...prevMessages, turnResponse.output_message];
+          console.log('New messages array:', newMessages);
+          return newMessages;
+        });
       } else {
+        console.warn('No output message in turn response:', turnResponse);
+        
         // Fallback if no output message
         setMessages(prev => [
           ...prev,
@@ -718,26 +848,49 @@ const AgentChatPage: React.FC = () => {
             </Typography>
           </Box>
         ) : (
-          <List>
-            {messages
-              .filter(msg => msg.role !== 'system') // Don't show system messages
-              .map((message, index) => (
-                <ListItem
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                    p: 0,
-                    mb: 2
-                  }}
-                >
-                  <ChatMessage
-                    message={message}
-                    isLast={index === messages.length - 1 && isSending}
-                  />
-                </ListItem>
-              ))}
-          </List>
+          <>
+            {/* Debug info - only visible in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.05)', mb: 2, borderRadius: 1, fontSize: '0.75rem' }}>
+                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
+                  Debug Info (only visible in development):
+                </Typography>
+                <Typography variant="caption" component="div">
+                  Messages count: {messages.length}
+                </Typography>
+                <Typography variant="caption" component="div">
+                  Is sending: {isSending ? 'true' : 'false'}
+                </Typography>
+              </Box>
+            )}
+            
+            <List sx={{ width: '100%' }}>
+              {messages
+                .filter(msg => msg.role !== 'system') // Don't show system messages
+                .map((message, index, filteredArray) => {
+                  console.log(`Rendering message ${index}:`, message);
+                  const isLastMessage = index === filteredArray.length - 1;
+                  
+                  return (
+                    <ListItem
+                      key={`message-${index}-${message.role}`}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                        p: 0,
+                        mb: 2,
+                        width: '100%'
+                      }}
+                    >
+                      <ChatMessage
+                        message={message}
+                        isLast={isLastMessage && isSending}
+                      />
+                    </ListItem>
+                  );
+                })}
+            </List>
+          </>
         )}
         <div ref={messagesEndRef} />
       </Box>
