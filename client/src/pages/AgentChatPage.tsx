@@ -338,9 +338,15 @@ const AgentChatPage: React.FC = () => {
               console.log('Updating message with new content:', newText);
               console.log('Current total content:', currentContent);
               
-              // Update the assistant's message with new content - similar to ChatInterface.tsx
-              assistantMessage.content += data.event.delta.text;
-              setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              // Update the state immutably by creating a new object based on the last message
+              setMessages(prev => {
+                const lastMessage = prev[prev.length - 1];
+                const updatedMessage = {
+                  ...lastMessage,
+                  content: lastMessage.content + data.event.delta.text,
+                };
+                return [...prev.slice(0, -1), updatedMessage];
+              });
               
               // Force scroll to bottom with each update
               setTimeout(scrollToBottom, 10);
@@ -353,15 +359,16 @@ const AgentChatPage: React.FC = () => {
               const outputMessage = data.event.payload.turn.output_message;
               console.log('Output message from turn_complete:', outputMessage);
               
-              // Update the state with the final message
+              // Update the state with the final message using immutable approach
               setMessages(prevMessages => {
-                const newMessages = [...prevMessages];
-                if (newMessages.length > 0) {
-                  // Replace the last message with the output message
-                  newMessages[newMessages.length - 1] = outputMessage;
+                if (prevMessages.length > 0) {
+                  // Create a new array with all messages except the last one
+                  const allButLast = prevMessages.slice(0, -1);
+                  // Return a new array with the output message appended
+                  return [...allButLast, outputMessage];
                 }
-                console.log('Final messages state:', newMessages);
-                return newMessages;
+                // If there are no messages, just return an array with the output message
+                return [outputMessage];
               });
               
               // Clean up
@@ -385,14 +392,16 @@ const AgentChatPage: React.FC = () => {
               finalMessage.tool_calls = data.completion_message.tool_calls;
             }
             
-            // Update the state with the final message
+            // Update the state with the final message using immutable approach
             setMessages(prevMessages => {
-              const newMessages = [...prevMessages];
-              if (newMessages.length > 0) {
-                newMessages[newMessages.length - 1] = finalMessage;
+              if (prevMessages.length > 0) {
+                // Create a new array with all messages except the last one
+                const allButLast = prevMessages.slice(0, -1);
+                // Return a new array with the final message appended
+                return [...allButLast, finalMessage];
               }
-              console.log('Final messages state:', newMessages);
-              return [...newMessages]; // Return a new array to ensure React detects the change
+              // If there are no messages, just return an array with the final message
+              return [finalMessage];
             });
             
             // Clean up
