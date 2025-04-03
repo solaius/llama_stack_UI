@@ -858,7 +858,7 @@ const AgentChatPage: React.FC = () => {
                     min={0.7}
                     max={1.4}
                     step={0.1}
-                    onChange={(_: React.ChangeEvent<{}>, value: number) => setTextSize(value)}
+                    onChange={(_event: Event, value: number | number[]) => setTextSize(typeof value === 'number' ? value : value[0])}
                     aria-labelledby="text-size-slider"
                     sx={{ mx: 1 }}
                   />
