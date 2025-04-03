@@ -49,7 +49,8 @@ import {
   MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { Agent } from '../../services/api';
+import { Agent, apiService } from '../../services/api';
+import { Snackbar, Alert, AlertColor } from '@mui/material';
 
 interface AgentListProps {
   agents: Agent[];
@@ -77,6 +78,15 @@ const AgentList: React.FC<AgentListProps> = ({
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: AlertColor;
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
   
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, agent: Agent) => {
     setMenuAnchorEl(event.currentTarget);
@@ -677,6 +687,23 @@ const AgentList: React.FC<AgentListProps> = ({
           </MenuItem>
         </Menu>
       )}
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
