@@ -189,6 +189,13 @@ const AgentChatPage: React.FC = () => {
       const content = e.target?.result as string;
       setSelectedFileContent(content);
       console.log('File content loaded, length:', content.length);
+      
+      // Show notification
+      setNotification({
+        open: true,
+        message: `File "${file.name}" selected and ready to send.`,
+        severity: 'info'
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -504,19 +511,7 @@ const AgentChatPage: React.FC = () => {
     }
   };
   
-  // Handle file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    // In a real implementation, you would handle file uploads
-    // For now, we'll just show a notification
-    setNotification({
-      open: true,
-      message: `File "${files[0].name}" selected. File uploads are not implemented yet.`,
-      severity: 'info'
-    });
-  };
+  // Note: handleFileUpload function is defined earlier in the file
   
   // Handle rerunning a tool
   const handleRerunTool = async (toolCall: ToolCall) => {
