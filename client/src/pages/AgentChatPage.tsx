@@ -431,7 +431,8 @@ const AgentChatPage: React.FC = () => {
       height: '100vh', 
       display: 'flex', 
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'relative'
     }}>
       {/* Header */}
       <Paper 
@@ -666,9 +667,11 @@ const AgentChatPage: React.FC = () => {
           flexGrow: 1,
           overflow: 'auto',
           p: 2,
+          pb: 4, // Add padding at bottom to ensure messages don't get hidden behind input
           bgcolor: 'background.default',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          height: 'calc(100vh - 200px)' // Adjust height to leave room for header and input
         }}
       >
         {messages.length === 0 ? (
@@ -720,9 +723,19 @@ const AgentChatPage: React.FC = () => {
         sx={{
           p: 2,
           borderRadius: 0,
-          position: 'sticky',
+          position: 'fixed',
           bottom: 0,
-          zIndex: 10
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          boxShadow: '0px -2px 10px rgba(0,0,0,0.1)',
+          background: theme.palette.background.paper,
+          [theme.breakpoints.up('md')]: {
+            marginLeft: '260px', // Match the width of the sidebar on larger screens
+          },
+          [theme.breakpoints.down('md')]: {
+            marginLeft: 0, // No margin on smaller screens
+          }
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
