@@ -33,7 +33,8 @@ import {
   Settings as SettingsIcon,
   ExpandMore as ExpandMoreIcon,
   SmartToy as BotIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
@@ -422,7 +423,12 @@ const AgentChatPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
       {/* Header */}
       <Paper elevation={1} sx={{ p: 2, borderRadius: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -438,9 +444,55 @@ const AgentChatPage: React.FC = () => {
             <Box>
               <Typography variant="h6" noWrap>
                 {agent?.name || agent?.model || 'Agent Chat'}
+                <IconButton 
+                  size="small" 
+                  onClick={() => {
+                    navigator.clipboard.writeText(agent?.name || agent?.model || '');
+                    setNotification({
+                      open: true,
+                      message: 'Agent name copied to clipboard',
+                      severity: 'success'
+                    });
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Agent ID: {agentId}
+                <IconButton 
+                  size="small" 
+                  onClick={() => {
+                    if (agentId) {
+                      navigator.clipboard.writeText(agentId);
+                      setNotification({
+                        open: true,
+                        message: 'Agent ID copied to clipboard',
+                        severity: 'success'
+                      });
+                    }
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 Session ID: {sessionId}
+                <IconButton 
+                  size="small" 
+                  onClick={() => {
+                    if (sessionId) {
+                      navigator.clipboard.writeText(sessionId);
+                      setNotification({
+                        open: true,
+                        message: 'Session ID copied to clipboard',
+                        severity: 'success'
+                      });
+                    }
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
               </Typography>
             </Box>
           </Box>
@@ -507,7 +559,9 @@ const AgentChatPage: React.FC = () => {
           flexGrow: 1,
           overflow: 'auto',
           p: 2,
-          bgcolor: 'background.default'
+          bgcolor: 'background.default',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {messages.length === 0 ? (
@@ -537,7 +591,7 @@ const AgentChatPage: React.FC = () => {
                   key={index}
                   sx={{
                     display: 'flex',
-                    justifyContent: 'center',
+                    justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
                     p: 0,
                     mb: 2
                   }}
@@ -558,7 +612,10 @@ const AgentChatPage: React.FC = () => {
         elevation={3}
         sx={{
           p: 2,
-          borderRadius: 0
+          borderRadius: 0,
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 10
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
