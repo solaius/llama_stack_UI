@@ -149,8 +149,8 @@ const AgentDetailsPage: React.FC = () => {
     try {
       setIsCreatingSession(true);
       
-      // Generate a session ID and navigate directly to chat
-      const sessionId = `session-${Date.now()}`;
+      // Create a session using the API
+      const sessionId = await apiService.createAgentSession(agentId, newSessionName.trim());
       
       setNotification({
         open: true,
@@ -272,10 +272,20 @@ const AgentDetailsPage: React.FC = () => {
             variant="contained"
             color="success"
             startIcon={<ChatIcon />}
-            onClick={() => {
-              // Create a new session and navigate to chat
-              const sessionId = `session-${Date.now()}`;
-              navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+            onClick={async () => {
+              try {
+                // Create a new session with a default name and navigate to chat
+                const defaultSessionName = `Chat with ${agent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, defaultSessionName);
+                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              } catch (error) {
+                console.error('Error creating session:', error);
+                setNotification({
+                  open: true,
+                  message: 'Failed to create session. Please try again.',
+                  severity: 'error'
+                });
+              }
             }}
             sx={{ 
               borderRadius: 2,
@@ -823,10 +833,20 @@ const AgentDetailsPage: React.FC = () => {
               variant="contained"
               color="success"
               startIcon={<ChatIcon />}
-              onClick={() => {
-                // Create a new session and navigate to chat
-                const sessionId = `session-${Date.now()}`;
-                navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+              onClick={async () => {
+                try {
+                  // Create a new session with a default name and navigate to chat
+                  const defaultSessionName = `Quick Chat - ${new Date().toLocaleString()}`;
+                  const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, defaultSessionName);
+                  navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                } catch (error) {
+                  console.error('Error creating session:', error);
+                  setNotification({
+                    open: true,
+                    message: 'Failed to create session. Please try again.',
+                    severity: 'error'
+                  });
+                }
               }}
               sx={{ 
                 borderRadius: 2,
@@ -855,10 +875,20 @@ const AgentDetailsPage: React.FC = () => {
                 variant="contained"
                 color="success"
                 startIcon={<ChatIcon />}
-                onClick={() => {
-                  // Create a new session and navigate to chat
-                  const sessionId = `session-${Date.now()}`;
-                  navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                onClick={async () => {
+                  try {
+                    // Create a new session with a default name and navigate to chat
+                    const defaultSessionName = `Start Chat - ${new Date().toLocaleString()}`;
+                    const sessionId = await apiService.createAgentSession(agent.agent_id || agent.id, defaultSessionName);
+                    navigate(`/chat/${agent.agent_id || agent.id}/${sessionId}`);
+                  } catch (error) {
+                    console.error('Error creating session:', error);
+                    setNotification({
+                      open: true,
+                      message: 'Failed to create session. Please try again.',
+                      severity: 'error'
+                    });
+                  }
                 }}
               >
                 Start chatting now
