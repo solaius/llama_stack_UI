@@ -467,7 +467,7 @@ const AgentChatPage: React.FC = () => {
               <ArrowBackIcon />
             </IconButton>
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Typography variant="h6" noWrap sx={{ fontWeight: 500 }}>
                   {agent?.name || agent?.model || 'Agent Chat'}
                 </Typography>
@@ -491,18 +491,21 @@ const AgentChatPage: React.FC = () => {
                     }
                   }}
                 >
-                  <IconButton 
-                    size="small" 
+                  <Box 
                     sx={{ 
-                      ml: 0.5, 
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
                       color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                      borderRadius: '50%',
+                      width: 24,
+                      height: 24,
                       transition: 'all 0.2s',
-                      padding: '4px'
                     }}
                   >
                     <DescriptionIcon fontSize="small" sx={{ fontSize: '1rem' }} />
-                  </IconButton>
+                  </Box>
                 </Tooltip>
               </Box>
               
@@ -749,7 +752,8 @@ const AgentChatPage: React.FC = () => {
           right: 0,
           zIndex: 100,
           boxShadow: '0px -2px 10px rgba(0,0,0,0.1)',
-          background: theme.palette.background.paper,
+          background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
           [theme.breakpoints.up('md')]: {
             marginLeft: '260px', // Match the width of the sidebar on larger screens
           },
@@ -758,7 +762,16 @@ const AgentChatPage: React.FC = () => {
           }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', px: 1 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          px: 2,
+          py: 1,
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.4)' : 'rgba(240, 240, 240, 0.6)',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}>
           <IconButton
             color="primary"
             onClick={() => fileInputRef.current?.click()}
@@ -776,14 +789,19 @@ const AgentChatPage: React.FC = () => {
           <TextField
             fullWidth
             placeholder="Type your message..."
-            variant="outlined"
+            variant="standard" // Changed to standard for cleaner look
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={isSending}
             multiline
             maxRows={4}
-            sx={{ mr: 1 }}
+            sx={{ 
+              mx: 1,
+              '& .MuiInput-underline:before': { borderBottom: 'none' },
+              '& .MuiInput-underline:after': { borderBottom: 'none' },
+              '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
+            }}
           />
           <Button
             variant="contained"
