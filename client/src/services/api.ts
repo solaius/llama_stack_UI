@@ -71,6 +71,11 @@ export interface Message {
   tool_calls?: ToolCall[];
   call_id?: string;
   tool_name?: string;
+  file?: {
+    name: string;
+    content: string;
+    type: string;
+  };
 }
 
 export interface ToolCallFunction {

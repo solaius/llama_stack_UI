@@ -58,6 +58,8 @@ const AgentChatPage: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [isStreaming, setIsStreaming] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileContent, setSelectedFileContent] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -171,6 +173,24 @@ const AgentChatPage: React.FC = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+  
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    console.log('File selected:', file.name);
+    setSelectedFile(file);
+    
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setSelectedFileContent(content);
+      console.log('File content loaded, length:', content.length);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Scroll to bottom when messages change
@@ -368,7 +388,7 @@ const AgentChatPage: React.FC = () => {
         // Update the message with an error
         setMessages(prevMessages => {
           const newMessages = [...prevMessages];
-          const errorMessage = {
+          const errorMessage: Message = {
             role: 'assistant',
             content: 'Sorry, there was an error with the streaming connection. Please try again.'
           };
@@ -395,7 +415,7 @@ const AgentChatPage: React.FC = () => {
       // Update the placeholder message with an error
       setMessages(prevMessages => {
         const newMessages = [...prevMessages];
-        const errorMessage = {
+        const errorMessage: Message = {
           role: 'assistant',
           content: 'Sorry, there was an error processing your request.'
         };
