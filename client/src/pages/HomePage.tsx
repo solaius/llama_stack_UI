@@ -87,7 +87,7 @@ const HomePage: React.FC = () => {
     { 
       title: 'Evaluations', 
       description: 'Run and view evaluations on model performance', 
-      icon: <AssessmentIcon fontSize="large" color="secondary" />,
+      icon: <AssessmentIcon fontSize="large" color="error" />,
       link: '/evaluations'
     }
   ];
@@ -178,13 +178,13 @@ const HomePage: React.FC = () => {
                       },
                       ...(theme.palette.mode === 'light' 
                         ? {
-                            border: '1px solid rgba(240, 86, 29, 0.2)',
-                            background: 'linear-gradient(to bottom, #ffffff, #ffeee6)',
+                            border: '1px solid rgba(0, 102, 204, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
                             boxShadow: 'none'
                           } 
                         : {
-                            border: '1px solid rgba(240, 86, 29, 0.2)',
-                            background: 'linear-gradient(to bottom, #202020, #3d1a0e)',
+                            border: '1px solid rgba(0, 102, 204, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #002952)',
                             boxShadow: 'none'
                           }
                       )
@@ -198,7 +198,7 @@ const HomePage: React.FC = () => {
                         minWidth: '40px', 
                         height: '40px',
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(240, 86, 29, 0.1)'
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)'
                       }}>
                         <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
                       </Box>
@@ -334,8 +334,8 @@ const HomePage: React.FC = () => {
                     width: '100%',
                     height: '4px',
                     backgroundColor: index === 0 ? 'primary.main' : 
-                                    index === 1 ? 'secondary.main' : 
-                                    index === 2 ? 'info.main' : 'success.main',
+                                    index === 1 ? 'success.main' : 
+                                    index === 2 ? 'info.main' : 'secondary.main',
                     opacity: 0,
                     transition: 'opacity 0.3s ease-in-out',
                   },
@@ -484,7 +484,7 @@ const HomePage: React.FC = () => {
                     borderRadius: '50%',
                     backgroundColor: 'rgba(99, 153, 61, 0.1)',
                   }}>
-                    <AssessmentIcon color="success" sx={{ fontSize: '1.25rem' }} />
+                    <AgentIcon color="success" sx={{ fontSize: '1.25rem' }} />
                   </Box>
                 </ListItemIcon>
                 <ListItemText 
