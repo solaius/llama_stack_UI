@@ -21,6 +21,7 @@ import {
   Switch,
   Chip,
   Accordion,
+  Slider,
   AccordionSummary,
   AccordionDetails,
   Collapse,
@@ -857,7 +858,7 @@ const AgentChatPage: React.FC = () => {
                     min={0.7}
                     max={1.4}
                     step={0.1}
-                    onChange={(_, value) => setTextSize(value as number)}
+                    onChange={(_: React.ChangeEvent<{}>, value: number) => setTextSize(value)}
                     aria-labelledby="text-size-slider"
                     sx={{ mx: 1 }}
                   />
