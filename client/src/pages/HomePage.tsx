@@ -487,35 +487,25 @@ const HomePage: React.FC = () => {
             <List>
               <ListItem 
                 component={Link} 
-                to="/agents" 
+                to="/tools" 
                 sx={{ 
                   py: 1.5, 
                   borderRadius: 1,
                   transition: 'all 0.2s',
                   '&:hover': {
                     backgroundColor: theme => theme.palette.mode === 'light' 
-                      ? 'rgba(99, 153, 61, 0.08)' 
-                      : 'rgba(99, 153, 61, 0.15)',
+                      ? 'rgba(0, 102, 204, 0.08)' 
+                      : 'rgba(0, 102, 204, 0.15)',
                     transform: 'translateX(5px)'
                   }
                 }}
               >
                 <ListItemIcon>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    width: '1.75rem',
-                    height: '1.75rem',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(99, 153, 61, 0.1)',
-                  }}>
-                    <AgentIcon color="success" sx={{ fontSize: '1.25rem' }} />
-                  </Box>
+                  <CodeIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Configure agents</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Create and manage specialized agents for different tasks</Typography>} 
+                  primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Explore available tools</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Discover and test tools that enhance model capabilities</Typography>} 
                 />
               </ListItem>
               
