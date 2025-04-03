@@ -743,16 +743,19 @@ const AgentChatPage: React.FC = () => {
       </Box>
       
       {/* Input */}
-      <Box
+      <Paper
+        elevation={3}
         sx={{
+          p: 0,
+          borderRadius: 0,
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(245, 245, 245, 0.95)',
+          boxShadow: '0px -2px 10px rgba(0,0,0,0.1)',
+          background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
-          p: 3,
           [theme.breakpoints.up('md')]: {
             marginLeft: '260px', // Match the width of the sidebar on larger screens
           },
@@ -761,32 +764,27 @@ const AgentChatPage: React.FC = () => {
           }
         }}
       >
-        <Box 
-          sx={{ 
-            maxWidth: '1200px',
-            width: '100%',
-            mx: 'auto',
-            px: 3
-          }}
-        >
-          <Paper
-            elevation={1}
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              px: 2,
-              py: 1,
-              borderRadius: 4,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: theme.palette.background.paper,
-              boxShadow: '0px 2px 4px rgba(0,0,0,0.05)'
-            }}>
+        <Box sx={{ 
+          maxWidth: '1200px', // Match the max-width of the content area
+          width: '100%',
+          mx: 'auto', // Center the box
+          p: 2
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            px: 2,
+            py: 1,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.4)' : 'rgba(240, 240, 240, 0.6)',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}>
           <IconButton
             color="primary"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
-            sx={{ color: theme.palette.mode === 'dark' ? 'error.main' : 'error.main' }}
+            sx={{ mr: 1 }}
           >
             <AttachFileIcon />
           </IconButton>
@@ -799,7 +797,7 @@ const AgentChatPage: React.FC = () => {
           <TextField
             fullWidth
             placeholder="Type your message..."
-            variant="standard"
+            variant="standard" // Changed to standard for cleaner look
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -807,37 +805,25 @@ const AgentChatPage: React.FC = () => {
             multiline
             maxRows={4}
             sx={{ 
-              mx: 2,
+              mx: 1,
               '& .MuiInput-underline:before': { borderBottom: 'none' },
               '& .MuiInput-underline:after': { borderBottom: 'none' },
-              '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-              '& .MuiInputBase-input': { 
-                fontSize: '1rem',
-                color: theme.palette.text.primary
-              }
+              '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
             }}
           />
           <Button
             variant="contained"
             color="primary"
-            endIcon={<SendIcon />}
+            endIcon={isSending ? <CircularProgress size={20} /> : <SendIcon />}
             onClick={handleSendMessage}
             disabled={!input.trim() || isSending}
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              bgcolor: theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300',
-              color: theme.palette.mode === 'dark' ? 'white' : 'text.primary',
-              '&:hover': {
-                bgcolor: theme.palette.mode === 'dark' ? 'grey.600' : 'grey.400',
-              }
-            }}
+            sx={{ ml: 1 }}
           >
-            {isSending ? <CircularProgress size={20} color="inherit" /> : 'Send'}
+            Send
           </Button>
-          </Paper>
+          </Box>
         </Box>
-      </Box>
+      </Paper>
 
       {/* Notification Snackbar */}
       <Snackbar
