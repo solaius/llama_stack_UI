@@ -12,7 +12,8 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from '@mui/material';
 import { 
   Chat as ChatIcon, 
@@ -20,7 +21,8 @@ import {
   Storage as StorageIcon,
   Assessment as AssessmentIcon,
   Info as InfoIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  SmartToy as AgentIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import apiService from '../services/api';
@@ -29,6 +31,7 @@ const HomePage: React.FC = () => {
   const [version, setVersion] = useState<string>('');
   const [modelCount, setModelCount] = useState<number>(0);
   const [toolCount, setToolCount] = useState<number>(0);
+  const [agentCount, setAgentCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -47,6 +50,10 @@ const HomePage: React.FC = () => {
         // Fetch tools
         const toolsData = await apiService.getTools();
         setToolCount(toolsData.length);
+        
+        // Fetch agents
+        const agentsData = await apiService.getAgents();
+        setAgentCount(agentsData.length);
         
         setIsLoading(false);
       } catch (error) {
@@ -72,10 +79,10 @@ const HomePage: React.FC = () => {
       link: '/tools'
     },
     { 
-      title: 'Model Management', 
-      description: 'View and manage available Llama models', 
-      icon: <StorageIcon fontSize="large" color="info" />,
-      link: '/models'
+      title: 'Agent Creation', 
+      description: 'Create and manage specialized agents for different tasks', 
+      icon: <AgentIcon fontSize="large" color="info" />,
+      link: '/agents'
     },
     { 
       title: 'Evaluations', 
@@ -101,108 +108,205 @@ const HomePage: React.FC = () => {
           </Box>
         ) : (
           <Box sx={{ mt: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ mb: 2, fontWeight: 600 }}>
+              System Dashboard
+            </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={2}
-                  sx={(theme) => ({ 
-                    p: 3, 
-                    borderRadius: 2, 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' 
-                      ? {
-                          border: '1px solid rgba(238, 0, 0, 0.2)',
-                          background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
-                          boxShadow: 'none'
-                        } 
-                      : {
-                          border: '1px solid rgba(238, 0, 0, 0.2)',
-                          background: 'linear-gradient(to bottom, #202020, #3a0000)',
-                          boxShadow: 'none'
-                        }
-                    )
-                  })}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
-                      <InfoIcon color="primary" sx={{ fontSize: '1.75rem' }} />
+              <Grid item xs={12} sm={6} md={3}>
+                <Tooltip title="Current version of Llama Stack" arrow placement="top">
+                  <Paper 
+                    elevation={2}
+                    sx={(theme) => ({ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
+                      },
+                      ...(theme.palette.mode === 'light' 
+                        ? {
+                            border: '1px solid rgba(238, 0, 0, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #fce3e3)',
+                            boxShadow: 'none'
+                          } 
+                        : {
+                            border: '1px solid rgba(238, 0, 0, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #3a0000)',
+                            boxShadow: 'none'
+                          }
+                      )
+                    })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        minWidth: '40px', 
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(238, 0, 0, 0.1)'
+                      }}>
+                        <InfoIcon color="primary" sx={{ fontSize: '1.75rem' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Stack Version</Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Llama Stack Version</Typography>
-                  </Box>
-                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
-                    {version}
-                  </Typography>
-                </Paper>
+                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
+                      {version}
+                    </Typography>
+                  </Paper>
+                </Tooltip>
               </Grid>
-              <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={2}
-                  sx={(theme) => ({ 
-                    p: 3, 
-                    borderRadius: 2, 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' 
-                      ? {
-                          border: '1px solid rgba(0, 102, 204, 0.2)',
-                          background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
-                          boxShadow: 'none'
-                        } 
-                      : {
-                          border: '1px solid rgba(0, 102, 204, 0.2)',
-                          background: 'linear-gradient(to bottom, #202020, #002952)',
-                          boxShadow: 'none'
-                        }
-                    )
-                  })}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
-                      <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
+              <Grid item xs={12} sm={6} md={3}>
+                <Tooltip title="Number of available models in the system" arrow placement="top">
+                  <Paper 
+                    elevation={2}
+                    sx={(theme) => ({ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
+                      },
+                      ...(theme.palette.mode === 'light' 
+                        ? {
+                            border: '1px solid rgba(0, 102, 204, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #e0f0ff)',
+                            boxShadow: 'none'
+                          } 
+                        : {
+                            border: '1px solid rgba(0, 102, 204, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #002952)',
+                            boxShadow: 'none'
+                          }
+                      )
+                    })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        minWidth: '40px', 
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)'
+                      }}>
+                        <StorageIcon color="secondary" sx={{ fontSize: '1.75rem' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Models</Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Available Models</Typography>
-                  </Box>
-                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
-                    {modelCount}
-                  </Typography>
-                </Paper>
+                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'secondary.main', textAlign: 'center' }}>
+                      {modelCount}
+                    </Typography>
+                  </Paper>
+                </Tooltip>
               </Grid>
-              <Grid item xs={12} md={4}>
-                <Paper 
-                  elevation={2}
-                  sx={(theme) => ({ 
-                    p: 3, 
-                    borderRadius: 2, 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    ...(theme.palette.mode === 'light' 
-                      ? {
-                          border: '1px solid rgba(55, 163, 163, 0.2)',
-                          background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
-                          boxShadow: 'none'
-                        } 
-                      : {
-                          border: '1px solid rgba(55, 163, 163, 0.2)',
-                          background: 'linear-gradient(to bottom, #202020, #003636)',
-                          boxShadow: 'none'
-                        }
-                    )
-                  })}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px', height: '40px' }}>
-                      <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
+              <Grid item xs={12} sm={6} md={3}>
+                <Tooltip title="Number of available tools for model integration" arrow placement="top">
+                  <Paper 
+                    elevation={2}
+                    sx={(theme) => ({ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
+                      },
+                      ...(theme.palette.mode === 'light' 
+                        ? {
+                            border: '1px solid rgba(55, 163, 163, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #daf2f2)',
+                            boxShadow: 'none'
+                          } 
+                        : {
+                            border: '1px solid rgba(55, 163, 163, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #003636)',
+                            boxShadow: 'none'
+                          }
+                      )
+                    })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        minWidth: '40px', 
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(55, 163, 163, 0.1)'
+                      }}>
+                        <CodeIcon color="info" sx={{ fontSize: '1.75rem' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Tools</Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Available Tools</Typography>
-                  </Box>
-                  <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
-                    {toolCount}
-                  </Typography>
-                </Paper>
+                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'info.main', textAlign: 'center' }}>
+                      {toolCount}
+                    </Typography>
+                  </Paper>
+                </Tooltip>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Tooltip title="Number of configured agents in the system" arrow placement="top">
+                  <Paper 
+                    elevation={2}
+                    sx={(theme) => ({ 
+                      p: 3, 
+                      borderRadius: 2, 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
+                      },
+                      ...(theme.palette.mode === 'light' 
+                        ? {
+                            border: '1px solid rgba(99, 153, 61, 0.2)',
+                            background: 'linear-gradient(to bottom, #ffffff, #e8f5e0)',
+                            boxShadow: 'none'
+                          } 
+                        : {
+                            border: '1px solid rgba(99, 153, 61, 0.2)',
+                            background: 'linear-gradient(to bottom, #202020, #1e3a0e)',
+                            boxShadow: 'none'
+                          }
+                      )
+                    })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        minWidth: '40px', 
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(99, 153, 61, 0.1)'
+                      }}>
+                        <AgentIcon color="success" sx={{ fontSize: '1.75rem' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, ml: 1, display: 'flex', alignItems: 'center', mt: '3px' }}>Agents</Typography>
+                    </Box>
+                    <Typography variant="h3" sx={{ mt: 'auto', fontWeight: 'bold', color: 'success.main', textAlign: 'center' }}>
+                      {agentCount}
+                    </Typography>
+                  </Paper>
+                </Tooltip>
               </Grid>
             </Grid>
           </Box>
