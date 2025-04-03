@@ -392,7 +392,7 @@ const HomePage: React.FC = () => {
         
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'primary.main' : '#ee0000' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'success.main' : '#99cc66' }}>
               Quick Start Guide
             </Typography>
             <List>
@@ -416,7 +416,7 @@ const HomePage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText 
                   primary={<Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'text.primary' : '#ffffff' }}>Start a conversation</Typography>} 
-                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Chat with Llama models using a simple interface</Typography>} 
+                  secondary={<Typography variant="body2" sx={{ mt: 0.5, color: theme => theme.palette.mode === 'light' ? 'text.secondary' : 'rgba(255, 255, 255, 0.7)' }}>Chat with available models to test quality and tools</Typography>} 
                 />
               </ListItem>
               
@@ -471,7 +471,7 @@ const HomePage: React.FC = () => {
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'secondary.main' : '#4394e5' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme => theme.palette.mode === 'light' ? 'primary.main' : '#ee0000' }}>
               Advanced Features
             </Typography>
             <List>
