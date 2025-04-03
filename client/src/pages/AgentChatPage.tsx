@@ -9,35 +9,49 @@ import {
   CircularProgress,
   IconButton,
   Divider,
-  List,
-  ListItem,
   Avatar,
   Card,
   CardContent,
   Snackbar,
-  Alert
+  Alert,
+  Tooltip,
+  List,
+  ListItem,
+  FormControlLabel,
+  Switch,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
   Send as SendIcon,
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon,
   AttachFile as AttachFileIcon,
-  Build as BuildIcon
+  Delete as DeleteIcon,
+  Settings as SettingsIcon,
+  ExpandMore as ExpandMoreIcon,
+  SmartToy as BotIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
+import ChatMessage from '../components/Chat/ChatMessage';
+import { SSE } from 'sse.js';
 
 const AgentChatPage: React.FC = () => {
   const { agentId, sessionId } = useParams<{ agentId: string; sessionId: string }>();
   const navigate = useNavigate();
+  
+  // State variables
   const [agent, setAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
-  const [toolResults, setToolResults] = useState<ToolResult[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [isProcessingTool, setIsProcessingTool] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -48,9 +62,12 @@ const AgentChatPage: React.FC = () => {
     severity: 'info'
   });
   
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const eventSourceRef = useRef<SSE | null>(null);
+  
+  // Fetch agent details and session history on component mount
   useEffect(() => {
     const fetchData = async () => {
       if (!agentId || !sessionId) return;
@@ -62,76 +79,69 @@ const AgentChatPage: React.FC = () => {
         const agentData = await apiService.getAgent(agentId);
         setAgent(agentData);
         
-        // In a real implementation, you would fetch the session and its turns
-        // const sessionData = await apiService.getAgentSession(agentId, sessionId);
-        
-        // For now, we'll use mock messages
-        const mockMessages: Message[] = [
-          {
-            role: 'system',
-            content: agentData.instructions
-          },
-          {
-            role: 'user',
-            content: 'Hello! Can you help me with something?'
-          },
-          {
-            role: 'assistant',
-            content: 'Of course! I\'m here to help. What do you need assistance with?'
-          },
-          {
-            role: 'user',
-            content: 'What\'s the weather in New York?'
-          },
-          {
-            role: 'assistant',
-            content: 'I\'ll check the weather in New York for you.',
-            tool_calls: [
-              {
-                id: 'call_01',
-                type: 'function',
-                function: {
-                  name: 'get_weather',
-                  arguments: JSON.stringify({
-                    location: 'New York',
-                    unit: 'celsius'
-                  })
+        try {
+          // Try to fetch session history
+          const sessionData = await apiService.getAgentSession(agentId, sessionId);
+          
+          // Process session turns into messages
+          if (sessionData && sessionData.turns) {
+            const sessionMessages: Message[] = [];
+            
+            // Add system message if agent has instructions
+            if (agentData.instructions) {
+              sessionMessages.push({
+                role: 'system',
+                content: agentData.instructions
+              });
+            }
+            
+            // Process each turn
+            sessionData.turns.forEach(turn => {
+              // Add user messages
+              turn.input_messages.forEach(msg => {
+                if (msg.role === 'user') {
+                  sessionMessages.push(msg);
                 }
+              });
+              
+              // Add assistant message
+              if (turn.output_message) {
+                sessionMessages.push(turn.output_message);
               }
-            ]
-          }
-        ];
-        
-        // Mock tool results
-        const mockToolResults: ToolResult[] = [
-          {
-            tool_call_id: 'call_01',
-            content: {
-              temperature: 22,
-              unit: 'celsius',
-              description: 'Partly cloudy',
-              location: 'New York, NY'
+            });
+            
+            setMessages(sessionMessages);
+          } else {
+            // If no turns, just add the system message
+            if (agentData.instructions) {
+              setMessages([{
+                role: 'system',
+                content: agentData.instructions
+              }]);
             }
           }
-        ];
-        
-        setMessages(mockMessages);
-        
-        // Extract tool calls from messages
-        const extractedToolCalls: ToolCall[] = [];
-        mockMessages.forEach(msg => {
-          if (msg.tool_calls && msg.tool_calls.length > 0) {
-            extractedToolCalls.push(...msg.tool_calls);
+        } catch (sessionError) {
+          console.error('Error fetching session data:', sessionError);
+          
+          // If session fetch fails, just add the system message
+          if (agentData.instructions) {
+            setMessages([{
+              role: 'system',
+              content: agentData.instructions
+            }]);
           }
-        });
-        
-        setToolCalls(extractedToolCalls);
-        setToolResults(mockToolResults);
+          
+          setNotification({
+            open: true,
+            message: 'Could not load chat history. Starting a new conversation.',
+            severity: 'warning'
+          });
+        }
       } catch (error) {
-        console.error('Error fetching chat data:', error);
+        console.error('Error fetching agent data:', error);
         setNotification({
           open: true,
-          message: 'Failed to load chat data. Please try again.',
+          message: 'Failed to load agent data. Please try again.',
           severity: 'error'
         });
       } finally {
@@ -140,13 +150,23 @@ const AgentChatPage: React.FC = () => {
     };
 
     fetchData();
+    
+    // Cleanup function to close EventSource on unmount
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
   }, [agentId, sessionId]);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    // Scroll to bottom when messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
+  // Handle sending a message
   const handleSendMessage = async () => {
     if (!input.trim() || !agentId || !sessionId) return;
     
@@ -155,102 +175,18 @@ const AgentChatPage: React.FC = () => {
       content: input
     };
     
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsSending(true);
     
     try {
-      // In a real implementation, you would call the API to create a turn
-      // const turnResponse = await apiService.createAgentTurn(agentId, sessionId, [userMessage]);
-      
-      // For now, we'll simulate a response after a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Check if the input contains keywords that might trigger tool usage
-      const shouldUseTool = input.toLowerCase().includes('weather') || 
-                           input.toLowerCase().includes('calculate') ||
-                           input.toLowerCase().includes('search');
-      
-      let mockResponse: Message;
-      
-      if (shouldUseTool) {
-        // Create a mock tool call
-        const toolCallId = `call_${Date.now()}`;
-        const toolName = input.toLowerCase().includes('weather') 
-          ? 'get_weather' 
-          : input.toLowerCase().includes('calculate')
-            ? 'calculator'
-            : 'web_search';
-            
-        const toolArgs = input.toLowerCase().includes('weather')
-          ? { location: input.includes('New York') ? 'New York' : 'San Francisco', unit: 'celsius' }
-          : input.toLowerCase().includes('calculate')
-            ? { expression: '2 + 2' }
-            : { query: input.replace(/search for |search |look up /gi, '') };
-        
-        mockResponse = {
-          role: 'assistant',
-          content: `I'll help you with that. Let me ${toolName === 'get_weather' ? 'check the weather' : toolName === 'calculator' ? 'calculate that' : 'search for that information'}.`,
-          tool_calls: [
-            {
-              id: toolCallId,
-              type: 'function',
-              function: {
-                name: toolName,
-                arguments: JSON.stringify(toolArgs)
-              }
-            }
-          ]
-        };
-        
-        // Add the tool call to our state
-        const newToolCall = mockResponse.tool_calls![0];
-        setToolCalls(prev => [...prev, newToolCall]);
-        
-        // Simulate tool execution
-        setTimeout(() => {
-          const toolResult: ToolResult = {
-            tool_call_id: toolCallId,
-            content: toolName === 'get_weather' 
-              ? {
-                  temperature: Math.floor(Math.random() * 30),
-                  unit: 'celsius',
-                  description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
-                  location: toolArgs.location
-                }
-              : toolName === 'calculator'
-                ? { result: 4 }
-                : { 
-                    results: [
-                      { title: 'Search result 1', url: 'https://example.com/1' },
-                      { title: 'Search result 2', url: 'https://example.com/2' }
-                    ]
-                  }
-          };
-          
-          setToolResults(prev => [...prev, toolResult]);
-          
-          // Add a follow-up message with the tool result
-          const followUpMessage: Message = {
-            role: 'assistant',
-            content: toolName === 'get_weather'
-              ? `The weather in ${toolArgs.location} is ${toolResult.content.description.toLowerCase()} with a temperature of ${toolResult.content.temperature}°C.`
-              : toolName === 'calculator'
-                ? `The result of the calculation is 4.`
-                : `Here are some search results for "${toolArgs.query}". The top result is "${toolResult.content.results[0].title}".`
-          };
-          
-          setMessages(prev => [...prev, followUpMessage]);
-        }, 2000);
+      if (isStreaming) {
+        // Handle streaming response
+        await handleStreamingResponse(userMessage);
       } else {
-        // Regular response without tool calls
-        mockResponse = {
-          role: 'assistant',
-          content: `I'm a simulated response to: "${input}"`
-        };
+        // Handle non-streaming response
+        await handleNonStreamingResponse(userMessage);
       }
-      
-      setMessages(prev => [...prev, mockResponse]);
     } catch (error) {
       console.error('Error sending message:', error);
       setNotification({
@@ -258,11 +194,143 @@ const AgentChatPage: React.FC = () => {
         message: 'Failed to send message. Please try again.',
         severity: 'error'
       });
+      setIsSending(false);
+    }
+  };
+
+  // Handle streaming response
+  const handleStreamingResponse = async (userMessage: Message) => {
+    // Add a placeholder assistant message that will be updated with streaming content
+    let assistantMessage: Message = { role: 'assistant', content: '' };
+    setMessages(prev => [...prev, assistantMessage]);
+    
+    try {
+      // Create a new EventSource for SSE
+      const url = `${apiService.getCurrentBaseUrl()}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`;
+      
+      const eventSource = new SSE(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        payload: JSON.stringify({
+          messages: [userMessage],
+          stream: true
+        })
+      });
+      
+      eventSourceRef.current = eventSource;
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.event && data.event.event_type === 'progress') {
+            // Update the assistant's message with new content
+            if (data.event.delta && data.event.delta.text) {
+              assistantMessage.content += data.event.delta.text;
+              setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+            }
+          } else if (data.event && data.event.event_type === 'complete') {
+            // Complete the message and add any tool calls
+            if (data.completion_message?.tool_calls) {
+              assistantMessage.tool_calls = data.completion_message.tool_calls;
+            }
+            
+            if (data.event.stop_reason) {
+              assistantMessage.stop_reason = data.event.stop_reason;
+            }
+            
+            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+            setIsSending(false);
+            eventSource.close();
+            eventSourceRef.current = null;
+          }
+        } catch (error) {
+          console.error('Error parsing SSE message:', error, event.data);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        setIsSending(false);
+        eventSource.close();
+        eventSourceRef.current = null;
+        
+        // Add error notification
+        setNotification({
+          open: true,
+          message: 'Connection error. Please try again.',
+          severity: 'error'
+        });
+      };
+      
+      // Open the connection
+      eventSource.stream();
+      
+    } catch (error) {
+      console.error('Error setting up streaming:', error);
+      setIsSending(false);
+      
+      // Update the placeholder message with an error
+      assistantMessage.content = 'Sorry, there was an error processing your request.';
+      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
+      
+      setNotification({
+        open: true,
+        message: 'Failed to connect to the server. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
+  // Handle non-streaming response
+  const handleNonStreamingResponse = async (userMessage: Message) => {
+    try {
+      // Call the API to create a turn
+      const turnResponse = await apiService.createAgentTurn(
+        agentId,
+        sessionId,
+        [userMessage],
+        false // non-streaming
+      );
+      
+      // Add assistant message from the response
+      if (turnResponse && turnResponse.output_message) {
+        setMessages(prev => [...prev, turnResponse.output_message]);
+      } else {
+        // Fallback if no output message
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'I received your message, but there was an issue with the response.'
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error in non-streaming response:', error);
+      
+      // Add error message
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Sorry, there was an error processing your request. Please try again.'
+        }
+      ]);
+      
+      setNotification({
+        open: true,
+        message: 'Failed to get a response. Please try again.',
+        severity: 'error'
+      });
     } finally {
       setIsSending(false);
     }
   };
 
+  // Handle key press (Enter to send)
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -270,53 +338,7 @@ const AgentChatPage: React.FC = () => {
     }
   };
   
-  const handleRerunTool = (toolCall: ToolCall) => {
-    setIsProcessingTool(true);
-    
-    // Find the existing tool result
-    const existingResult = toolResults.find(result => result.tool_call_id === toolCall.id);
-    
-    // Remove the existing result if it exists
-    if (existingResult) {
-      setToolResults(prev => prev.filter(result => result.tool_call_id !== toolCall.id));
-    }
-    
-    // Simulate tool execution with a delay
-    setTimeout(() => {
-      const toolName = toolCall.function.name;
-      const toolArgs = JSON.parse(toolCall.function.arguments);
-      
-      const toolResult: ToolResult = {
-        tool_call_id: toolCall.id,
-        content: toolName === 'get_weather' 
-          ? {
-              temperature: Math.floor(Math.random() * 30),
-              unit: 'celsius',
-              description: ['Sunny', 'Cloudy', 'Rainy', 'Partly cloudy'][Math.floor(Math.random() * 4)],
-              location: toolArgs.location
-            }
-          : toolName === 'calculator'
-            ? { result: 4 }
-            : { 
-                results: [
-                  { title: 'Updated search result 1', url: 'https://example.com/updated1' },
-                  { title: 'Updated search result 2', url: 'https://example.com/updated2' }
-                ]
-              }
-      };
-      
-      setToolResults(prev => [...prev, toolResult]);
-      setIsProcessingTool(false);
-      
-      // Show notification
-      setNotification({
-        open: true,
-        message: 'Tool execution completed successfully',
-        severity: 'success'
-      });
-    }, 1500);
-  };
-
+  // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -329,11 +351,50 @@ const AgentChatPage: React.FC = () => {
       severity: 'info'
     });
   };
-
+  
+  // Handle rerunning a tool
+  const handleRerunTool = async (toolCall: ToolCall) => {
+    if (!agentId || !sessionId) return;
+    
+    setNotification({
+      open: true,
+      message: 'Rerunning tool...',
+      severity: 'info'
+    });
+    
+    try {
+      // In a real implementation, you would call the API to rerun the tool
+      // For now, we'll just show a notification
+      setTimeout(() => {
+        setNotification({
+          open: true,
+          message: 'Tool rerun functionality is not implemented yet.',
+          severity: 'info'
+        });
+      }, 1000);
+    } catch (error) {
+      console.error('Error rerunning tool:', error);
+      setNotification({
+        open: true,
+        message: 'Failed to rerun tool. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+  
+  // Handle clearing the chat
+  const handleClearChat = () => {
+    // Keep only the system message if it exists
+    const systemMessage = messages.find(msg => msg.role === 'system');
+    setMessages(systemMessage ? [systemMessage] : []);
+  };
+  
+  // Close notification
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
@@ -345,34 +406,82 @@ const AgentChatPage: React.FC = () => {
   return (
     <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Box
-        component={Paper}
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          borderRadius: 0,
-          zIndex: 1,
-          boxShadow: 1
-        }}
-      >
-        <IconButton
-          edge="start"
-          color="inherit"
-          onClick={() => navigate(`/agents/${agentId}`)}
-          sx={{ mr: 2 }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Box>
-          <Typography variant="h6" noWrap>
-            {agent?.model || 'Agent Chat'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Session ID: {sessionId}
-          </Typography>
+      <Paper elevation={1} sx={{ p: 2, borderRadius: 0 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => navigate(`/agents/${agentId}`)}
+              sx={{ mr: 2 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Box>
+              <Typography variant="h6" noWrap>
+                {agent?.name || agent?.model || 'Agent Chat'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Session ID: {sessionId}
+              </Typography>
+            </Box>
+          </Box>
+          <Box>
+            <Tooltip title="Chat Settings">
+              <IconButton onClick={() => setShowSettings(!showSettings)}>
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Clear Chat">
+              <IconButton onClick={handleClearChat} color="error">
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
+        
+        <Accordion expanded={showSettings} onChange={() => setShowSettings(!showSettings)}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Chat Settings</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isStreaming}
+                    onChange={(e) => setIsStreaming(e.target.checked)}
+                  />
+                }
+                label="Streaming Responses"
+              />
+              
+              {agent && (
+                <>
+                  <Divider />
+                  <Typography variant="subtitle2">Agent Configuration</Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <Chip label={`Model: ${agent.model}`} size="small" />
+                    {agent.config?.toolgroups && agent.config.toolgroups.length > 0 && (
+                      <Chip 
+                        label={`Tools: ${agent.config.toolgroups.length}`} 
+                        size="small" 
+                        color="primary" 
+                      />
+                    )}
+                    {agent.config?.sampling_params?.temperature && (
+                      <Chip 
+                        label={`Temp: ${agent.config.sampling_params.temperature}`} 
+                        size="small" 
+                      />
+                    )}
+                  </Box>
+                </>
+              )}
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      </Paper>
 
       {/* Messages */}
       <Box
@@ -383,99 +492,55 @@ const AgentChatPage: React.FC = () => {
           bgcolor: 'background.default'
         }}
       >
-        <List>
-          {messages
-            .filter(msg => msg.role !== 'system') // Don't show system messages
-            .map((message, index) => (
-              <ListItem
-                key={index}
-                sx={{
-                  display: 'flex',
-                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                  mb: 2
-                }}
-              >
-                <Box
+        {messages.length === 0 ? (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              opacity: 0.7,
+            }}
+          >
+            <Typography variant="h6" color="text.secondary">
+              Start a conversation
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Send a message to begin chatting with the agent
+            </Typography>
+          </Box>
+        ) : (
+          <List>
+            {messages
+              .filter(msg => msg.role !== 'system') // Don't show system messages
+              .map((message, index) => (
+                <ListItem
+                  key={index}
                   sx={{
                     display: 'flex',
-                    maxWidth: '70%',
-                    flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
+                    justifyContent: 'center',
+                    p: 0,
+                    mb: 2
                   }}
                 >
-                  <Avatar
-                    sx={{
-                      bgcolor: message.role === 'user' ? 'primary.main' : 'secondary.main',
-                      mr: message.role === 'user' ? 0 : 1,
-                      ml: message.role === 'user' ? 1 : 0
-                    }}
-                  >
-                    {message.role === 'user' ? 'U' : 'A'}
-                  </Avatar>
-                  <Card
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: message.role === 'user' ? 'primary.light' : 'background.paper'
-                    }}
-                  >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: message.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                          whiteSpace: 'pre-wrap'
-                        }}
-                      >
-                        {message.content}
-                      </Typography>
-                      
-                      {message.tool_calls && message.tool_calls.length > 0 && (
-                        <Box sx={{ mt: 2, color: 'text.primary' }}>
-                          <ToolUsageDisplay 
-                            toolCalls={message.tool_calls}
-                            toolResults={toolResults.filter(result => 
-                              message.tool_calls?.some(call => call.id === result.tool_call_id)
-                            )}
-                            onRerunTool={handleRerunTool}
-                          />
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Box>
-              </ListItem>
-            ))}
-        </List>
+                  <ChatMessage
+                    message={message}
+                    isLast={index === messages.length - 1 && isSending}
+                  />
+                </ListItem>
+              ))}
+          </List>
+        )}
         <div ref={messagesEndRef} />
       </Box>
-
-      {/* Tool Processing Indicator */}
-      {isProcessingTool && (
-        <Box 
-          sx={{ 
-            position: 'fixed', 
-            bottom: 80, 
-            right: 20, 
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            bgcolor: 'background.paper',
-            p: 1,
-            borderRadius: 1,
-            boxShadow: 3
-          }}
-        >
-          <CircularProgress size={20} sx={{ mr: 1 }} />
-          <Typography variant="body2">Processing tool...</Typography>
-        </Box>
-      )}
       
       {/* Input */}
-      <Box
-        component={Paper}
+      <Paper
+        elevation={3}
         sx={{
           p: 2,
-          borderRadius: 0,
-          boxShadow: 3
+          borderRadius: 0
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -514,7 +579,7 @@ const AgentChatPage: React.FC = () => {
             Send
           </Button>
         </Box>
-      </Box>
+      </Paper>
 
       {/* Notification Snackbar */}
       <Snackbar
