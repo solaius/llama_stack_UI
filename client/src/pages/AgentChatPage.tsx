@@ -757,7 +757,8 @@ const AgentChatPage: React.FC = () => {
           background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
           [theme.breakpoints.up('md')]: {
-            marginLeft: '260px', // Match the width of the sidebar on larger screens
+            marginLeft: '265px', // Match the width of the sidebar on larger screens
+            marginRight: '24px', // Add margin on the right side
           },
           [theme.breakpoints.down('md')]: {
             marginLeft: 0, // No margin on smaller screens
