@@ -338,19 +338,25 @@ const AgentChatPage: React.FC = () => {
               console.log('Updating message with new content:', newText);
               console.log('Current total content:', currentContent);
               
-              // Create a new message object with updated content
-              const updatedMessage = { 
-                ...assistantMessage, 
+              // Force update the message with the current content
+              const updatedMessage: Message = { 
+                role: 'assistant', 
                 content: currentContent 
               };
               
-              // Update the state with the new message
+              // Update the state with the new message and force a re-render
               setMessages(prevMessages => {
-                // Find the last message (which should be our placeholder)
+                // Create a new array with all messages except the last one
                 const newMessages = [...prevMessages];
-                newMessages[newMessages.length - 1] = updatedMessage;
-                return newMessages;
+                // Replace the last message with our updated one
+                if (newMessages.length > 0) {
+                  newMessages[newMessages.length - 1] = updatedMessage;
+                }
+                return [...newMessages]; // Return a new array to ensure React detects the change
               });
+              
+              // Force scroll to bottom with each update
+              setTimeout(scrollToBottom, 10);
             }
           } else if (data.event && data.event.event_type === 'complete') {
             console.log('Stream complete event received:', data);
@@ -371,15 +377,20 @@ const AgentChatPage: React.FC = () => {
             // Update the state with the final message
             setMessages(prevMessages => {
               const newMessages = [...prevMessages];
-              newMessages[newMessages.length - 1] = finalMessage;
+              if (newMessages.length > 0) {
+                newMessages[newMessages.length - 1] = finalMessage;
+              }
               console.log('Final messages state:', newMessages);
-              return newMessages;
+              return [...newMessages]; // Return a new array to ensure React detects the change
             });
             
             // Clean up
             setIsSending(false);
             eventSource.close();
             eventSourceRef.current = null;
+            
+            // Final scroll to bottom
+            setTimeout(scrollToBottom, 50);
           }
         } catch (error) {
           console.error('Error parsing SSE message:', error, event.data);
@@ -467,19 +478,28 @@ const AgentChatPage: React.FC = () => {
           console.log('Previous messages:', prevMessages);
           const newMessages = [...prevMessages, turnResponse.output_message];
           console.log('New messages array:', newMessages);
-          return newMessages;
+          return [...newMessages]; // Return a new array to ensure React detects the change
         });
+        
+        // Force scroll to bottom
+        setTimeout(scrollToBottom, 50);
       } else {
         console.warn('No output message in turn response:', turnResponse);
         
         // Fallback if no output message
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: 'I received your message, but there was an issue with the response.'
-          }
-        ]);
+        setMessages(prev => {
+          const newMessages = [
+            ...prev,
+            {
+              role: 'assistant',
+              content: 'I received your message, but there was an issue with the response.'
+            }
+          ];
+          return [...newMessages]; // Return a new array to ensure React detects the change
+        });
+        
+        // Force scroll to bottom
+        setTimeout(scrollToBottom, 50);
       }
     } catch (error) {
       console.error('Error in non-streaming response:', error);
@@ -966,7 +986,7 @@ const AgentChatPage: React.FC = () => {
           <TextField
             fullWidth
             placeholder="Type your message..."
-            variant="standard" // Changed to standard for cleaner look
+            variant="outlined" // Changed back to outlined to fix the periods issue
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -975,9 +995,20 @@ const AgentChatPage: React.FC = () => {
             maxRows={4}
             sx={{ 
               mx: 1,
-              '& .MuiInput-underline:before': { borderBottom: 'none' },
-              '& .MuiInput-underline:after': { borderBottom: 'none' },
-              '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                backgroundColor: theme.palette.background.paper,
+                '& fieldset': {
+                  borderColor: 'transparent'
+                },
+                '&:hover fieldset': {
+                  borderColor: 'divider'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'primary.main',
+                  borderWidth: 1
+                }
+              }
             }}
           />
           <Button
