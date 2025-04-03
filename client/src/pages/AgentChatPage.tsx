@@ -37,7 +37,8 @@ import {
   SmartToy as BotIcon,
   Person as PersonIcon,
   ContentCopy as ContentCopyIcon,
-  NoteAdd as NoteAddIcon
+  NoteAdd as NoteAddIcon,
+  Description as DescriptionIcon
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
@@ -470,20 +471,39 @@ const AgentChatPage: React.FC = () => {
                 <Typography variant="h6" noWrap sx={{ fontWeight: 500 }}>
                   {agent?.name || agent?.model || 'Agent Chat'}
                 </Typography>
-                <IconButton 
-                  size="small" 
-                  sx={{ ml: 0.5, opacity: 0.7 }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(agent?.name || agent?.model || '');
-                    setNotification({
-                      open: true,
-                      message: 'Agent name copied to clipboard',
-                      severity: 'success'
-                    });
+                <Tooltip 
+                  title={agent?.instructions || "No system prompt provided"}
+                  placement="bottom-start"
+                  sx={{ maxWidth: 500 }}
+                  componentsProps={{
+                    tooltip: {
+                      sx: {
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                        color: theme.palette.mode === 'dark' ? 'white' : 'black',
+                        boxShadow: '0px 2px 10px rgba(0,0,0,0.2)',
+                        p: 2,
+                        maxWidth: '400px',
+                        fontSize: '0.8rem',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        whiteSpace: 'pre-wrap'
+                      }
+                    }
                   }}
                 >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
+                  <IconButton 
+                    size="small" 
+                    sx={{ 
+                      ml: 0.5, 
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
+                      color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                      transition: 'all 0.2s',
+                      padding: '4px'
+                    }}
+                  >
+                    <DescriptionIcon fontSize="small" sx={{ fontSize: '1rem' }} />
+                  </IconButton>
+                </Tooltip>
               </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
@@ -738,11 +758,12 @@ const AgentChatPage: React.FC = () => {
           }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', px: 1 }}>
           <IconButton
             color="primary"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
+            sx={{ mr: 1 }}
           >
             <AttachFileIcon />
           </IconButton>
@@ -762,7 +783,7 @@ const AgentChatPage: React.FC = () => {
             disabled={isSending}
             multiline
             maxRows={4}
-            sx={{ mx: 1 }}
+            sx={{ mr: 1 }}
           />
           <Button
             variant="contained"
@@ -770,6 +791,7 @@ const AgentChatPage: React.FC = () => {
             endIcon={isSending ? <CircularProgress size={20} /> : <SendIcon />}
             onClick={handleSendMessage}
             disabled={!input.trim() || isSending}
+            sx={{ ml: 1 }}
           >
             Send
           </Button>
