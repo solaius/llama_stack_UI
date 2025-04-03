@@ -22,7 +22,9 @@ import {
   Chip,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Collapse,
+  useTheme
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -34,7 +36,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   SmartToy as BotIcon,
   Person as PersonIcon,
-  ContentCopy as ContentCopyIcon
+  ContentCopy as ContentCopyIcon,
+  NoteAdd as NoteAddIcon
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
@@ -44,6 +47,7 @@ import { SSE } from 'sse.js';
 const AgentChatPage: React.FC = () => {
   const { agentId, sessionId } = useParams<{ agentId: string; sessionId: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
   
   // State variables
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -430,8 +434,27 @@ const AgentChatPage: React.FC = () => {
       overflow: 'hidden'
     }}>
       {/* Header */}
-      <Paper elevation={1} sx={{ p: 2, borderRadius: 0 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          borderRadius: 0,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}
+      >
+        {/* Main Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          p: 1.5,
+          px: 2
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               edge="start"
@@ -442,10 +465,13 @@ const AgentChatPage: React.FC = () => {
               <ArrowBackIcon />
             </IconButton>
             <Box>
-              <Typography variant="h6" noWrap>
-                {agent?.name || agent?.model || 'Agent Chat'}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="h6" noWrap sx={{ fontWeight: 500 }}>
+                  {agent?.name || agent?.model || 'Agent Chat'}
+                </Typography>
                 <IconButton 
                   size="small" 
+                  sx={{ ml: 0.5, opacity: 0.7 }}
                   onClick={() => {
                     navigator.clipboard.writeText(agent?.name || agent?.model || '');
                     setNotification({
@@ -457,100 +483,181 @@ const AgentChatPage: React.FC = () => {
                 >
                   <ContentCopyIcon fontSize="small" />
                 </IconButton>
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Agent ID: {agentId}
-                <IconButton 
-                  size="small" 
-                  onClick={() => {
-                    if (agentId) {
-                      navigator.clipboard.writeText(agentId);
-                      setNotification({
-                        open: true,
-                        message: 'Agent ID copied to clipboard',
-                        severity: 'success'
-                      });
-                    }
-                  }}
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                Session ID: {sessionId}
-                <IconButton 
-                  size="small" 
-                  onClick={() => {
-                    if (sessionId) {
-                      navigator.clipboard.writeText(sessionId);
-                      setNotification({
-                        open: true,
-                        message: 'Session ID copied to clipboard',
-                        severity: 'success'
-                      });
-                    }
-                  }}
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mr: 2 }}>
+                  <Box component="span" sx={{ opacity: 0.7, mr: 0.5 }}>ID:</Box> 
+                  <Box component="span" sx={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                    {agentId?.substring(0, 8)}...
+                  </Box>
+                  <IconButton 
+                    size="small" 
+                    sx={{ ml: 0.5, opacity: 0.7 }}
+                    onClick={() => {
+                      if (agentId) {
+                        navigator.clipboard.writeText(agentId);
+                        setNotification({
+                          open: true,
+                          message: 'Agent ID copied to clipboard',
+                          severity: 'success'
+                        });
+                      }
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small" sx={{ fontSize: '0.8rem' }} />
+                  </IconButton>
+                </Typography>
+                
+                <Typography variant="caption" color="text.secondary">
+                  <Box component="span" sx={{ opacity: 0.7, mr: 0.5 }}>Session:</Box> 
+                  <Box component="span" sx={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                    {sessionId?.substring(0, 8)}...
+                  </Box>
+                  <IconButton 
+                    size="small" 
+                    sx={{ ml: 0.5, opacity: 0.7 }}
+                    onClick={() => {
+                      if (sessionId) {
+                        navigator.clipboard.writeText(sessionId);
+                        setNotification({
+                          open: true,
+                          message: 'Session ID copied to clipboard',
+                          severity: 'success'
+                        });
+                      }
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small" sx={{ fontSize: '0.8rem' }} />
+                  </IconButton>
+                </Typography>
+              </Box>
             </Box>
           </Box>
-          <Box>
+          
+          <Box sx={{ display: 'flex' }}>
             <Tooltip title="Chat Settings">
-              <IconButton onClick={() => setShowSettings(!showSettings)}>
+              <IconButton 
+                onClick={() => setShowSettings(!showSettings)}
+                sx={{ 
+                  color: showSettings ? 'primary.main' : 'inherit',
+                  transition: 'all 0.2s'
+                }}
+              >
                 <SettingsIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Clear Chat">
-              <IconButton onClick={handleClearChat} color="error">
-                <DeleteIcon />
+            <Tooltip title="New Chat">
+              <IconButton 
+                onClick={async () => {
+                  try {
+                    if (!agentId) return;
+                    
+                    // Create a new session
+                    const defaultSessionName = `Chat with ${agent?.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                    const newSessionId = await apiService.createAgentSession(
+                      agentId,
+                      defaultSessionName
+                    );
+                    
+                    // Navigate to the new session
+                    navigate(`/chat/${agentId}/${newSessionId}`);
+                    
+                    setNotification({
+                      open: true,
+                      message: 'New chat session created',
+                      severity: 'success'
+                    });
+                  } catch (error) {
+                    console.error('Error creating new session:', error);
+                    setNotification({
+                      open: true,
+                      message: 'Failed to create new session',
+                      severity: 'error'
+                    });
+                  }
+                }}
+                sx={{ 
+                  color: theme.palette.primary.main,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <NoteAddIcon />
               </IconButton>
             </Tooltip>
           </Box>
         </Box>
         
-        <Accordion expanded={showSettings} onChange={() => setShowSettings(!showSettings)}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Chat Settings</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {/* Settings Panel */}
+        <Collapse in={showSettings}>
+          <Box sx={{ 
+            p: 2, 
+            pt: 0,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            background: theme.palette.mode === 'dark' ? 'rgba(20, 20, 20, 0.5)' : 'rgba(245, 245, 245, 0.5)'
+          }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
               <FormControlLabel
                 control={
                   <Switch
                     checked={isStreaming}
                     onChange={(e) => setIsStreaming(e.target.checked)}
+                    color="primary"
                   />
                 }
-                label="Streaming Responses"
+                label={
+                  <Typography variant="body2">
+                    Streaming Responses
+                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
+                      Show responses as they are generated
+                    </Typography>
+                  </Typography>
+                }
               />
               
               {agent && (
                 <>
                   <Divider />
-                  <Typography variant="subtitle2">Agent Configuration</Typography>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 500, mb: 1 }}>
+                    Agent Configuration
+                  </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    <Chip label={`Model: ${agent.model}`} size="small" />
+                    <Chip 
+                      label={`Model: ${agent.model}`} 
+                      size="small" 
+                      sx={{ 
+                        borderRadius: '4px',
+                        fontWeight: 500
+                      }}
+                    />
                     {agent.config?.toolgroups && agent.config.toolgroups.length > 0 && (
                       <Chip 
                         label={`Tools: ${agent.config.toolgroups.length}`} 
                         size="small" 
                         color="primary" 
+                        sx={{ 
+                          borderRadius: '4px',
+                          fontWeight: 500
+                        }}
                       />
                     )}
                     {agent.config?.sampling_params?.temperature && (
                       <Chip 
                         label={`Temp: ${agent.config.sampling_params.temperature}`} 
-                        size="small" 
+                        size="small"
+                        sx={{ 
+                          borderRadius: '4px',
+                          fontWeight: 500
+                        }}
                       />
                     )}
                   </Box>
                 </>
               )}
             </Box>
-          </AccordionDetails>
-        </Accordion>
+          </Box>
+        </Collapse>
       </Paper>
 
       {/* Messages */}
