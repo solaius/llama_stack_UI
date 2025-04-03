@@ -592,10 +592,25 @@ const AgentList: React.FC<AgentListProps> = ({
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
           <MenuItem 
-            onClick={() => {
-              const sessionId = `session-${Date.now()}`;
-              navigate(`/chat/${selectedAgent.agent_id || selectedAgent.id}/${sessionId}`);
-              handleMenuClose();
+            onClick={async () => {
+              try {
+                // Create a new session with a default name and navigate to chat
+                const defaultSessionName = `Chat with ${selectedAgent.name || 'Agent'} - ${new Date().toLocaleString()}`;
+                const sessionId = await apiService.createAgentSession(
+                  selectedAgent.agent_id || selectedAgent.id, 
+                  defaultSessionName
+                );
+                navigate(`/chat/${selectedAgent.agent_id || selectedAgent.id}/${sessionId}`);
+              } catch (error) {
+                console.error('Error creating session:', error);
+                setSnackbar({
+                  open: true,
+                  message: 'Failed to create session. Please try again.',
+                  severity: 'error'
+                });
+              } finally {
+                handleMenuClose();
+              }
             }}
             sx={{ color: 'success.main' }}
           >
