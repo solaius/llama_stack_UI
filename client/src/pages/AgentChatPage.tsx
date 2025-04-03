@@ -205,6 +205,11 @@ const AgentChatPage: React.FC = () => {
     setMessages(prev => [...prev, assistantMessage]);
     
     try {
+      // Ensure agentId and sessionId are defined
+      if (!agentId || !sessionId) {
+        throw new Error('Agent ID or Session ID is undefined');
+      }
+      
       // Create a new EventSource for SSE
       const url = `${apiService.getCurrentBaseUrl()}/v1/agents/${agentId}/session/${sessionId}/turn?stream=true`;
       
@@ -287,6 +292,11 @@ const AgentChatPage: React.FC = () => {
   // Handle non-streaming response
   const handleNonStreamingResponse = async (userMessage: Message) => {
     try {
+      // Ensure agentId and sessionId are defined
+      if (!agentId || !sessionId) {
+        throw new Error('Agent ID or Session ID is undefined');
+      }
+      
       // Call the API to create a turn
       const turnResponse = await apiService.createAgentTurn(
         agentId,
@@ -354,7 +364,15 @@ const AgentChatPage: React.FC = () => {
   
   // Handle rerunning a tool
   const handleRerunTool = async (toolCall: ToolCall) => {
-    if (!agentId || !sessionId) return;
+    // Ensure agentId and sessionId are defined
+    if (!agentId || !sessionId) {
+      setNotification({
+        open: true,
+        message: 'Cannot rerun tool: Agent ID or Session ID is missing',
+        severity: 'error'
+      });
+      return;
+    }
     
     setNotification({
       open: true,
