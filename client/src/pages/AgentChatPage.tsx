@@ -488,13 +488,11 @@ const AgentChatPage: React.FC = () => {
         
         // Fallback if no output message
         setMessages(prev => {
-          const newMessages = [
-            ...prev,
-            {
-              role: 'assistant',
-              content: 'I received your message, but there was an issue with the response.'
-            }
-          ];
+          const fallbackMessage: Message = {
+            role: 'assistant',
+            content: 'I received your message, but there was an issue with the response.'
+          };
+          const newMessages = [...prev, fallbackMessage];
           return [...newMessages]; // Return a new array to ensure React detects the change
         });
         
@@ -505,13 +503,13 @@ const AgentChatPage: React.FC = () => {
       console.error('Error in non-streaming response:', error);
       
       // Add error message
-      setMessages(prev => [
-        ...prev,
-        {
+      setMessages(prev => {
+        const errorMessage: Message = {
           role: 'assistant',
           content: 'Sorry, there was an error processing your request. Please try again.'
-        }
-      ]);
+        };
+        return [...prev, errorMessage];
+      });
       
       setNotification({
         open: true,
