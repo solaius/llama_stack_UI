@@ -60,6 +60,7 @@ const AgentChatPage: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileContent, setSelectedFileContent] = useState<string | null>(null);
+  const [textSize, setTextSize] = useState<number>(0.9); // Default to slightly smaller text (0.9rem)
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -171,7 +172,10 @@ const AgentChatPage: React.FC = () => {
   const scrollToBottom = () => {
     console.log('Scrolling to bottom of messages');
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Force scroll to bottom with a slight delay to ensure DOM updates are complete
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
     }
   };
   
@@ -205,6 +209,12 @@ const AgentChatPage: React.FC = () => {
     console.log('Messages changed, scrolling to bottom');
     scrollToBottom();
   }, [messages]);
+  
+  // Scroll to bottom when component mounts
+  useEffect(() => {
+    console.log('Component mounted, scrolling to bottom');
+    scrollToBottom();
+  }, []);
 
   // Handle sending a message
   const handleSendMessage = async () => {
@@ -628,7 +638,7 @@ const AgentChatPage: React.FC = () => {
       overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Header */}
+      {/* Header - Fixed Position */}
       <Paper 
         elevation={2} 
         sx={{ 
@@ -639,7 +649,8 @@ const AgentChatPage: React.FC = () => {
           backdropFilter: 'blur(8px)',
           position: 'sticky',
           top: 0,
-          zIndex: 10
+          zIndex: 10,
+          width: '100%'
         }}
       >
         {/* Main Header */}
@@ -835,6 +846,28 @@ const AgentChatPage: React.FC = () => {
                 }
               />
               
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2" gutterBottom>
+                  Text Size: {textSize.toFixed(1)}rem
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="caption">Small</Typography>
+                  <Slider
+                    value={textSize}
+                    min={0.7}
+                    max={1.4}
+                    step={0.1}
+                    onChange={(_, value) => setTextSize(value as number)}
+                    aria-labelledby="text-size-slider"
+                    sx={{ mx: 1 }}
+                  />
+                  <Typography variant="caption">Large</Typography>
+                </Box>
+                <Typography variant="caption" sx={{ display: 'block', opacity: 0.7 }}>
+                  Adjust the size of chat messages
+                </Typography>
+              </Box>
+              
               {agent && (
                 <>
                   <Divider />
@@ -879,7 +912,7 @@ const AgentChatPage: React.FC = () => {
         </Collapse>
       </Paper>
 
-      {/* Messages */}
+      {/* Messages - Scrollable Container */}
       <Box
         sx={{
           flexGrow: 1,
@@ -889,7 +922,8 @@ const AgentChatPage: React.FC = () => {
           bgcolor: 'background.default',
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 200px)' // Adjust height to leave room for header and input
+          height: 'calc(100vh - 200px)', // Adjust height to leave room for header and input
+          scrollBehavior: 'smooth' // Enable smooth scrolling
         }}
       >
         {messages.length === 0 ? (
@@ -948,6 +982,7 @@ const AgentChatPage: React.FC = () => {
                       <ChatMessage
                         message={message}
                         isLast={isLastMessage && isSending}
+                        textSize={textSize}
                       />
                     </ListItem>
                   );

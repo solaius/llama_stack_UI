@@ -8,9 +8,10 @@ import { docco, dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 interface ChatMessageProps {
   message: Message;
   isLast?: boolean;
+  textSize?: number;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, textSize = 1 }) => {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -58,7 +59,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false }) =>
       // Add text before code block
       if (match.index > lastIndex) {
         parts.push(
-          <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
+          <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap', fontSize: `${textSize}rem` }} data-testid="message-content">
             {content.substring(lastIndex, match.index)}
           </Typography>
         );
@@ -91,14 +92,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false }) =>
     // Add remaining text after last code block
     if (lastIndex < content.length) {
       parts.push(
-        <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
+        <Typography key={`text-${lastIndex}`} variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap', fontSize: `${textSize}rem` }} data-testid="message-content">
           {content.substring(lastIndex)}
         </Typography>
       );
     }
 
     return parts.length > 0 ? parts : (
-      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }} data-testid="message-content">
+      <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap', fontSize: `${textSize}rem` }} data-testid="message-content">
         {content}
       </Typography>
     );
