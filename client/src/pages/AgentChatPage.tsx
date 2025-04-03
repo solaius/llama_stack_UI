@@ -467,46 +467,48 @@ const AgentChatPage: React.FC = () => {
               <ArrowBackIcon />
             </IconButton>
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="h6" noWrap sx={{ fontWeight: 500 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="h6" noWrap sx={{ fontWeight: 500, display: 'flex', alignItems: 'center' }}>
                   {agent?.name || agent?.model || 'Agent Chat'}
-                </Typography>
-                <Tooltip 
-                  title={agent?.instructions || "No system prompt provided"}
-                  placement="bottom-start"
-                  sx={{ maxWidth: 500 }}
-                  componentsProps={{
-                    tooltip: {
-                      sx: {
-                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                        color: theme.palette.mode === 'dark' ? 'white' : 'black',
-                        boxShadow: '0px 2px 10px rgba(0,0,0,0.2)',
-                        p: 2,
-                        maxWidth: '400px',
-                        fontSize: '0.8rem',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        whiteSpace: 'pre-wrap'
+                  <Tooltip 
+                    title={agent?.instructions || "No system prompt provided"}
+                    placement="bottom-start"
+                    sx={{ maxWidth: 500, ml: 1.5 }}
+                    componentsProps={{
+                      tooltip: {
+                        sx: {
+                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                          color: theme.palette.mode === 'dark' ? 'white' : 'black',
+                          boxShadow: '0px 2px 10px rgba(0,0,0,0.2)',
+                          p: 2,
+                          maxWidth: '400px',
+                          fontSize: '0.8rem',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          whiteSpace: 'pre-wrap'
+                        }
                       }
-                    }
-                  }}
-                >
-                  <Box 
-                    sx={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
-                      color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
-                      borderRadius: '50%',
-                      width: 24,
-                      height: 24,
-                      transition: 'all 0.2s',
                     }}
                   >
-                    <DescriptionIcon fontSize="small" sx={{ fontSize: '1rem' }} />
-                  </Box>
-                </Tooltip>
+                    <Box 
+                      sx={{ 
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'grey.200',
+                        color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        transition: 'all 0.2s',
+                        verticalAlign: 'middle',
+                        ml: 1
+                      }}
+                    >
+                      <DescriptionIcon fontSize="small" sx={{ fontSize: '0.9rem' }} />
+                    </Box>
+                  </Tooltip>
+                </Typography>
               </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
@@ -744,7 +746,7 @@ const AgentChatPage: React.FC = () => {
       <Paper
         elevation={3}
         sx={{
-          p: 2,
+          p: 0,
           borderRadius: 0,
           position: 'fixed',
           bottom: 0,
@@ -763,15 +765,21 @@ const AgentChatPage: React.FC = () => {
         }}
       >
         <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          px: 2,
-          py: 1,
-          bgcolor: theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.4)' : 'rgba(240, 240, 240, 0.6)',
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider'
+          maxWidth: '1200px', // Match the max-width of the content area
+          width: '100%',
+          mx: 'auto', // Center the box
+          p: 2
         }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            px: 2,
+            py: 1,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.4)' : 'rgba(240, 240, 240, 0.6)',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}>
           <IconButton
             color="primary"
             onClick={() => fileInputRef.current?.click()}
@@ -813,6 +821,7 @@ const AgentChatPage: React.FC = () => {
           >
             Send
           </Button>
+          </Box>
         </Box>
       </Paper>
 
