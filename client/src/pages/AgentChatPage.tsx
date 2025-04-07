@@ -339,6 +339,31 @@ const AgentChatPage: React.FC = () => {
         try {
           console.log('SSE message received:', event.data);
           const data = JSON.parse(event.data);
+
+          if (data.error) {
+            setMessages(prevMessages => {
+              const newMessages = [...prevMessages];
+              const errorMessage: Message = {
+                role: 'assistant',
+                content: data.error.message
+              };
+              newMessages[newMessages.length - 1] = errorMessage;
+              return newMessages;
+            });
+
+
+            // Add error notification
+            setNotification({
+              open: true,
+              message: 'Llama Stack could not handle the last request.',
+              severity: 'error'
+            });
+
+            // Clean up
+            setIsSending(false);
+            eventSource.close();
+            eventSourceRef.current = null;
+          }
           
           if (data.event && data.event.payload && data.event.payload.event_type === 'step_progress') {
             // Update the assistant's message with new content
@@ -380,6 +405,14 @@ const AgentChatPage: React.FC = () => {
                 if (prevMessages.length > 0) {
                   // Create a new array with all messages except the last one
                   const allButLast = prevMessages.slice(0, -1);
+
+                  const lastMessage = prevMessages[prevMessages.length - 1];
+
+                  // If the last message contains tool_calls, carry them over to the finalMessage
+                  if (lastMessage.tool_calls) {
+                    outputMessage.tool_calls = lastMessage.tool_calls;
+                  }
+
                   // Return a new array with the output message appended
                   return [...allButLast, outputMessage];
                 }
@@ -417,18 +450,21 @@ const AgentChatPage: React.FC = () => {
                 if (prevMessages.length > 0) {
                   // Create a new array with all messages except the last one
                   const allButLast = prevMessages.slice(0, -1);
+
+                  const lastMessage = prevMessages[prevMessages.length - 1];
+
+                  // If the last message contains tool_calls, carry them over to the finalMessage
+                  if (lastMessage.tool_calls) {
+                    finalMessage.tool_calls = lastMessage.tool_calls;
+                  }
+
                   // Return a new array with the final message appended
                   return [...allButLast, finalMessage];
                 }
                 // If there are no messages, just return an array with the final message
                 return [finalMessage];
               });
-              
-              // Clean up
-              setIsSending(false);
-              eventSource.close();
-              eventSourceRef.current = null;
-              
+
               // Final scroll to bottom
               setTimeout(scrollToBottom, 50);
             }
