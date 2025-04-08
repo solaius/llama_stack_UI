@@ -232,31 +232,62 @@ const AgentChatPage: React.FC = () => {
     setFileSize(file.size);
     setIsFileLoading(true);
     
-    // Read file content
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setSelectedFileContent(content);
-      setIsFileLoading(false);
-      console.log('File content loaded, length:', content.length);
-      
-      // No notification popup - we'll show the file info in the UI instead
-    };
-    reader.onerror = () => {
-      setIsFileLoading(false);
-      setNotification({
-        open: true,
-        message: 'Error reading file. Please try again with a different file.',
-        severity: 'error'
-      });
-      
-      // Clear the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      setSelectedFile(null);
-    };
-    reader.readAsDataURL(file);
+    // For text files, read as text instead of data URL
+    if (file.type === 'text/plain' || file.type === 'text/csv' || 
+        file.name.endsWith('.txt') || file.name.endsWith('.csv') || 
+        file.name.endsWith('.md') || file.name.endsWith('.json')) {
+      const textReader = new FileReader();
+      textReader.onload = (e) => {
+        const content = e.target?.result as string;
+        // For text files, we'll prefix with "data:text/plain;base64," to maintain consistency
+        const base64Content = btoa(content);
+        const dataUrl = `data:text/plain;base64,${base64Content}`;
+        setSelectedFileContent(dataUrl);
+        setIsFileLoading(false);
+        console.log('Text file content loaded, length:', content.length);
+      };
+      textReader.onerror = () => {
+        setIsFileLoading(false);
+        setNotification({
+          open: true,
+          message: 'Error reading text file. Please try again with a different file.',
+          severity: 'error'
+        });
+        
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setSelectedFile(null);
+      };
+      textReader.readAsText(file);
+    } else {
+      // For all other files, read as data URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setSelectedFileContent(content);
+        setIsFileLoading(false);
+        console.log('File content loaded, length:', content.length);
+        
+        // No notification popup - we'll show the file info in the UI instead
+      };
+      reader.onerror = () => {
+        setIsFileLoading(false);
+        setNotification({
+          open: true,
+          message: 'Error reading file. Please try again with a different file.',
+          severity: 'error'
+        });
+        
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setSelectedFile(null);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
   // Handle removing the selected file
@@ -299,11 +330,17 @@ const AgentChatPage: React.FC = () => {
     
     if (!messageContent && selectedFile) {
       if (selectedFile.type === 'application/pdf') {
-        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. This file has been converted to a data URL format. Please analyze this document and tell me what it contains.`;
+        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. The content is provided as Base64-encoded text. Please decode and analyze this document to tell me what it contains. This is a PDF document with text content.`;
       } else if (selectedFile.type.startsWith('image/')) {
-        messageContent = `I'm sending you an image file: ${selectedFile.name} (${selectedFile.type}). Please analyze this image and describe what you see.`;
+        messageContent = `I'm sending you an image file: ${selectedFile.name} (${selectedFile.type}). Please analyze this image and describe what you see in detail.`;
+      } else if (selectedFile.type === 'text/plain' || 
+                 selectedFile.name.endsWith('.txt') || 
+                 selectedFile.name.endsWith('.md') || 
+                 selectedFile.name.endsWith('.json') || 
+                 selectedFile.name.endsWith('.csv')) {
+        messageContent = `I'm sending you a text file: ${selectedFile.name}. Please analyze the content and tell me what it contains. The file has been encoded as Base64 for transmission, but contains plain text.`;
       } else {
-        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains.`;
+        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). The content is provided as Base64-encoded text. Please analyze this document and tell me what it contains.`;
       }
     }
     
@@ -356,6 +393,14 @@ const AgentChatPage: React.FC = () => {
       // Prepare documents array if a file is attached
       const documents = [];
       if (selectedFile && selectedFileContent) {
+        // Extract the actual Base64 content from the data URL
+        // Data URLs are in the format: data:[<mediatype>][;base64],<data>
+        let fileContent = selectedFileContent;
+        if (selectedFileContent.includes(',')) {
+          // Extract just the Base64 content after the comma
+          fileContent = selectedFileContent.split(',')[1];
+        }
+        
         // Determine the appropriate mime type to send to the API
         // The API might not support all mime types, so we'll use text/plain for most files
         let apiMimeType = 'text/plain';
@@ -365,10 +410,13 @@ const AgentChatPage: React.FC = () => {
           apiMimeType = selectedFile.type;
         }
         
+        // For PDFs, we'll explicitly tell the agent it's a PDF in the message content
+        // but send it as text/plain to the API
+        
         // Create a document object in the format expected by the Memory API
         const document = {
           document_id: `file-${Date.now()}`,
-          content: selectedFileContent,
+          content: fileContent, // Just the Base64 content without the data URL prefix
           mime_type: apiMimeType, // Use the API-compatible mime type
           metadata: {
             filename: selectedFile.name,
@@ -383,7 +431,7 @@ const AgentChatPage: React.FC = () => {
           mime_type: document.mime_type,
           original_mime_type: selectedFile.type,
           metadata: document.metadata,
-          content_length: document.content.length
+          content_length: fileContent.length
         });
       }
 
