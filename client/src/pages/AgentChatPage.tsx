@@ -294,12 +294,22 @@ const AgentChatPage: React.FC = () => {
       sessionId 
     });
     
-    // Create user message
+    // Create user message with detailed instructions based on file type
+    let messageContent = input.trim();
+    
+    if (!messageContent && selectedFile) {
+      if (selectedFile.type === 'application/pdf') {
+        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. This file has been converted to a data URL format. Please analyze this document and tell me what it contains.`;
+      } else if (selectedFile.type.startsWith('image/')) {
+        messageContent = `I'm sending you an image file: ${selectedFile.name} (${selectedFile.type}). Please analyze this image and describe what you see.`;
+      } else {
+        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains.`;
+      }
+    }
+    
     const userMessage: Message = {
       role: 'user',
-      content: input.trim() || (selectedFile ? 
-        `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains.` : 
-        '')
+      content: messageContent
     };
     
     // Add file if one is selected
@@ -346,13 +356,23 @@ const AgentChatPage: React.FC = () => {
       // Prepare documents array if a file is attached
       const documents = [];
       if (selectedFile && selectedFileContent) {
+        // Determine the appropriate mime type to send to the API
+        // The API might not support all mime types, so we'll use text/plain for most files
+        let apiMimeType = 'text/plain';
+        
+        // For images, we can keep the original mime type
+        if (selectedFile.type.startsWith('image/')) {
+          apiMimeType = selectedFile.type;
+        }
+        
         // Create a document object in the format expected by the Memory API
         const document = {
           document_id: `file-${Date.now()}`,
           content: selectedFileContent,
-          mime_type: selectedFile.type,
+          mime_type: apiMimeType, // Use the API-compatible mime type
           metadata: {
             filename: selectedFile.name,
+            original_mime_type: selectedFile.type, // Store the original mime type in metadata
             size: fileSize,
             source: 'user_upload'
           }
@@ -361,6 +381,7 @@ const AgentChatPage: React.FC = () => {
         console.log('Added document to request:', {
           document_id: document.document_id,
           mime_type: document.mime_type,
+          original_mime_type: selectedFile.type,
           metadata: document.metadata,
           content_length: document.content.length
         });
