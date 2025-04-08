@@ -240,7 +240,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, text
             {message.file.type.startsWith('image/') && (
               <Box sx={{ mt: 2, width: '100%', maxWidth: '300px', mx: 'auto' }}>
                 <img 
-                  src={message.file.content} 
+                  src={message.file.content.startsWith('data:') 
+                    ? message.file.content 
+                    : `data:${message.file.type};base64,${message.file.content}`} 
                   alt={message.file.name}
                   style={{ 
                     maxWidth: '100%', 

@@ -239,12 +239,36 @@ const AgentChatPage: React.FC = () => {
       const textReader = new FileReader();
       textReader.onload = (e) => {
         const content = e.target?.result as string;
-        // For text files, we'll prefix with "data:text/plain;base64," to maintain consistency
-        const base64Content = btoa(content);
-        const dataUrl = `data:text/plain;base64,${base64Content}`;
-        setSelectedFileContent(dataUrl);
-        setIsFileLoading(false);
-        console.log('Text file content loaded, length:', content.length);
+        
+        try {
+          // For text files, we'll prefix with "data:text/plain;base64," to maintain consistency
+          // Use encodeURIComponent to handle special characters properly
+          const base64Content = btoa(unescape(encodeURIComponent(content)));
+          const dataUrl = `data:text/plain;base64,${base64Content}`;
+          setSelectedFileContent(dataUrl);
+          setIsFileLoading(false);
+          console.log('Text file content loaded, length:', content.length);
+        } catch (error) {
+          console.error('Error encoding text file content:', error);
+          // If encoding fails, try a simpler approach
+          try {
+            const base64Content = btoa(content);
+            const dataUrl = `data:text/plain;base64,${base64Content}`;
+            setSelectedFileContent(dataUrl);
+          } catch (e) {
+            console.error('Failed to encode file content:', e);
+            setNotification({
+              open: true,
+              message: 'Error processing text file. The file may contain invalid characters.',
+              severity: 'error'
+            });
+            setSelectedFile(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+          }
+          setIsFileLoading(false);
+        }
       };
       textReader.onerror = () => {
         setIsFileLoading(false);
@@ -330,17 +354,17 @@ const AgentChatPage: React.FC = () => {
     
     if (!messageContent && selectedFile) {
       if (selectedFile.type === 'application/pdf') {
-        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. The content is provided as Base64-encoded text. Please decode and analyze this document to tell me what it contains. This is a PDF document with text content.`;
+        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. Please extract and analyze the text content from this document. The file is attached to this message.`;
       } else if (selectedFile.type.startsWith('image/')) {
-        messageContent = `I'm sending you an image file: ${selectedFile.name} (${selectedFile.type}). Please analyze this image and describe what you see in detail.`;
+        messageContent = `I'm sending you an image file: ${selectedFile.name}. Please analyze this image and describe what you see in detail. The image is attached to this message.`;
       } else if (selectedFile.type === 'text/plain' || 
                  selectedFile.name.endsWith('.txt') || 
                  selectedFile.name.endsWith('.md') || 
                  selectedFile.name.endsWith('.json') || 
                  selectedFile.name.endsWith('.csv')) {
-        messageContent = `I'm sending you a text file: ${selectedFile.name}. Please analyze the content and tell me what it contains. The file has been encoded as Base64 for transmission, but contains plain text.`;
+        messageContent = `I'm sending you a text file: ${selectedFile.name}. Please analyze the content and tell me what it contains. The file is attached to this message.`;
       } else {
-        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). The content is provided as Base64-encoded text. Please analyze this document and tell me what it contains.`;
+        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains. The file is attached to this message.`;
       }
     }
     
@@ -352,17 +376,27 @@ const AgentChatPage: React.FC = () => {
     // Add file if one is selected
     if (selectedFile && selectedFileContent) {
       console.log('Adding file to message:', selectedFile.name, 'Type:', selectedFile.type);
+      
+      // For PDF files, we'll use text/plain as the type to help the agent process it
+      const fileType = selectedFile.type === 'application/pdf' ? 'text/plain' : selectedFile.type;
+      
+      // Extract just the base64 content if it's a data URL
+      let fileContent = selectedFileContent;
+      if (selectedFileContent.includes(',')) {
+        fileContent = selectedFileContent.split(',')[1];
+      }
+      
       userMessage.file = {
         name: selectedFile.name,
-        content: selectedFileContent,
-        type: selectedFile.type
+        content: fileContent,
+        type: fileType
       };
       
       // Log the file attachment for debugging
       console.log('File attachment added to message:', {
         name: selectedFile.name,
-        type: selectedFile.type,
-        contentLength: selectedFileContent.length
+        type: fileType,
+        contentLength: fileContent.length
       });
     }
     
@@ -390,58 +424,14 @@ const AgentChatPage: React.FC = () => {
     }, 100);
     
     try {
-      // Prepare documents array if a file is attached
-      const documents = [];
-      if (selectedFile && selectedFileContent) {
-        // Extract the actual Base64 content from the data URL
-        // Data URLs are in the format: data:[<mediatype>][;base64],<data>
-        let fileContent = selectedFileContent;
-        if (selectedFileContent.includes(',')) {
-          // Extract just the Base64 content after the comma
-          fileContent = selectedFileContent.split(',')[1];
-        }
-        
-        // Determine the appropriate mime type to send to the API
-        // The API might not support all mime types, so we'll use text/plain for most files
-        let apiMimeType = 'text/plain';
-        
-        // For images, we can keep the original mime type
-        if (selectedFile.type.startsWith('image/')) {
-          apiMimeType = selectedFile.type;
-        }
-        
-        // For PDFs, we'll explicitly tell the agent it's a PDF in the message content
-        // but send it as text/plain to the API
-        
-        // Create a document object in the format expected by the Memory API
-        const document = {
-          document_id: `file-${Date.now()}`,
-          content: fileContent, // Just the Base64 content without the data URL prefix
-          mime_type: apiMimeType, // Use the API-compatible mime type
-          metadata: {
-            filename: selectedFile.name,
-            original_mime_type: selectedFile.type, // Store the original mime type in metadata
-            size: fileSize,
-            source: 'user_upload'
-          }
-        };
-        documents.push(document);
-        console.log('Added document to request:', {
-          document_id: document.document_id,
-          mime_type: document.mime_type,
-          original_mime_type: selectedFile.type,
-          metadata: document.metadata,
-          content_length: fileContent.length
-        });
-      }
 
       // Handle response based on streaming preference
       if (isStreaming) {
         console.log('Using streaming response handler');
-        await handleStreamingResponse(userMessage, documents);
+        await handleStreamingResponse(userMessage);
       } else {
         console.log('Using non-streaming response handler');
-        await handleNonStreamingResponse(userMessage, documents);
+        await handleNonStreamingResponse(userMessage);
       }
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
@@ -461,9 +451,8 @@ const AgentChatPage: React.FC = () => {
   };
 
   // Handle streaming response
-  const handleStreamingResponse = async (userMessage: Message, documents: any[] = []) => {
+  const handleStreamingResponse = async (userMessage: Message) => {
     console.log('Starting streaming response for message:', userMessage);
-    console.log('Documents for streaming request:', documents.length);
     
     // Create a new assistant message object that we'll update with streaming content
     const assistantMessage: Message = { role: 'assistant', content: '' };
@@ -487,7 +476,7 @@ const AgentChatPage: React.FC = () => {
       const payload = {
         messages: [userMessage],
         stream: true,
-        documents: documents
+        documents: [] // We don't need to include documents since we're sending the file directly in the message
       };
       console.log('Streaming payload:', JSON.stringify(payload, (key, value) => {
         // Truncate long content strings in the log for readability
@@ -702,14 +691,12 @@ const AgentChatPage: React.FC = () => {
   };
 
   // Handle non-streaming response
-  const handleNonStreamingResponse = async (userMessage: Message, documents: any[] = []) => {
+  const handleNonStreamingResponse = async (userMessage: Message) => {
     try {
       // Ensure agentId and sessionId are defined
       if (!agentId || !sessionId) {
         throw new Error('Agent ID or Session ID is undefined');
       }
-      
-      console.log('Documents for non-streaming request:', documents.length);
       
       console.log('Sending non-streaming message:', JSON.stringify(userMessage, (key, value) => {
         // Truncate long content strings in the log for readability
@@ -725,7 +712,7 @@ const AgentChatPage: React.FC = () => {
         sessionId,
         [userMessage],
         false, // non-streaming
-        documents, // documents from file upload
+        [], // We don't need to include documents since we're sending the file directly in the message
         [] // toolgroups
       );
       
