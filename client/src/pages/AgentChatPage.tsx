@@ -80,6 +80,7 @@ const AgentChatPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isFileLoading, setIsFileLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -210,17 +211,50 @@ const AgentChatPage: React.FC = () => {
     if (!file) return;
     
     console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
+    // Check file size - limit to 10MB to be safe
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      setNotification({
+        open: true,
+        message: `File is too large (${formatFileSize(file.size)}). Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`,
+        severity: 'error'
+      });
+      
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+    
     setSelectedFile(file);
     setFileSize(file.size);
+    setIsFileLoading(true);
     
     // Read file content
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
       setSelectedFileContent(content);
+      setIsFileLoading(false);
       console.log('File content loaded, length:', content.length);
       
       // No notification popup - we'll show the file info in the UI instead
+    };
+    reader.onerror = () => {
+      setIsFileLoading(false);
+      setNotification({
+        open: true,
+        message: 'Error reading file. Please try again with a different file.',
+        severity: 'error'
+      });
+      
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setSelectedFile(null);
     };
     reader.readAsDataURL(file);
   };
@@ -250,7 +284,7 @@ const AgentChatPage: React.FC = () => {
   // Handle sending a message
   const handleSendMessage = async () => {
     // Allow sending if there's text input OR a file is selected
-    if ((!input.trim() && !selectedFile) || !agentId || !sessionId || isSending) return;
+    if ((!input.trim() && !selectedFile) || !agentId || !sessionId || isSending || isFileLoading) return;
     
     console.log('Sending message, current state:', { 
       input, 
@@ -1155,21 +1189,31 @@ const AgentChatPage: React.FC = () => {
                 borderRadius: 1,
                 bgcolor: theme.palette.mode === 'dark' ? 'rgba(60, 60, 60, 0.6)' : 'rgba(230, 230, 230, 0.8)',
                 border: '1px dashed',
-                borderColor: 'divider'
+                borderColor: isFileLoading ? 'primary.main' : 'divider'
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {getFileIcon(selectedFile.type)}
+                {isFileLoading ? (
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                ) : (
+                  getFileIcon(selectedFile.type)
+                )}
                 <Typography variant="body2" sx={{ ml: 1, fontWeight: 500 }}>
                   {selectedFile.name}
                 </Typography>
                 <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
                   {formatFileSize(fileSize)}
                 </Typography>
+                {isFileLoading && (
+                  <Typography variant="caption" sx={{ ml: 1, color: 'primary.main' }}>
+                    Loading file...
+                  </Typography>
+                )}
               </Box>
               <IconButton 
                 size="small" 
                 onClick={handleRemoveFile}
+                disabled={isFileLoading}
                 sx={{ 
                   color: 'text.secondary',
                   '&:hover': {
@@ -1241,12 +1285,12 @@ const AgentChatPage: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            endIcon={isSending ? <CircularProgress size={20} /> : <SendIcon />}
+            endIcon={isSending || isFileLoading ? <CircularProgress size={20} /> : <SendIcon />}
             onClick={handleSendMessage}
-            disabled={(!input.trim() && !selectedFile) || isSending}
+            disabled={(!input.trim() && !selectedFile) || isSending || isFileLoading}
             sx={{ ml: 1 }}
           >
-            Send
+            {isFileLoading ? 'Loading File...' : 'Send'}
           </Button>
           </Box>
         </Box>
