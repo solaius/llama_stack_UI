@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import * as pdfjsLib from 'pdfjs-dist';
 import {
   Box,
   Typography,
@@ -56,6 +57,40 @@ const formatFileSize = (bytes: number): string => {
   else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   else return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+};
+
+// Extract text from PDF
+const extractTextFromPDF = async (pdfData: string): Promise<string> => {
+  try {
+    // Initialize PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    
+    // Convert base64 to array buffer
+    const binaryString = atob(pdfData);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({ data: bytes.buffer });
+    const pdf = await loadingTask.promise;
+    
+    let extractedText = '';
+    
+    // Extract text from each page
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item: any) => item.str).join(' ');
+      extractedText += `Page ${i}:\n${pageText}\n\n`;
+    }
+    
+    return extractedText;
+  } catch (error) {
+    console.error('Error extracting text from PDF:', error);
+    return 'Error extracting text from PDF. Please try a different file or format.';
+  }
 };
 
 // Helper function to get file icon based on file type
@@ -391,9 +426,22 @@ const AgentChatPage: React.FC = () => {
         fileContent = selectedFileContent.split(',')[1];
       }
       
-      // For text files, we'll add the content directly to the message as well
-      // This helps the agent process the content more easily
-      if (selectedFile.type === 'text/plain' || 
+      // For PDF files, try to extract the text content
+      if (selectedFile.type === 'application/pdf' || selectedFile.name.endsWith('.pdf')) {
+        try {
+          // Extract text from the PDF
+          const extractedText = await extractTextFromPDF(fileContent);
+          
+          // Update the user message with the extracted text
+          userMessage.content += `\n\nHere is the extracted text from the PDF:\n\n${extractedText}`;
+        } catch (error) {
+          console.error('Error extracting text from PDF:', error);
+          // If extraction fails, just continue with the base64 content
+          userMessage.content += '\n\nAttempted to extract text from the PDF but encountered an error. The file is still attached as Base64 content.';
+        }
+      }
+      // For text files, add the content directly to the message
+      else if (selectedFile.type === 'text/plain' || 
           selectedFile.name.endsWith('.txt') || 
           selectedFile.name.endsWith('.md') || 
           selectedFile.name.endsWith('.json') || 
