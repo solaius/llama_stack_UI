@@ -413,7 +413,7 @@ export const apiService = {
   invokeTool: async (toolName: string, args: Record<string, any>) => {
     const response = await api.post('/v1/tool-runtime/invoke', {
       tool_name: toolName,
-      arguments: args
+      kwargs: args  // Changed from 'arguments' to 'kwargs' to match API requirements
     });
     return response.data;
   },
