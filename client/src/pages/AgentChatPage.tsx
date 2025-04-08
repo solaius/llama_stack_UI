@@ -263,7 +263,9 @@ const AgentChatPage: React.FC = () => {
     // Create user message
     const userMessage: Message = {
       role: 'user',
-      content: input.trim() || (selectedFile ? `I'm sending you a file: ${selectedFile.name}` : '')
+      content: input.trim() || (selectedFile ? 
+        `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains.` : 
+        '')
     };
     
     // Add file if one is selected
@@ -307,13 +309,36 @@ const AgentChatPage: React.FC = () => {
     }, 100);
     
     try {
+      // Prepare documents array if a file is attached
+      const documents = [];
+      if (selectedFile && selectedFileContent) {
+        // Create a document object in the format expected by the Memory API
+        const document = {
+          document_id: `file-${Date.now()}`,
+          content: selectedFileContent,
+          mime_type: selectedFile.type,
+          metadata: {
+            filename: selectedFile.name,
+            size: fileSize,
+            source: 'user_upload'
+          }
+        };
+        documents.push(document);
+        console.log('Added document to request:', {
+          document_id: document.document_id,
+          mime_type: document.mime_type,
+          metadata: document.metadata,
+          content_length: document.content.length
+        });
+      }
+
       // Handle response based on streaming preference
       if (isStreaming) {
         console.log('Using streaming response handler');
-        await handleStreamingResponse(userMessage);
+        await handleStreamingResponse(userMessage, documents);
       } else {
         console.log('Using non-streaming response handler');
-        await handleNonStreamingResponse(userMessage);
+        await handleNonStreamingResponse(userMessage, documents);
       }
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
@@ -333,8 +358,9 @@ const AgentChatPage: React.FC = () => {
   };
 
   // Handle streaming response
-  const handleStreamingResponse = async (userMessage: Message) => {
+  const handleStreamingResponse = async (userMessage: Message, documents: any[] = []) => {
     console.log('Starting streaming response for message:', userMessage);
+    console.log('Documents for streaming request:', documents.length);
     
     // Create a new assistant message object that we'll update with streaming content
     const assistantMessage: Message = { role: 'assistant', content: '' };
@@ -357,7 +383,8 @@ const AgentChatPage: React.FC = () => {
       
       const payload = {
         messages: [userMessage],
-        stream: true
+        stream: true,
+        documents: documents
       };
       console.log('Streaming payload:', JSON.stringify(payload, (key, value) => {
         // Truncate long content strings in the log for readability
@@ -572,12 +599,14 @@ const AgentChatPage: React.FC = () => {
   };
 
   // Handle non-streaming response
-  const handleNonStreamingResponse = async (userMessage: Message) => {
+  const handleNonStreamingResponse = async (userMessage: Message, documents: any[] = []) => {
     try {
       // Ensure agentId and sessionId are defined
       if (!agentId || !sessionId) {
         throw new Error('Agent ID or Session ID is undefined');
       }
+      
+      console.log('Documents for non-streaming request:', documents.length);
       
       console.log('Sending non-streaming message:', JSON.stringify(userMessage, (key, value) => {
         // Truncate long content strings in the log for readability
@@ -593,7 +622,7 @@ const AgentChatPage: React.FC = () => {
         sessionId,
         [userMessage],
         false, // non-streaming
-        [], // documents
+        documents, // documents from file upload
         [] // toolgroups
       );
       
