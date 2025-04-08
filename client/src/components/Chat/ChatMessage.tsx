@@ -1,6 +1,14 @@
 import React from 'react';
-import { Box, Paper, Typography, Avatar, Chip, useTheme } from '@mui/material';
-import { Person as PersonIcon, SmartToy as BotIcon, Code as CodeIcon } from '@mui/icons-material';
+import { Box, Paper, Typography, Avatar, Chip, useTheme, Link } from '@mui/material';
+import { 
+  Person as PersonIcon, 
+  SmartToy as BotIcon, 
+  Code as CodeIcon,
+  InsertDriveFile as FileIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  AttachFile as AttachFileIcon
+} from '@mui/icons-material';
 import { Message, ToolCall } from '../../services/api';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco, dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -10,6 +18,19 @@ interface ChatMessageProps {
   isLast?: boolean;
   textSize?: number;
 }
+
+// Helper function to get file icon based on file type
+const getFileIcon = (fileType: string | undefined) => {
+  if (!fileType) return <AttachFileIcon />;
+  
+  if (fileType.startsWith('image/')) {
+    return <ImageIcon />;
+  } else if (fileType === 'application/pdf') {
+    return <PdfIcon />;
+  } else {
+    return <FileIcon />;
+  }
+};
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, textSize = 1 }) => {
   const theme = useTheme();
@@ -191,6 +212,48 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, text
         )}
 
         {formatMessageContent(message.content)}
+
+        {/* Display file attachment if present */}
+        {message.file && (
+          <Box 
+            sx={{ 
+              mt: 2,
+              p: 1.5,
+              borderRadius: 1,
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.6)' : 'rgba(245, 245, 245, 0.8)',
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {getFileIcon(message.file.type)}
+              <Box sx={{ ml: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {message.file.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {message.file.type}
+                </Typography>
+              </Box>
+            </Box>
+            
+            {message.file.type.startsWith('image/') && (
+              <Box sx={{ mt: 2, width: '100%', maxWidth: '300px', mx: 'auto' }}>
+                <img 
+                  src={message.file.content} 
+                  alt={message.file.name}
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '200px',
+                    borderRadius: '4px',
+                    display: 'block',
+                    margin: '0 auto'
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        )}
 
         {message.tool_calls && message.tool_calls.length > 0 && renderToolCalls(message.tool_calls)}
       </Paper>

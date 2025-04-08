@@ -39,12 +39,35 @@ import {
   Person as PersonIcon,
   ContentCopy as ContentCopyIcon,
   NoteAdd as NoteAddIcon,
-  Description as DescriptionIcon
+  Description as DescriptionIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  InsertDriveFile as FileIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
 import ChatMessage from '../components/Chat/ChatMessage';
 import { SSE } from 'sse.js';
+
+// Helper function to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  else return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+};
+
+// Helper function to get file icon based on file type
+const getFileIcon = (fileType: string) => {
+  if (fileType.startsWith('image/')) {
+    return <ImageIcon />;
+  } else if (fileType === 'application/pdf') {
+    return <PdfIcon />;
+  } else {
+    return <FileIcon />;
+  }
+};
 
 const AgentChatPage: React.FC = () => {
   const { agentId, sessionId } = useParams<{ agentId: string; sessionId: string }>();
@@ -61,6 +84,7 @@ const AgentChatPage: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileContent, setSelectedFileContent] = useState<string | null>(null);
+  const [fileSize, setFileSize] = useState<number>(0);
   const [textSize, setTextSize] = useState<number>(0.9); // Default to slightly smaller text (0.9rem)
   const [notification, setNotification] = useState<{
     open: boolean;
@@ -185,8 +209,9 @@ const AgentChatPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     
-    console.log('File selected:', file.name);
+    console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
     setSelectedFile(file);
+    setFileSize(file.size);
     
     // Read file content
     const reader = new FileReader();
@@ -195,14 +220,19 @@ const AgentChatPage: React.FC = () => {
       setSelectedFileContent(content);
       console.log('File content loaded, length:', content.length);
       
-      // Show notification
-      setNotification({
-        open: true,
-        message: `File "${file.name}" selected and ready to send.`,
-        severity: 'info'
-      });
+      // No notification popup - we'll show the file info in the UI instead
     };
     reader.readAsDataURL(file);
+  };
+  
+  // Handle removing the selected file
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setSelectedFileContent(null);
+    setFileSize(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Scroll to bottom when messages change
@@ -219,7 +249,8 @@ const AgentChatPage: React.FC = () => {
 
   // Handle sending a message
   const handleSendMessage = async () => {
-    if (!input.trim() || !agentId || !sessionId || isSending) return;
+    // Allow sending if there's text input OR a file is selected
+    if ((!input.trim() && !selectedFile) || !agentId || !sessionId || isSending) return;
     
     console.log('Sending message, current state:', { 
       input, 
@@ -232,16 +263,24 @@ const AgentChatPage: React.FC = () => {
     // Create user message
     const userMessage: Message = {
       role: 'user',
-      content: input.trim()
+      content: input.trim() || (selectedFile ? `I'm sending you a file: ${selectedFile.name}` : '')
     };
     
     // Add file if one is selected
-    if (selectedFile) {
+    if (selectedFile && selectedFileContent) {
+      console.log('Adding file to message:', selectedFile.name, 'Type:', selectedFile.type);
       userMessage.file = {
         name: selectedFile.name,
-        content: selectedFileContent || '',
+        content: selectedFileContent,
         type: selectedFile.type
       };
+      
+      // Log the file attachment for debugging
+      console.log('File attachment added to message:', {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        contentLength: selectedFileContent.length
+      });
     }
     
     console.log('Created user message:', userMessage);
@@ -320,7 +359,13 @@ const AgentChatPage: React.FC = () => {
         messages: [userMessage],
         stream: true
       };
-      console.log('Streaming payload:', payload);
+      console.log('Streaming payload:', JSON.stringify(payload, (key, value) => {
+        // Truncate long content strings in the log for readability
+        if (key === 'content' && typeof value === 'string' && value.length > 100) {
+          return value.substring(0, 100) + '... [truncated]';
+        }
+        return value;
+      }, 2));
       
       const eventSource = new SSE(url, {
         headers: {
@@ -534,14 +579,22 @@ const AgentChatPage: React.FC = () => {
         throw new Error('Agent ID or Session ID is undefined');
       }
       
-      console.log('Sending non-streaming message:', userMessage);
+      console.log('Sending non-streaming message:', JSON.stringify(userMessage, (key, value) => {
+        // Truncate long content strings in the log for readability
+        if (key === 'content' && typeof value === 'string' && value.length > 100) {
+          return value.substring(0, 100) + '... [truncated]';
+        }
+        return value;
+      }, 2));
       
       // Call the API to create a turn
       const turnResponse = await apiService.createAgentTurn(
         agentId,
         sessionId,
         [userMessage],
-        false // non-streaming
+        false, // non-streaming
+        [], // documents
+        [] // toolgroups
       );
       
       console.log('Received turn response:', turnResponse);
@@ -1060,6 +1113,46 @@ const AgentChatPage: React.FC = () => {
           mx: 'auto', // Center the box
           p: 2
         }}>
+          {/* File Indicator */}
+          {selectedFile && (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                mb: 1,
+                p: 1,
+                pl: 2,
+                borderRadius: 1,
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(60, 60, 60, 0.6)' : 'rgba(230, 230, 230, 0.8)',
+                border: '1px dashed',
+                borderColor: 'divider'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {getFileIcon(selectedFile.type)}
+                <Typography variant="body2" sx={{ ml: 1, fontWeight: 500 }}>
+                  {selectedFile.name}
+                </Typography>
+                <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                  {formatFileSize(fileSize)}
+                </Typography>
+              </Box>
+              <IconButton 
+                size="small" 
+                onClick={handleRemoveFile}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': {
+                    color: 'error.main'
+                  }
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+          
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -1073,8 +1166,12 @@ const AgentChatPage: React.FC = () => {
           <IconButton
             color="primary"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isSending}
-            sx={{ mr: 1 }}
+            disabled={isSending || !!selectedFile}
+            sx={{ 
+              mr: 1,
+              color: selectedFile ? 'success.main' : 'primary.main',
+              opacity: selectedFile || isSending ? 0.6 : 1
+            }}
           >
             <AttachFileIcon />
           </IconButton>
@@ -1086,7 +1183,7 @@ const AgentChatPage: React.FC = () => {
           />
           <TextField
             fullWidth
-            placeholder="Type your message..."
+            placeholder={selectedFile ? `Type your message about ${selectedFile.name}...` : "Type your message..."}
             variant="outlined" // Changed back to outlined to fix the periods issue
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -1117,7 +1214,7 @@ const AgentChatPage: React.FC = () => {
             color="primary"
             endIcon={isSending ? <CircularProgress size={20} /> : <SendIcon />}
             onClick={handleSendMessage}
-            disabled={!input.trim() || isSending}
+            disabled={(!input.trim() && !selectedFile) || isSending}
             sx={{ ml: 1 }}
           >
             Send
