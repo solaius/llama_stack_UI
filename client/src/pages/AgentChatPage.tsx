@@ -354,18 +354,23 @@ const AgentChatPage: React.FC = () => {
     
     if (!messageContent && selectedFile) {
       if (selectedFile.type === 'application/pdf') {
-        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. Please extract and analyze the text content from this document. The file is attached to this message.`;
+        messageContent = `I'm sending you a PDF file: ${selectedFile.name}. The content is encoded in Base64 format. Please decode it, extract the text, and provide a detailed summary of the document's content.`;
       } else if (selectedFile.type.startsWith('image/')) {
-        messageContent = `I'm sending you an image file: ${selectedFile.name}. Please analyze this image and describe what you see in detail. The image is attached to this message.`;
+        messageContent = `I'm sending you an image file: ${selectedFile.name}. The image is encoded in Base64 format. Please analyze this image and describe what you see in detail.`;
       } else if (selectedFile.type === 'text/plain' || 
                  selectedFile.name.endsWith('.txt') || 
                  selectedFile.name.endsWith('.md') || 
                  selectedFile.name.endsWith('.json') || 
                  selectedFile.name.endsWith('.csv')) {
-        messageContent = `I'm sending you a text file: ${selectedFile.name}. Please analyze the content and tell me what it contains. The file is attached to this message.`;
+        messageContent = `I'm sending you a text file: ${selectedFile.name}. The content is encoded in Base64 format. Please decode it and provide a detailed analysis of the text content.`;
       } else {
-        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). Please analyze this document and tell me what it contains. The file is attached to this message.`;
+        messageContent = `I'm sending you a file: ${selectedFile.name} (${selectedFile.type}). The content is encoded in Base64 format. Please decode it and analyze what it contains.`;
       }
+    }
+    
+    // If user provided their own message, add a note about the file
+    if (messageContent && selectedFile) {
+      messageContent += `\n\nI've also attached a file: ${selectedFile.name}. The file content is encoded in Base64 format.`;
     }
     
     const userMessage: Message = {
@@ -384,6 +389,23 @@ const AgentChatPage: React.FC = () => {
       let fileContent = selectedFileContent;
       if (selectedFileContent.includes(',')) {
         fileContent = selectedFileContent.split(',')[1];
+      }
+      
+      // For text files, we'll add the content directly to the message as well
+      // This helps the agent process the content more easily
+      if (selectedFile.type === 'text/plain' || 
+          selectedFile.name.endsWith('.txt') || 
+          selectedFile.name.endsWith('.md') || 
+          selectedFile.name.endsWith('.json') || 
+          selectedFile.name.endsWith('.csv')) {
+        try {
+          // Try to decode the base64 content and add it to the message
+          const decodedContent = atob(fileContent);
+          userMessage.content += `\n\nHere is the decoded content of the file:\n\n${decodedContent}`;
+        } catch (error) {
+          console.error('Error decoding file content:', error);
+          // If decoding fails, just continue with the base64 content
+        }
       }
       
       userMessage.file = {
