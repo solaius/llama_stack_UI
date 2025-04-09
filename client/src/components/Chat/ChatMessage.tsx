@@ -1,17 +1,19 @@
 import React from 'react';
 import { Box, Paper, Typography, Avatar, Chip, useTheme } from '@mui/material';
 import { Person as PersonIcon, SmartToy as BotIcon, Code as CodeIcon } from '@mui/icons-material';
-import { Message, ToolCall } from '../../services/api';
+import { Message, ToolCall, ToolResult } from '../../services/api';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco, dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import ToolUsageDisplay from './ToolUsageDisplay';
 
 interface ChatMessageProps {
   message: Message;
   isLast?: boolean;
   textSize?: number;
+  onRerunTool?: (toolCall: ToolCall) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, textSize = 1 }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, textSize = 1, onRerunTool }) => {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -192,7 +194,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, text
 
         {formatMessageContent(message.content)}
 
-        {message.tool_calls && message.tool_calls.length > 0 && renderToolCalls(message.tool_calls)}
+        {message.tool_calls && message.tool_calls.length > 0 && (
+          <ToolUsageDisplay 
+            toolCalls={message.tool_calls} 
+            onRerunTool={onRerunTool}
+          />
+        )}
       </Paper>
     </Box>
   );

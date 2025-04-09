@@ -160,7 +160,47 @@ const ChatInterface: React.FC = () => {
             // Complete the message and add any tool calls
             if (data.completion_message?.tool_calls) {
               assistantMessage.tool_calls = data.completion_message.tool_calls;
+              
+              // Execute tool calls if present
+              setTimeout(async () => {
+                try {
+                  // Execute each tool call
+                  const toolResults = await Promise.all(
+                    data.completion_message.tool_calls.map(async (toolCall: any) => {
+                      try {
+                        // Call the API to execute the tool
+                        const result = await apiService.executeToolCall(toolCall);
+                        return result;
+                      } catch (error) {
+                        console.error('Error executing tool call:', error);
+                        return {
+                          tool_call_id: toolCall.id,
+                          content: null,
+                          error: error instanceof Error ? error.message : 'Unknown error executing tool'
+                        };
+                      }
+                    })
+                  );
+                  
+                  // Add tool results as messages
+                  const toolMessages: Message[] = toolResults.map(result => ({
+                    role: 'tool',
+                    content: typeof result.content === 'string' 
+                      ? result.content 
+                      : JSON.stringify(result.content),
+                    tool_call_id: result.tool_call_id,
+                    error: result.error
+                  }));
+                  
+                  // Add tool messages to the chat
+                  setMessages(prev => [...prev, ...toolMessages]);
+                  
+                } catch (error) {
+                  console.error('Error handling tool calls:', error);
+                }
+              }, 500);
             }
+            
             assistantMessage.stop_reason = data.event.stop_reason;
 
             setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
@@ -189,6 +229,48 @@ const ChatInterface: React.FC = () => {
         };
         
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Execute tool calls if present
+        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+          setTimeout(async () => {
+            try {
+              // Execute each tool call
+              const toolResults = await Promise.all(
+                assistantMessage.tool_calls!.map(async (toolCall) => {
+                  try {
+                    // Call the API to execute the tool
+                    const result = await apiService.executeToolCall(toolCall);
+                    return result;
+                  } catch (error) {
+                    console.error('Error executing tool call:', error);
+                    return {
+                      tool_call_id: toolCall.id,
+                      content: null,
+                      error: error instanceof Error ? error.message : 'Unknown error executing tool'
+                    };
+                  }
+                })
+              );
+              
+              // Add tool results as messages
+              const toolMessages: Message[] = toolResults.map(result => ({
+                role: 'tool',
+                content: typeof result.content === 'string' 
+                  ? result.content 
+                  : JSON.stringify(result.content),
+                tool_call_id: result.tool_call_id,
+                error: result.error
+              }));
+              
+              // Add tool messages to the chat
+              setMessages(prev => [...prev, ...toolMessages]);
+              
+            } catch (error) {
+              console.error('Error handling tool calls:', error);
+            }
+          }, 500);
+        }
+        
         setIsLoading(false);
       }
     } catch (error) {
@@ -215,6 +297,33 @@ const ChatInterface: React.FC = () => {
 
   const handleClearChat = () => {
     setMessages([]);
+  };
+  
+  // Handle rerunning a tool
+  const handleRerunTool = async (toolCall: ToolCall) => {
+    try {
+      console.log('Rerunning tool call:', toolCall);
+      
+      // Execute the tool call
+      const result = await apiService.executeToolCall(toolCall);
+      console.log('Tool execution result:', result);
+      
+      // Add the tool result as a message
+      const toolMessage: Message = {
+        role: 'tool',
+        content: typeof result.content === 'string' 
+          ? result.content 
+          : JSON.stringify(result.content),
+        tool_call_id: result.tool_call_id,
+        error: result.error
+      };
+      
+      // Add tool message to the chat
+      setMessages(prevMessages => [...prevMessages, toolMessage]);
+      
+    } catch (error) {
+      console.error('Error rerunning tool:', error);
+    }
   };
 
   const handleModelChange = (event: SelectChangeEvent) => {
@@ -385,6 +494,7 @@ const ChatInterface: React.FC = () => {
               key={index}
               message={message}
               isLast={index === messages.length - 1 && isLoading}
+              onRerunTool={handleRerunTool}
             />
           ))
         )}

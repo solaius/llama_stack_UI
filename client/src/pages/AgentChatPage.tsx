@@ -334,6 +334,7 @@ const AgentChatPage: React.FC = () => {
       
       // Track content to avoid duplicate updates
       let currentContent = '';
+      let toolCallsDetected = false;
       
       eventSource.onmessage = (event) => {
         try {
@@ -420,8 +421,50 @@ const AgentChatPage: React.FC = () => {
                 return [outputMessage];
               });
               
-              // Clean up
-              setIsSending(false);
+              // Check if there are tool calls in the output message
+              if (outputMessage.tool_calls && outputMessage.tool_calls.length > 0) {
+                console.log('Tool calls detected in turn_complete:', outputMessage.tool_calls);
+                toolCallsDetected = true;
+                
+                // Execute the tool calls
+                setTimeout(async () => {
+                  await handleExecuteToolCalls(outputMessage);
+                  
+                  // Continue the conversation with the tool results
+                  if (agentId && sessionId) {
+                    // Get the updated messages including tool results
+                    const updatedMessages = [...messages, outputMessage];
+                    const toolMessages = updatedMessages.filter(msg => msg.role === 'tool');
+                    
+                    if (toolMessages.length > 0) {
+                      console.log('Continuing conversation with tool results:', toolMessages);
+                      
+                      // Create a new assistant message for the follow-up response
+                      const followUpMessage: Message = { role: 'assistant', content: '' };
+                      
+                      // Add the placeholder message to the state
+                      setMessages(prevMessages => [...prevMessages, followUpMessage]);
+                      
+                      // Create a new turn with the tool results
+                      const followUpPayload = {
+                        messages: [userMessage, outputMessage, ...toolMessages],
+                        stream: true
+                      };
+                      
+                      console.log('Follow-up payload:', followUpPayload);
+                      
+                      // We'll handle this in a separate function in a real implementation
+                      // For now, we'll just close the current stream
+                      setIsSending(false);
+                    }
+                  }
+                }, 500);
+              } else {
+                // No tool calls, clean up
+                setIsSending(false);
+              }
+              
+              // Close the event source
               eventSource.close();
               eventSourceRef.current = null;
             }
@@ -440,9 +483,10 @@ const AgentChatPage: React.FC = () => {
               };
               
               // Add tool calls if present
-              if (modelResponse.tool_calls) {
-                console.log('Tool calls received:', modelResponse.tool_calls);
+              if (modelResponse.tool_calls && modelResponse.tool_calls.length > 0) {
+                console.log('Tool calls received in step_complete:', modelResponse.tool_calls);
                 finalMessage.tool_calls = modelResponse.tool_calls;
+                toolCallsDetected = true;
               }
               
               // Update the state with the final message using immutable approach
@@ -465,8 +509,39 @@ const AgentChatPage: React.FC = () => {
                 return [finalMessage];
               });
 
+              // If tool calls were detected, execute them
+              if (finalMessage.tool_calls && finalMessage.tool_calls.length > 0) {
+                setTimeout(async () => {
+                  await handleExecuteToolCalls(finalMessage);
+                  setIsSending(false);
+                }, 500);
+              }
+
               // Final scroll to bottom
               setTimeout(scrollToBottom, 50);
+            }
+          }
+          // Handle tool_execution events
+          else if (data.event && data.event.payload && data.event.payload.event_type === 'tool_execution') {
+            console.log('Tool execution event received:', data);
+            
+            // Extract tool execution details
+            const toolExecution = data.event.payload;
+            if (toolExecution.tool_call && toolExecution.result) {
+              // Create a tool message
+              const toolMessage: Message = {
+                role: 'tool',
+                content: typeof toolExecution.result === 'string' 
+                  ? toolExecution.result 
+                  : JSON.stringify(toolExecution.result),
+                tool_call_id: toolExecution.tool_call.id
+              };
+              
+              // Add the tool message to the chat
+              setMessages(prevMessages => [...prevMessages, toolMessage]);
+              
+              // Scroll to bottom
+              setTimeout(scrollToBottom, 10);
             }
           }
         } catch (error) {
@@ -558,6 +633,23 @@ const AgentChatPage: React.FC = () => {
           return [...newMessages]; // Return a new array to ensure React detects the change
         });
         
+        // Check if there are tool calls in the output message
+        if (turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) {
+          console.log('Tool calls detected in non-streaming response:', turnResponse.output_message.tool_calls);
+          
+          // Execute the tool calls
+          setTimeout(async () => {
+            await handleExecuteToolCalls(turnResponse.output_message);
+            setIsSending(false);
+            
+            // Continue the conversation with the tool results if needed
+            // This would be similar to the streaming implementation
+          }, 500);
+        } else {
+          // No tool calls, clean up
+          setIsSending(false);
+        }
+        
         // Force scroll to bottom
         setTimeout(scrollToBottom, 50);
       } else {
@@ -608,6 +700,55 @@ const AgentChatPage: React.FC = () => {
   
   // Note: handleFileUpload function is defined earlier in the file
   
+  // Handle executing a tool call
+  const handleExecuteToolCall = async (toolCall: ToolCall): Promise<ToolResult> => {
+    console.log('Executing tool call:', toolCall);
+    
+    try {
+      // Call the API to execute the tool
+      const result = await apiService.executeToolCall(toolCall);
+      console.log('Tool execution result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error executing tool call:', error);
+      return {
+        tool_call_id: toolCall.id,
+        content: null,
+        error: error instanceof Error ? error.message : 'Unknown error executing tool'
+      };
+    }
+  };
+  
+  // Handle executing all tool calls in a message
+  const handleExecuteToolCalls = async (message: Message) => {
+    if (!message.tool_calls || message.tool_calls.length === 0) {
+      return [];
+    }
+    
+    console.log('Executing tool calls for message:', message);
+    
+    // Execute all tool calls in parallel
+    const toolResults = await Promise.all(
+      message.tool_calls.map(toolCall => handleExecuteToolCall(toolCall))
+    );
+    
+    // Add tool results to the messages
+    const toolMessages: Message[] = toolResults.map(result => ({
+      role: 'tool',
+      content: typeof result.content === 'string' 
+        ? result.content 
+        : JSON.stringify(result.content),
+      tool_call_id: result.tool_call_id,
+      error: result.error
+    }));
+    
+    // Add tool messages to the chat
+    setMessages(prevMessages => [...prevMessages, ...toolMessages]);
+    
+    // Return the tool results
+    return toolResults;
+  };
+  
   // Handle rerunning a tool
   const handleRerunTool = async (toolCall: ToolCall) => {
     // Ensure agentId and sessionId are defined
@@ -627,15 +768,34 @@ const AgentChatPage: React.FC = () => {
     });
     
     try {
-      // In a real implementation, you would call the API to rerun the tool
-      // For now, we'll just show a notification
-      setTimeout(() => {
-        setNotification({
-          open: true,
-          message: 'Tool rerun functionality is not implemented yet.',
-          severity: 'info'
-        });
-      }, 1000);
+      // Execute the tool call
+      const result = await handleExecuteToolCall(toolCall);
+      
+      // Add the tool result as a message
+      const toolMessage: Message = {
+        role: 'tool',
+        content: typeof result.content === 'string' 
+          ? result.content 
+          : JSON.stringify(result.content),
+        tool_call_id: result.tool_call_id,
+        error: result.error
+      };
+      
+      // Add tool message to the chat
+      setMessages(prevMessages => [...prevMessages, toolMessage]);
+      
+      // Show success notification
+      setNotification({
+        open: true,
+        message: result.error 
+          ? `Tool execution failed: ${result.error}` 
+          : 'Tool executed successfully',
+        severity: result.error ? 'error' : 'success'
+      });
+      
+      // Scroll to bottom
+      setTimeout(scrollToBottom, 100);
+      
     } catch (error) {
       console.error('Error rerunning tool:', error);
       setNotification({
@@ -1021,6 +1181,7 @@ const AgentChatPage: React.FC = () => {
                         message={message}
                         isLast={isLastMessage && isSending}
                         textSize={textSize}
+                        onRerunTool={handleRerunTool}
                       />
                     </ListItem>
                   );

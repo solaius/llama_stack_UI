@@ -243,6 +243,35 @@ export const apiService = {
     return response.data;
   },
 
+  executeToolCall: async (toolCall: ToolCall): Promise<ToolResult> => {
+    try {
+      // Extract the tool name and arguments
+      const toolName = toolCall.function.name;
+      const args = JSON.parse(toolCall.function.arguments);
+      
+      console.log(`Executing tool call: ${toolName}`, args);
+      
+      // Call the tool runtime endpoint
+      const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
+        tool_name: toolName,
+        kwargs: args
+      });
+      
+      return {
+        tool_call_id: toolCall.id,
+        content: response.data.content,
+        error: response.data.error_message
+      };
+    } catch (error: any) {
+      console.error('Error executing tool call:', error);
+      return {
+        tool_call_id: toolCall.id,
+        content: null,
+        error: error.message || 'Failed to execute tool'
+      };
+    }
+  },
+
   createTool: async (toolData: {
     identifier: string;
     description: string;
