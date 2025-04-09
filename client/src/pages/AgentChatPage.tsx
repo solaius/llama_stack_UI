@@ -940,6 +940,9 @@ const AgentChatPage: React.FC = () => {
     }
   };
   
+  // Track which tool calls have been executed to prevent duplicates
+  const executedToolCalls = useRef<Set<string>>(new Set());
+  
   // Handle executing all tool calls in a message
   const handleExecuteToolCalls = async (message: Message) => {
     if (!message.tool_calls || message.tool_calls.length === 0) {
@@ -948,9 +951,22 @@ const AgentChatPage: React.FC = () => {
     
     console.log('Executing tool calls for message:', message);
     
-    // Execute all tool calls in parallel
+    // Filter out tool calls that have already been executed
+    const newToolCalls = message.tool_calls.filter(toolCall => !executedToolCalls.current.has(toolCall.id));
+    
+    if (newToolCalls.length === 0) {
+      console.log('All tool calls have already been executed, skipping');
+      return [];
+    }
+    
+    // Mark these tool calls as executed
+    newToolCalls.forEach(toolCall => executedToolCalls.current.add(toolCall.id));
+    
+    console.log('Executing new tool calls:', newToolCalls);
+    
+    // Execute all new tool calls in parallel
     const toolResults = await Promise.all(
-      message.tool_calls.map(toolCall => handleExecuteToolCall(toolCall))
+      newToolCalls.map(toolCall => handleExecuteToolCall(toolCall))
     );
     
     // Add tool results to the messages
@@ -989,6 +1005,11 @@ const AgentChatPage: React.FC = () => {
     });
     
     try {
+      // Remove this tool call from the executed set so it can be run again
+      executedToolCalls.current.delete(toolCall.id);
+      
+      console.log('Rerunning tool call:', toolCall);
+      
       // Execute the tool call
       const result = await handleExecuteToolCall(toolCall);
       
@@ -1004,6 +1025,9 @@ const AgentChatPage: React.FC = () => {
       
       // Add tool message to the chat
       setMessages(prevMessages => [...prevMessages, toolMessage]);
+      
+      // Mark the tool call as executed again
+      executedToolCalls.current.add(toolCall.id);
       
       // Show success notification
       setNotification({
