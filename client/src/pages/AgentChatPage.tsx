@@ -429,27 +429,70 @@ const AgentChatPage: React.FC = () => {
                 console.log('Tool calls or Python code detected in turn_complete');
                 toolCallsDetected = true;
                 
-                // If Python code is detected but no tool calls, create a code_interpreter tool call
+                // If Python code is detected but no tool calls, check if we should create a tool call
                 if (hasPythonCode && (!outputMessage.tool_calls || outputMessage.tool_calls.length === 0)) {
-                  console.log('Converting Python code to code_interpreter tool call');
+                  // Check if the agent has access to the code_interpreter tool
+                  const hasCodeInterpreter = agent && agent.config && 
+                                           agent.config.toolgroups && 
+                                           agent.config.toolgroups.some(tool => 
+                                             tool.name === 'builtin::code_interpreter');
+                  
+                  // Check if the agent has access to the websearch tool
+                  const hasWebSearch = agent && agent.config && 
+                                     agent.config.toolgroups && 
+                                     agent.config.toolgroups.some(tool => 
+                                       tool.name === 'builtin::websearch');
+                  
+                  console.log('Agent tools:', agent?.config?.toolgroups);
+                  console.log('Has code_interpreter:', hasCodeInterpreter);
+                  console.log('Has websearch:', hasWebSearch);
                   
                   // Extract the Python code
                   const pythonCode = outputMessage.content.replace('<|python_tag|>', '').trim();
                   
-                  // Create a synthetic tool call for code_interpreter
-                  const codeToolCall: ToolCall = {
-                    id: `code-${Date.now()}`,
-                    type: 'function',
-                    function: {
-                      name: 'code_interpreter',
-                      arguments: JSON.stringify({ code: pythonCode })
-                    }
-                  };
-                  
-                  // Add the tool call to the message
-                  outputMessage.tool_calls = [codeToolCall];
-                  
-                  console.log('Created synthetic tool call:', codeToolCall);
+                  if (hasCodeInterpreter) {
+                    // If the agent has code_interpreter, create a code_interpreter tool call
+                    console.log('Converting Python code to code_interpreter tool call');
+                    
+                    // Create a synthetic tool call for code_interpreter
+                    const codeToolCall: ToolCall = {
+                      id: `code-${Date.now()}`,
+                      type: 'function',
+                      function: {
+                        name: 'code_interpreter',
+                        arguments: JSON.stringify({ code: pythonCode })
+                      }
+                    };
+                    
+                    // Add the tool call to the message
+                    outputMessage.tool_calls = [codeToolCall];
+                    
+                    console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+                  } else if (hasWebSearch) {
+                    // If the agent has websearch but not code_interpreter, create a websearch tool call
+                    console.log('Converting Python code to websearch tool call');
+                    
+                    // Extract a search query from the Python code
+                    const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                    
+                    // Create a synthetic tool call for websearch
+                    const searchToolCall: ToolCall = {
+                      id: `search-${Date.now()}`,
+                      type: 'function',
+                      function: {
+                        name: 'web_search',
+                        arguments: JSON.stringify({ query: searchQuery })
+                      }
+                    };
+                    
+                    // Add the tool call to the message
+                    outputMessage.tool_calls = [searchToolCall];
+                    
+                    console.log('Created synthetic tool call for websearch:', searchToolCall);
+                  } else {
+                    // If the agent doesn't have either tool, just display the message as is
+                    console.log('Agent does not have code_interpreter or websearch tools. Displaying message as is.');
+                  }
                 }
                 
                 // Execute the tool calls
@@ -519,24 +562,70 @@ const AgentChatPage: React.FC = () => {
               } else if (hasPythonCode) {
                 console.log('Python code detected in step_complete');
                 
+                // Check if the agent has access to the code_interpreter tool
+                const hasCodeInterpreter = agent && agent.config && 
+                                         agent.config.toolgroups && 
+                                         agent.config.toolgroups.some(tool => 
+                                           tool.name === 'builtin::code_interpreter');
+                
+                // Check if the agent has access to the websearch tool
+                const hasWebSearch = agent && agent.config && 
+                                   agent.config.toolgroups && 
+                                   agent.config.toolgroups.some(tool => 
+                                     tool.name === 'builtin::websearch');
+                
+                console.log('Agent tools:', agent?.config?.toolgroups);
+                console.log('Has code_interpreter:', hasCodeInterpreter);
+                console.log('Has websearch:', hasWebSearch);
+                
                 // Extract the Python code
                 const pythonCode = modelResponse.content.replace('<|python_tag|>', '').trim();
                 
-                // Create a synthetic tool call for code_interpreter
-                const codeToolCall: ToolCall = {
-                  id: `code-${Date.now()}`,
-                  type: 'function',
-                  function: {
-                    name: 'code_interpreter',
-                    arguments: JSON.stringify({ code: pythonCode })
-                  }
-                };
-                
-                // Add the tool call to the message
-                finalMessage.tool_calls = [codeToolCall];
-                toolCallsDetected = true;
-                
-                console.log('Created synthetic tool call for Python code:', codeToolCall);
+                if (hasCodeInterpreter) {
+                  // If the agent has code_interpreter, create a code_interpreter tool call
+                  console.log('Converting Python code to code_interpreter tool call');
+                  
+                  // Create a synthetic tool call for code_interpreter
+                  const codeToolCall: ToolCall = {
+                    id: `code-${Date.now()}`,
+                    type: 'function',
+                    function: {
+                      name: 'code_interpreter',
+                      arguments: JSON.stringify({ code: pythonCode })
+                    }
+                  };
+                  
+                  // Add the tool call to the message
+                  finalMessage.tool_calls = [codeToolCall];
+                  toolCallsDetected = true;
+                  
+                  console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+                } else if (hasWebSearch) {
+                  // If the agent has websearch but not code_interpreter, create a websearch tool call
+                  console.log('Converting Python code to websearch tool call');
+                  
+                  // Extract a search query from the Python code
+                  const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                  
+                  // Create a synthetic tool call for websearch
+                  const searchToolCall: ToolCall = {
+                    id: `search-${Date.now()}`,
+                    type: 'function',
+                    function: {
+                      name: 'web_search',
+                      arguments: JSON.stringify({ query: searchQuery })
+                    }
+                  };
+                  
+                  // Add the tool call to the message
+                  finalMessage.tool_calls = [searchToolCall];
+                  toolCallsDetected = true;
+                  
+                  console.log('Created synthetic tool call for websearch:', searchToolCall);
+                } else {
+                  // If the agent doesn't have either tool, just display the message as is
+                  console.log('Agent does not have code_interpreter or websearch tools. Displaying message as is.');
+                }
               }
               
               // Update the state with the final message using immutable approach
@@ -691,27 +780,70 @@ const AgentChatPage: React.FC = () => {
         if ((turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) || hasPythonCode) {
           console.log('Tool calls or Python code detected in non-streaming response');
           
-          // If Python code is detected but no tool calls, create a code_interpreter tool call
+          // If Python code is detected but no tool calls, check if we should create a tool call
           if (hasPythonCode && (!turnResponse.output_message.tool_calls || turnResponse.output_message.tool_calls.length === 0)) {
-            console.log('Converting Python code to code_interpreter tool call');
+            // Check if the agent has access to the code_interpreter tool
+            const hasCodeInterpreter = agent && agent.config && 
+                                     agent.config.toolgroups && 
+                                     agent.config.toolgroups.some(tool => 
+                                       tool.name === 'builtin::code_interpreter');
+            
+            // Check if the agent has access to the websearch tool
+            const hasWebSearch = agent && agent.config && 
+                               agent.config.toolgroups && 
+                               agent.config.toolgroups.some(tool => 
+                                 tool.name === 'builtin::websearch');
+            
+            console.log('Agent tools:', agent?.config?.toolgroups);
+            console.log('Has code_interpreter:', hasCodeInterpreter);
+            console.log('Has websearch:', hasWebSearch);
             
             // Extract the Python code
             const pythonCode = turnResponse.output_message.content.replace('<|python_tag|>', '').trim();
             
-            // Create a synthetic tool call for code_interpreter
-            const codeToolCall: ToolCall = {
-              id: `code-${Date.now()}`,
-              type: 'function',
-              function: {
-                name: 'code_interpreter',
-                arguments: JSON.stringify({ code: pythonCode })
-              }
-            };
-            
-            // Add the tool call to the message
-            turnResponse.output_message.tool_calls = [codeToolCall];
-            
-            console.log('Created synthetic tool call:', codeToolCall);
+            if (hasCodeInterpreter) {
+              // If the agent has code_interpreter, create a code_interpreter tool call
+              console.log('Converting Python code to code_interpreter tool call');
+              
+              // Create a synthetic tool call for code_interpreter
+              const codeToolCall: ToolCall = {
+                id: `code-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: 'code_interpreter',
+                  arguments: JSON.stringify({ code: pythonCode })
+                }
+              };
+              
+              // Add the tool call to the message
+              turnResponse.output_message.tool_calls = [codeToolCall];
+              
+              console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+            } else if (hasWebSearch) {
+              // If the agent has websearch but not code_interpreter, create a websearch tool call
+              console.log('Converting Python code to websearch tool call');
+              
+              // Extract a search query from the Python code
+              const searchQuery = pythonCode.replace(/^br>/, '').trim();
+              
+              // Create a synthetic tool call for websearch
+              const searchToolCall: ToolCall = {
+                id: `search-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: 'web_search',
+                  arguments: JSON.stringify({ query: searchQuery })
+                }
+              };
+              
+              // Add the tool call to the message
+              turnResponse.output_message.tool_calls = [searchToolCall];
+              
+              console.log('Created synthetic tool call for websearch:', searchToolCall);
+            } else {
+              // If the agent doesn't have either tool, just display the message as is
+              console.log('Agent does not have code_interpreter or websearch tools. Displaying message as is.');
+            }
           }
           
           // Execute the tool calls

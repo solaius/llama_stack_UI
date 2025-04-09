@@ -169,27 +169,67 @@ const ChatInterface: React.FC = () => {
             if (data.completion_message?.tool_calls) {
               assistantMessage.tool_calls = data.completion_message.tool_calls;
             } 
-            // If Python code is detected but no tool calls, create a code_interpreter tool call
+            // If Python code is detected but no tool calls, check available tools
             else if (hasPythonCode) {
               console.log('Python code detected in completion message');
               
               // Extract the Python code
               const pythonCode = data.completion_message.content.replace('<|python_tag|>', '').trim();
               
-              // Create a synthetic tool call for code_interpreter
-              const codeToolCall: ToolCall = {
-                id: `code-${Date.now()}`,
-                type: 'function',
-                function: {
-                  name: 'code_interpreter',
-                  arguments: JSON.stringify({ code: pythonCode })
-                }
-              };
+              // Check if code_interpreter is in the selected tools
+              const hasCodeInterpreter = selectedTools.includes('code_interpreter');
               
-              // Add the tool call to the message
-              assistantMessage.tool_calls = [codeToolCall];
+              // Check if websearch is in the selected tools
+              const hasWebSearch = selectedTools.includes('web_search') || 
+                                 selectedTools.includes('websearch');
               
-              console.log('Created synthetic tool call for Python code:', codeToolCall);
+              console.log('Selected tools:', selectedTools);
+              console.log('Has code_interpreter:', hasCodeInterpreter);
+              console.log('Has websearch:', hasWebSearch);
+              
+              if (hasCodeInterpreter) {
+                // If code_interpreter is available, create a code_interpreter tool call
+                console.log('Converting Python code to code_interpreter tool call');
+                
+                // Create a synthetic tool call for code_interpreter
+                const codeToolCall: ToolCall = {
+                  id: `code-${Date.now()}`,
+                  type: 'function',
+                  function: {
+                    name: 'code_interpreter',
+                    arguments: JSON.stringify({ code: pythonCode })
+                  }
+                };
+                
+                // Add the tool call to the message
+                assistantMessage.tool_calls = [codeToolCall];
+                
+                console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+              } else if (hasWebSearch) {
+                // If websearch is available but not code_interpreter, create a websearch tool call
+                console.log('Converting Python code to websearch tool call');
+                
+                // Extract a search query from the Python code
+                const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                
+                // Create a synthetic tool call for websearch
+                const searchToolCall: ToolCall = {
+                  id: `search-${Date.now()}`,
+                  type: 'function',
+                  function: {
+                    name: 'web_search',
+                    arguments: JSON.stringify({ query: searchQuery })
+                  }
+                };
+                
+                // Add the tool call to the message
+                assistantMessage.tool_calls = [searchToolCall];
+                
+                console.log('Created synthetic tool call for websearch:', searchToolCall);
+              } else {
+                // If neither tool is available, just display the message as is
+                console.log('No code_interpreter or websearch tools available. Displaying message as is.');
+              }
             }
             
             assistantMessage.stop_reason = data.event.stop_reason;
@@ -271,27 +311,67 @@ const ChatInterface: React.FC = () => {
           const hasPythonCode = assistantMessage.content && 
                                assistantMessage.content.includes('<|python_tag|>');
           
-          // If Python code is detected but no tool calls, create a code_interpreter tool call
+          // If Python code is detected but no tool calls, check available tools
           if (hasPythonCode && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
             console.log('Python code detected in non-streaming response');
             
             // Extract the Python code
             const pythonCode = assistantMessage.content.replace('<|python_tag|>', '').trim();
             
-            // Create a synthetic tool call for code_interpreter
-            const codeToolCall: ToolCall = {
-              id: `code-${Date.now()}`,
-              type: 'function',
-              function: {
-                name: 'code_interpreter',
-                arguments: JSON.stringify({ code: pythonCode })
-              }
-            };
+            // Check if code_interpreter is in the selected tools
+            const hasCodeInterpreter = selectedTools.includes('code_interpreter');
             
-            // Add the tool call to the message
-            assistantMessage.tool_calls = [codeToolCall];
+            // Check if websearch is in the selected tools
+            const hasWebSearch = selectedTools.includes('web_search') || 
+                               selectedTools.includes('websearch');
             
-            console.log('Created synthetic tool call for Python code:', codeToolCall);
+            console.log('Selected tools:', selectedTools);
+            console.log('Has code_interpreter:', hasCodeInterpreter);
+            console.log('Has websearch:', hasWebSearch);
+            
+            if (hasCodeInterpreter) {
+              // If code_interpreter is available, create a code_interpreter tool call
+              console.log('Converting Python code to code_interpreter tool call');
+              
+              // Create a synthetic tool call for code_interpreter
+              const codeToolCall: ToolCall = {
+                id: `code-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: 'code_interpreter',
+                  arguments: JSON.stringify({ code: pythonCode })
+                }
+              };
+              
+              // Add the tool call to the message
+              assistantMessage.tool_calls = [codeToolCall];
+              
+              console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+            } else if (hasWebSearch) {
+              // If websearch is available but not code_interpreter, create a websearch tool call
+              console.log('Converting Python code to websearch tool call');
+              
+              // Extract a search query from the Python code
+              const searchQuery = pythonCode.replace(/^br>/, '').trim();
+              
+              // Create a synthetic tool call for websearch
+              const searchToolCall: ToolCall = {
+                id: `search-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: 'web_search',
+                  arguments: JSON.stringify({ query: searchQuery })
+                }
+              };
+              
+              // Add the tool call to the message
+              assistantMessage.tool_calls = [searchToolCall];
+              
+              console.log('Created synthetic tool call for websearch:', searchToolCall);
+            } else {
+              // If neither tool is available, just display the message as is
+              console.log('No code_interpreter or websearch tools available. Displaying message as is.');
+            }
           }
           
           setMessages(prev => [...prev, assistantMessage]);
