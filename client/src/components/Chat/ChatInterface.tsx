@@ -140,160 +140,184 @@ const ChatInterface: React.FC = () => {
         let assistantMessage: Message = { role: 'assistant', content: '' };
         setMessages(prev => [...prev, assistantMessage]);
         
-        // Create a new EventSource for SSE
-        const eventSource = new SSE(
-          process.env.REACT_APP_API_URL + '/v1/inference/chat-completion?stream=true', {
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': "text/event-stream"
-            },
-            payload: JSON.stringify(request) 
-          }
-        );
-        
-        eventSourceRef.current = eventSource;
-        
-        eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
+        try {
+          // Create a new EventSource for SSE
+          const eventSource = new SSE(
+            process.env.REACT_APP_API_URL + '/v1/inference/chat-completion?stream=true', {
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': "text/event-stream"
+              },
+              payload: JSON.stringify(request) 
+            }
+          );
           
-          if (data.event.event_type === 'progress') {
-            // Update the assistant's message with new content
-            assistantMessage.content += data.event.delta.text;
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
-          } else if (data.event.event_type === 'complete') {
-            // Check for Python code in the content
-            const hasPythonCode = data.completion_message?.content && 
-                                 data.completion_message.content.includes('<|python_tag|>');
-            
-            // Complete the message and add any tool calls
-            if (data.completion_message?.tool_calls) {
-              assistantMessage.tool_calls = data.completion_message.tool_calls;
-            } 
-            // If Python code is detected but no tool calls, check available tools
-            else if (hasPythonCode) {
-              console.log('Python code detected in completion message');
+          eventSourceRef.current = eventSource;
+          
+          eventSource.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
               
-              // Extract the Python code
-              const pythonCode = data.completion_message.content.replace('<|python_tag|>', '').trim();
-              
-              // Check if code_interpreter is in the selected tools
-              const hasCodeInterpreter = selectedTools.includes('code_interpreter');
-              
-              // Check if websearch is in the selected tools
-              const hasWebSearch = selectedTools.includes('web_search') || 
-                                 selectedTools.includes('websearch');
-              
-              console.log('Selected tools:', selectedTools);
-              console.log('Has code_interpreter:', hasCodeInterpreter);
-              console.log('Has websearch:', hasWebSearch);
-              
-              if (hasCodeInterpreter) {
-                // If code_interpreter is available, create a code_interpreter tool call
-                console.log('Converting Python code to code_interpreter tool call');
+              if (data.event.event_type === 'progress') {
+                // Update the assistant's message with new content
+                assistantMessage.content += data.event.delta.text;
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+              } else if (data.event.event_type === 'complete') {
+                // Check for Python code in the content
+                const hasPythonCode = data.completion_message?.content && 
+                                    data.completion_message.content.includes('<|python_tag|>');
                 
-                // Create a synthetic tool call for code_interpreter
-                const codeToolCall: ToolCall = {
-                  id: `code-${Date.now()}`,
-                  type: 'function',
-                  function: {
-                    name: 'code_interpreter',
-                    arguments: JSON.stringify({ code: pythonCode })
-                  }
-                };
-                
-                // Add the tool call to the message
-                assistantMessage.tool_calls = [codeToolCall];
-                
-                console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
-              } else if (hasWebSearch) {
-                // If websearch is available but not code_interpreter, create a websearch tool call
-                console.log('Converting Python code to websearch tool call');
-                
-                // Extract a search query from the Python code
-                const searchQuery = pythonCode.replace(/^br>/, '').trim();
-                
-                // Create a synthetic tool call for websearch
-                const searchToolCall: ToolCall = {
-                  id: `search-${Date.now()}`,
-                  type: 'function',
-                  function: {
-                    name: 'web_search',
-                    arguments: JSON.stringify({ query: searchQuery })
-                  }
-                };
-                
-                // Add the tool call to the message
-                assistantMessage.tool_calls = [searchToolCall];
-                
-                console.log('Created synthetic tool call for websearch:', searchToolCall);
-              } else {
-                // If neither tool is available, just display the message as is
-                console.log('No code_interpreter or websearch tools available. Displaying message as is.');
-              }
-            }
-            
-            assistantMessage.stop_reason = data.event.stop_reason;
-
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
-            
-            // Execute tool calls if present
-            if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-              setTimeout(async () => {
-                try {
-                  // Execute each tool call
-                  const toolResults = await Promise.all(
-                    assistantMessage.tool_calls!.map(async (toolCall: any) => {
-                      try {
-                        // Call the API to execute the tool
-                        const result = await apiService.executeToolCall(toolCall);
-                        return result;
-                      } catch (error) {
-                        console.error('Error executing tool call:', error);
-                        return {
-                          tool_call_id: toolCall.id,
-                          content: null,
-                          error: error instanceof Error ? error.message : 'Unknown error executing tool'
-                        };
+                // Complete the message and add any tool calls
+                if (data.completion_message?.tool_calls) {
+                  assistantMessage.tool_calls = data.completion_message.tool_calls;
+                } 
+                // If Python code is detected but no tool calls, check available tools
+                else if (hasPythonCode) {
+                  console.log('Python code detected in completion message');
+                  
+                  // Extract the Python code
+                  const pythonCode = data.completion_message.content.replace('<|python_tag|>', '').trim();
+                  
+                  // Check if code_interpreter is in the selected tools
+                  const hasCodeInterpreter = selectedTools.includes('code_interpreter');
+                  
+                  // Check if websearch is in the selected tools
+                  const hasWebSearch = selectedTools.includes('web_search') || 
+                                    selectedTools.includes('websearch');
+                  
+                  console.log('Selected tools:', selectedTools);
+                  console.log('Has code_interpreter:', hasCodeInterpreter);
+                  console.log('Has websearch:', hasWebSearch);
+                  
+                  if (hasCodeInterpreter) {
+                    // If code_interpreter is available, create a code_interpreter tool call
+                    console.log('Converting Python code to code_interpreter tool call');
+                    
+                    // Create a synthetic tool call for code_interpreter
+                    const codeToolCall: ToolCall = {
+                      id: `code-${Date.now()}`,
+                      type: 'function',
+                      function: {
+                        name: 'code_interpreter',
+                        arguments: JSON.stringify({ code: pythonCode })
                       }
-                    })
-                  );
-                  
-                  // Add tool results as messages
-                  const toolMessages: Message[] = toolResults.map(result => ({
-                    role: 'tool',
-                    content: typeof result.content === 'string' 
-                      ? result.content 
-                      : JSON.stringify(result.content),
-                    tool_call_id: result.tool_call_id,
-                    error: result.error
-                  }));
-                  
-                  // Add tool messages to the chat
-                  setMessages(prev => [...prev, ...toolMessages]);
-                  
-                } catch (error) {
-                  console.error('Error handling tool calls:', error);
+                    };
+                    
+                    // Add the tool call to the message
+                    assistantMessage.tool_calls = [codeToolCall];
+                    
+                    console.log('Created synthetic tool call for code_interpreter:', codeToolCall);
+                  } else if (hasWebSearch) {
+                    // If websearch is available but not code_interpreter, create a websearch tool call
+                    console.log('Converting Python code to websearch tool call');
+                    
+                    // Extract a search query from the Python code
+                    const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                    
+                    // Create a synthetic tool call for websearch
+                    const searchToolCall: ToolCall = {
+                      id: `search-${Date.now()}`,
+                      type: 'function',
+                      function: {
+                        name: 'web_search',
+                        arguments: JSON.stringify({ query: searchQuery })
+                      }
+                    };
+                    
+                    // Add the tool call to the message
+                    assistantMessage.tool_calls = [searchToolCall];
+                    
+                    console.log('Created synthetic tool call for websearch:', searchToolCall);
+                  } else {
+                    // If neither tool is available, just display the message as is
+                    console.log('No code_interpreter or websearch tools available. Displaying message as is.');
+                  }
                 }
-              }, 500);
+                
+                assistantMessage.stop_reason = data.event.stop_reason;
+
+                setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+                
+                // Execute tool calls if present
+                if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+                  setTimeout(async () => {
+                    try {
+                      // Execute each tool call
+                      const toolResults = await Promise.all(
+                        assistantMessage.tool_calls!.map(async (toolCall: any) => {
+                          try {
+                            // Call the API to execute the tool
+                            const result = await apiService.executeToolCall(toolCall);
+                            return result;
+                          } catch (error) {
+                            console.error('Error executing tool call:', error);
+                            return {
+                              tool_call_id: toolCall.id,
+                              content: null,
+                              error: error instanceof Error ? error.message : 'Unknown error executing tool'
+                            };
+                          }
+                        })
+                      );
+                      
+                      // Add tool results as messages
+                      const toolMessages: Message[] = toolResults.map(result => ({
+                        role: 'tool',
+                        content: typeof result.content === 'string' 
+                          ? result.content 
+                          : JSON.stringify(result.content),
+                        tool_call_id: result.tool_call_id,
+                        error: result.error
+                      }));
+                      
+                      // Add tool messages to the chat
+                      setMessages(prev => [...prev, ...toolMessages]);
+                      
+                    } catch (error) {
+                      console.error('Error handling tool calls:', error);
+                    }
+                  }, 500);
+                }
+                
+                setIsLoading(false);
+                eventSource.close();
+                eventSourceRef.current = null;
+              }
+            } catch (error) {
+              console.error('Error parsing SSE message:', error, event.data);
             }
-            
+          };
+          
+          eventSource.onerror = (error: any) => {
+            console.error('EventSource error:', error);
             setIsLoading(false);
-            eventSource.close();
+            if (eventSourceRef.current) {
+              eventSourceRef.current.close();
+            }
             eventSourceRef.current = null;
-          }
-        };
-        
-        eventSource.onerror = (error: any) => {
-          console.error('EventSource error:', error);
+          };
+          
+          // Start the connection
+          eventSource.stream();
+        } catch (streamError) {
+          console.error('Error setting up streaming:', streamError);
           setIsLoading(false);
-          if (eventSourceRef.current) {
-            eventSourceRef.current.close();
-          }
-          eventSourceRef.current = null;
-        };
-        
-        // Start the connection
-        eventSource.stream();
+          
+          // Update the message with an error
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const errorMessage: Message = {
+              role: 'assistant',
+              content: 'Sorry, there was an error with the streaming connection. Please try again.'
+            };
+            if (newMessages.length > 0) {
+              newMessages[newMessages.length - 1] = errorMessage;
+            } else {
+              newMessages.push(errorMessage);
+            }
+            return newMessages;
+          });
+        }
       } else {
         // Handle non-streaming response
         try {
@@ -309,7 +333,7 @@ const ChatInterface: React.FC = () => {
           
           // Check for Python code in the content
           const hasPythonCode = assistantMessage.content && 
-                               assistantMessage.content.includes('<|python_tag|>');
+                              assistantMessage.content.includes('<|python_tag|>');
           
           // If Python code is detected but no tool calls, check available tools
           if (hasPythonCode && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
@@ -323,7 +347,7 @@ const ChatInterface: React.FC = () => {
             
             // Check if websearch is in the selected tools
             const hasWebSearch = selectedTools.includes('web_search') || 
-                               selectedTools.includes('websearch');
+                              selectedTools.includes('websearch');
             
             console.log('Selected tools:', selectedTools);
             console.log('Has code_interpreter:', hasCodeInterpreter);
@@ -418,9 +442,18 @@ const ChatInterface: React.FC = () => {
           }
           
           setIsLoading(false);
-        } catch (error) {
-          console.error('Error in non-streaming response:', error);
+        } catch (nonStreamError) {
+          console.error('Error in non-streaming response:', nonStreamError);
           setIsLoading(false);
+          
+          // Add error message
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: 'An error occurred while processing your request. Please try again.',
+            },
+          ]);
         }
       }
     } catch (error) {

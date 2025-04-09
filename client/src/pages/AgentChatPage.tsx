@@ -435,13 +435,17 @@ const AgentChatPage: React.FC = () => {
                   const hasCodeInterpreter = agent && agent.config && 
                                            agent.config.toolgroups && 
                                            agent.config.toolgroups.some(tool => 
-                                             tool.name === 'builtin::code_interpreter');
+                                             typeof tool === 'string' 
+                                               ? tool === 'builtin::code_interpreter'
+                                               : tool.name === 'builtin::code_interpreter');
                   
                   // Check if the agent has access to the websearch tool
                   const hasWebSearch = agent && agent.config && 
                                      agent.config.toolgroups && 
                                      agent.config.toolgroups.some(tool => 
-                                       tool.name === 'builtin::websearch');
+                                       typeof tool === 'string'
+                                         ? tool === 'builtin::websearch'
+                                         : tool.name === 'builtin::websearch');
                   
                   console.log('Agent tools:', agent?.config?.toolgroups);
                   console.log('Has code_interpreter:', hasCodeInterpreter);
@@ -566,13 +570,17 @@ const AgentChatPage: React.FC = () => {
                 const hasCodeInterpreter = agent && agent.config && 
                                          agent.config.toolgroups && 
                                          agent.config.toolgroups.some(tool => 
-                                           tool.name === 'builtin::code_interpreter');
+                                           typeof tool === 'string' 
+                                             ? tool === 'builtin::code_interpreter'
+                                             : tool.name === 'builtin::code_interpreter');
                 
                 // Check if the agent has access to the websearch tool
                 const hasWebSearch = agent && agent.config && 
                                    agent.config.toolgroups && 
                                    agent.config.toolgroups.some(tool => 
-                                     tool.name === 'builtin::websearch');
+                                     typeof tool === 'string'
+                                       ? tool === 'builtin::websearch'
+                                       : tool.name === 'builtin::websearch');
                 
                 console.log('Agent tools:', agent?.config?.toolgroups);
                 console.log('Has code_interpreter:', hasCodeInterpreter);
@@ -786,13 +794,17 @@ const AgentChatPage: React.FC = () => {
             const hasCodeInterpreter = agent && agent.config && 
                                      agent.config.toolgroups && 
                                      agent.config.toolgroups.some(tool => 
-                                       tool.name === 'builtin::code_interpreter');
+                                       typeof tool === 'string' 
+                                         ? tool === 'builtin::code_interpreter'
+                                         : tool.name === 'builtin::code_interpreter');
             
             // Check if the agent has access to the websearch tool
             const hasWebSearch = agent && agent.config && 
                                agent.config.toolgroups && 
                                agent.config.toolgroups.some(tool => 
-                                 tool.name === 'builtin::websearch');
+                                 typeof tool === 'string'
+                                   ? tool === 'builtin::websearch'
+                                   : tool.name === 'builtin::websearch');
             
             console.log('Agent tools:', agent?.config?.toolgroups);
             console.log('Has code_interpreter:', hasCodeInterpreter);
