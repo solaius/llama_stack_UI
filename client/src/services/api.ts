@@ -253,48 +253,93 @@ export const apiService = {
       
       console.log(`Executing tool call: ${toolName}`, args);
       
-      // Special handling for code_interpreter
-      if (toolName === 'code_interpreter') {
-        try {
-          console.log('Executing code_interpreter tool call with code:', args.code);
+      // Try the agent API endpoint first (for agent-specific tools)
+      try {
+        // For web_search, use the agent's toolgroups endpoint
+        if (toolName === 'web_search') {
+          console.log('Executing web_search tool call with query:', args.query);
           
-          // Call the code_interpreter endpoint
-          const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
-            tool_name: 'code_interpreter',
-            kwargs: {
-              code: args.code
-            }
+          // Call the websearch endpoint
+          const response = await api.post(`/v1/toolgroups/builtin::websearch/invoke`, {
+            query: args.query
           });
           
           return {
             tool_call_id: toolCall.id,
-            content: response.data.content || 'Code executed successfully',
+            content: response.data.content || JSON.stringify(response.data),
             error: response.data.error_message
           };
-        } catch (codeError: any) {
-          console.error('Error executing code_interpreter:', codeError);
-          
-          // If the API call fails, provide a fallback response
-          // In a real implementation, you would handle this more gracefully
-          return {
-            tool_call_id: toolCall.id,
-            content: 'Code execution failed. The code interpreter tool may not be available.',
-            error: codeError.message
-          };
         }
+        
+        // Special handling for code_interpreter
+        if (toolName === 'code_interpreter') {
+          console.log('Executing code_interpreter tool call with code:', args.code);
+          
+          // Try the toolgroups endpoint first
+          try {
+            const response = await api.post(`/v1/toolgroups/builtin::code_interpreter/invoke`, {
+              code: args.code
+            });
+            
+            return {
+              tool_call_id: toolCall.id,
+              content: response.data.content || 'Code executed successfully',
+              error: response.data.error_message
+            };
+          } catch (toolGroupError) {
+            console.warn('Toolgroups endpoint failed, trying tool_runtime endpoint:', toolGroupError);
+            
+            // Fall back to the tool_runtime endpoint
+            const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
+              tool_name: 'code_interpreter',
+              kwargs: {
+                code: args.code
+              }
+            });
+            
+            return {
+              tool_call_id: toolCall.id,
+              content: response.data.content || 'Code executed successfully',
+              error: response.data.error_message
+            };
+          }
+        }
+        
+        // For all other tools, try the generic tool runtime endpoint
+        const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
+          tool_name: toolName,
+          kwargs: args
+        });
+        
+        return {
+          tool_call_id: toolCall.id,
+          content: response.data.content,
+          error: response.data.error_message
+        };
+      } catch (apiError: any) {
+        console.error(`Error with primary endpoint for ${toolName}:`, apiError);
+        
+        // Try fallback endpoints
+        if (toolName === 'web_search') {
+          try {
+            // Try the alternative endpoint format
+            const response = await api.post(`/v1/toolgroups/websearch/invoke`, {
+              query: args.query
+            });
+            
+            return {
+              tool_call_id: toolCall.id,
+              content: response.data.content || JSON.stringify(response.data),
+              error: response.data.error_message
+            };
+          } catch (fallbackError) {
+            console.error('Fallback endpoint also failed:', fallbackError);
+            throw apiError; // Re-throw the original error
+          }
+        }
+        
+        throw apiError; // Re-throw the error for other tools
       }
-      
-      // For all other tools, call the tool runtime endpoint
-      const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
-        tool_name: toolName,
-        kwargs: args
-      });
-      
-      return {
-        tool_call_id: toolCall.id,
-        content: response.data.content,
-        error: response.data.error_message
-      };
     } catch (error: any) {
       console.error('Error executing tool call:', error);
       return {
