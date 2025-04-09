@@ -477,7 +477,23 @@ const AgentChatPage: React.FC = () => {
                     console.log('Converting Python code to websearch tool call');
                     
                     // Extract a search query from the Python code
-                    const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                    // Remove the "br>" prefix and any "Let me check..." preamble
+                    let searchQuery = pythonCode.replace(/^br>/, '').trim();
+                    
+                    // Extract the actual query by removing common preambles
+                    searchQuery = searchQuery.replace(/^Let me check (the current )?weather (conditions )?(in|for) /i, '');
+                    searchQuery = searchQuery.replace(/^I'll search for /i, '');
+                    searchQuery = searchQuery.replace(/^Let me search for /i, '');
+                    searchQuery = searchQuery.replace(/^Let me look up /i, '');
+                    searchQuery = searchQuery.replace(/for you\.?$/i, '');
+                    
+                    // If the query is about weather, make it more specific
+                    if (searchQuery.toLowerCase().includes('weather') && 
+                        !searchQuery.toLowerCase().includes('current weather')) {
+                      searchQuery = `current weather ${searchQuery}`;
+                    }
+                    
+                    console.log('Extracted search query:', searchQuery);
                     
                     // Create a synthetic tool call for websearch
                     const searchToolCall: ToolCall = {
@@ -613,7 +629,23 @@ const AgentChatPage: React.FC = () => {
                   console.log('Converting Python code to websearch tool call');
                   
                   // Extract a search query from the Python code
-                  const searchQuery = pythonCode.replace(/^br>/, '').trim();
+                  // Remove the "br>" prefix and any "Let me check..." preamble
+                  let searchQuery = pythonCode.replace(/^br>/, '').trim();
+                  
+                  // Extract the actual query by removing common preambles
+                  searchQuery = searchQuery.replace(/^Let me check (the current )?weather (conditions )?(in|for) /i, '');
+                  searchQuery = searchQuery.replace(/^I'll search for /i, '');
+                  searchQuery = searchQuery.replace(/^Let me search for /i, '');
+                  searchQuery = searchQuery.replace(/^Let me look up /i, '');
+                  searchQuery = searchQuery.replace(/for you\.?$/i, '');
+                  
+                  // If the query is about weather, make it more specific
+                  if (searchQuery.toLowerCase().includes('weather') && 
+                      !searchQuery.toLowerCase().includes('current weather')) {
+                    searchQuery = `current weather ${searchQuery}`;
+                  }
+                  
+                  console.log('Extracted search query:', searchQuery);
                   
                   // Create a synthetic tool call for websearch
                   const searchToolCall: ToolCall = {
@@ -836,7 +868,23 @@ const AgentChatPage: React.FC = () => {
               console.log('Converting Python code to websearch tool call');
               
               // Extract a search query from the Python code
-              const searchQuery = pythonCode.replace(/^br>/, '').trim();
+              // Remove the "br>" prefix and any "Let me check..." preamble
+              let searchQuery = pythonCode.replace(/^br>/, '').trim();
+              
+              // Extract the actual query by removing common preambles
+              searchQuery = searchQuery.replace(/^Let me check (the current )?weather (conditions )?(in|for) /i, '');
+              searchQuery = searchQuery.replace(/^I'll search for /i, '');
+              searchQuery = searchQuery.replace(/^Let me search for /i, '');
+              searchQuery = searchQuery.replace(/^Let me look up /i, '');
+              searchQuery = searchQuery.replace(/for you\.?$/i, '');
+              
+              // If the query is about weather, make it more specific
+              if (searchQuery.toLowerCase().includes('weather') && 
+                  !searchQuery.toLowerCase().includes('current weather')) {
+                searchQuery = `current weather ${searchQuery}`;
+              }
+              
+              console.log('Extracted search query:', searchQuery);
               
               // Create a synthetic tool call for websearch
               const searchToolCall: ToolCall = {

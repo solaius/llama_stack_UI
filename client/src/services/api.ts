@@ -263,10 +263,21 @@ export const apiService = {
       
       // For web_search, use a mock response since the API endpoints are not working
       if (toolName === 'web_search') {
-        console.log('Executing web_search tool call with query:', args.query);
+        // Clean up the query to remove any LLM-generated preambles
+        let cleanQuery = args.query;
+        
+        // Extract the actual query by removing common preambles
+        cleanQuery = cleanQuery.replace(/^Let me check (the current )?weather (conditions )?(in|for) /i, '');
+        cleanQuery = cleanQuery.replace(/^I'll search for /i, '');
+        cleanQuery = cleanQuery.replace(/^Let me search for /i, '');
+        cleanQuery = cleanQuery.replace(/^Let me look up /i, '');
+        cleanQuery = cleanQuery.replace(/for you\.?$/i, '');
+        
+        console.log('Executing web_search tool call with query:', cleanQuery);
         
         // Return a mock response with weather information for Pittsburgh
-        if (args.query.toLowerCase().includes('weather') && args.query.toLowerCase().includes('pittsburgh')) {
+        if (cleanQuery.toLowerCase().includes('weather') && 
+            (cleanQuery.toLowerCase().includes('pittsburgh') || cleanQuery.toLowerCase().includes('pa'))) {
           return {
             tool_call_id: toolCall.id,
             content: JSON.stringify({
@@ -293,9 +304,9 @@ export const apiService = {
           content: JSON.stringify({
             results: [
               {
-                title: "Search results for: " + args.query,
+                title: "Search results for: " + cleanQuery,
                 url: "https://www.example.com/search",
-                content: "Here are the search results for your query: " + args.query
+                content: "Here are the search results for your query: " + cleanQuery
               }
             ]
           }),
