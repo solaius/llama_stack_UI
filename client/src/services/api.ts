@@ -411,14 +411,17 @@ export const apiService = {
     } catch (error: any) {
       console.error('Error executing tool call:', error);
       
+      // Get the tool name from the toolCall parameter to avoid scope issues
+      const currentToolName = toolCall.function.name;
+      
       // Provide a more user-friendly error message based on the tool type
-      if (toolName === 'web_search') {
+      if (currentToolName === 'web_search') {
         return {
           tool_call_id: toolCall.id,
           content: "I'm having trouble searching the web right now. Please try again later or rephrase your question.",
           error: error.message || 'Failed to execute web search'
         };
-      } else if (toolName === 'code_interpreter') {
+      } else if (currentToolName === 'code_interpreter') {
         return {
           tool_call_id: toolCall.id,
           content: "I'm having trouble executing code right now. Please try again later.",

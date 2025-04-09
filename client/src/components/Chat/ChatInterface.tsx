@@ -29,6 +29,7 @@ import {
   Settings as SettingsIcon,
   Save as SaveIcon,
   Refresh as RefreshIcon,
+  Code as CodeIcon,
 } from '@mui/icons-material';
 import ChatMessage from './ChatMessage';
 import apiService, { Message, Model, Tool, ToolCall, ToolResult, ChatCompletionRequest } from '../../services/api';
@@ -244,7 +245,7 @@ const ChatInterface: React.FC = () => {
                     try {
                       // Execute each tool call
                       const toolResults = await Promise.all(
-                        assistantMessage.tool_calls!.map(async (toolCall: any) => {
+                        assistantMessage.tool_calls!.map(async (toolCall: ToolCall) => {
                           try {
                             // Call the API to execute the tool
                             const result = await apiService.executeToolCall(toolCall);
@@ -280,7 +281,9 @@ const ChatInterface: React.FC = () => {
                 }
                 
                 setIsLoading(false);
-                eventSource.close();
+                if (eventSourceRef.current) {
+                  eventSourceRef.current.close();
+                }
                 eventSourceRef.current = null;
               }
             } catch (error) {
@@ -288,7 +291,7 @@ const ChatInterface: React.FC = () => {
             }
           };
           
-          eventSource.onerror = (error: any) => {
+          eventSource.onerror = (error: Event) => {
             console.error('EventSource error:', error);
             setIsLoading(false);
             if (eventSourceRef.current) {
@@ -483,7 +486,7 @@ const ChatInterface: React.FC = () => {
   };
   
   // Handle rerunning a tool
-  const handleRerunTool = async (toolCall: Tool | any) => {
+  const handleRerunTool = async (toolCall: ToolCall) => {
     try {
       console.log('Rerunning tool call:', toolCall);
       

@@ -434,7 +434,7 @@ const AgentChatPage: React.FC = () => {
                   // Check if the agent has access to the code_interpreter tool
                   const hasCodeInterpreter = agent && agent.config && 
                                            agent.config.toolgroups && 
-                                           agent.config.toolgroups.some(tool => 
+                                           agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                              typeof tool === 'string' 
                                                ? tool === 'builtin::code_interpreter'
                                                : tool.name === 'builtin::code_interpreter');
@@ -442,7 +442,7 @@ const AgentChatPage: React.FC = () => {
                   // Check if the agent has access to the websearch tool
                   const hasWebSearch = agent && agent.config && 
                                      agent.config.toolgroups && 
-                                     agent.config.toolgroups.some(tool => 
+                                     agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                        typeof tool === 'string'
                                          ? tool === 'builtin::websearch'
                                          : tool.name === 'builtin::websearch');
@@ -569,7 +569,7 @@ const AgentChatPage: React.FC = () => {
                 // Check if the agent has access to the code_interpreter tool
                 const hasCodeInterpreter = agent && agent.config && 
                                          agent.config.toolgroups && 
-                                         agent.config.toolgroups.some(tool => 
+                                         agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                            typeof tool === 'string' 
                                              ? tool === 'builtin::code_interpreter'
                                              : tool.name === 'builtin::code_interpreter');
@@ -577,7 +577,7 @@ const AgentChatPage: React.FC = () => {
                 // Check if the agent has access to the websearch tool
                 const hasWebSearch = agent && agent.config && 
                                    agent.config.toolgroups && 
-                                   agent.config.toolgroups.some(tool => 
+                                   agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                      typeof tool === 'string'
                                        ? tool === 'builtin::websearch'
                                        : tool.name === 'builtin::websearch');
@@ -793,7 +793,7 @@ const AgentChatPage: React.FC = () => {
             // Check if the agent has access to the code_interpreter tool
             const hasCodeInterpreter = agent && agent.config && 
                                      agent.config.toolgroups && 
-                                     agent.config.toolgroups.some(tool => 
+                                     agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                        typeof tool === 'string' 
                                          ? tool === 'builtin::code_interpreter'
                                          : tool.name === 'builtin::code_interpreter');
@@ -801,7 +801,7 @@ const AgentChatPage: React.FC = () => {
             // Check if the agent has access to the websearch tool
             const hasWebSearch = agent && agent.config && 
                                agent.config.toolgroups && 
-                               agent.config.toolgroups.some(tool => 
+                               agent.config.toolgroups.some((tool: string | AgentToolGroupWithArgs) => 
                                  typeof tool === 'string'
                                    ? tool === 'builtin::websearch'
                                    : tool.name === 'builtin::websearch');
