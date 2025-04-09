@@ -31,7 +31,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import ChatMessage from './ChatMessage';
-import apiService, { Message, Model, Tool, ChatCompletionRequest } from '../../services/api';
+import apiService, { Message, Model, Tool, ToolCall, ToolResult, ChatCompletionRequest } from '../../services/api';
 import { SSE } from 'sse.js';
 
 const ChatInterface: React.FC = () => {
@@ -300,7 +300,7 @@ const ChatInterface: React.FC = () => {
   };
   
   // Handle rerunning a tool
-  const handleRerunTool = async (toolCall: ToolCall) => {
+  const handleRerunTool = async (toolCall: Tool | any) => {
     try {
       console.log('Rerunning tool call:', toolCall);
       

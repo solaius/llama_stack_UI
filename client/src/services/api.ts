@@ -71,6 +71,8 @@ export interface Message {
   tool_calls?: ToolCall[];
   call_id?: string;
   tool_name?: string;
+  tool_call_id?: string; // Added for tool response messages
+  error?: string; // Added for tool error handling
   file?: {
     name: string;
     content: string;
