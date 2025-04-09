@@ -283,7 +283,7 @@ export const apiService = {
                 }
               ]
             }),
-            error: null
+            error: undefined
           };
         }
         
@@ -299,7 +299,7 @@ export const apiService = {
               }
             ]
           }),
-          error: null
+          error: undefined
         };
       }
       
