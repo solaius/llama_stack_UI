@@ -141,12 +141,16 @@ const ChatInterface: React.FC = () => {
         setMessages(prev => [...prev, assistantMessage]);
         
         // Create a new EventSource for SSE
-        
         const eventSource = new SSE(
-          process.env.REACT_APP_API_URL + '/v1/inference/chat-completion?stream=true', {headers: {'Content-Type': 'application/json',
-                'Accept': "text/event-stream"},
-          payload: JSON.stringify(request) });
-
+          process.env.REACT_APP_API_URL + '/v1/inference/chat-completion?stream=true', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': "text/event-stream"
+            },
+            payload: JSON.stringify(request) 
+          }
+        );
+        
         eventSourceRef.current = eventSource;
         
         eventSource.onmessage = (event) => {
@@ -187,13 +191,18 @@ const ChatInterface: React.FC = () => {
               
               console.log('Created synthetic tool call for Python code:', codeToolCall);
             }
-              
-              // Execute tool calls if present
+            
+            assistantMessage.stop_reason = data.event.stop_reason;
+
+            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
+            
+            // Execute tool calls if present
+            if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
               setTimeout(async () => {
                 try {
                   // Execute each tool call
                   const toolResults = await Promise.all(
-                    data.completion_message.tool_calls.map(async (toolCall: any) => {
+                    assistantMessage.tool_calls!.map(async (toolCall: any) => {
                       try {
                         // Call the API to execute the tool
                         const result = await apiService.executeToolCall(toolCall);
@@ -228,104 +237,111 @@ const ChatInterface: React.FC = () => {
               }, 500);
             }
             
-            assistantMessage.stop_reason = data.event.stop_reason;
-
-            setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
             setIsLoading(false);
             eventSource.close();
             eventSourceRef.current = null;
           }
         };
         
-        eventSource.onerror = (error) => {
+        eventSource.onerror = (error: any) => {
           console.error('EventSource error:', error);
           setIsLoading(false);
-          eventSource.close();
+          if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+          }
           eventSourceRef.current = null;
         };
+        
+        // Start the connection
+        eventSource.stream();
       } else {
         // Handle non-streaming response
-        const response = await apiService.createChatCompletion(request);
-        
-        // Add assistant message
-        const assistantMessage: Message = {
-          role: 'assistant',
-          content: response.completion_message.content,
-          stop_reason: response.completion_message.stop_reason,
-          tool_calls: response.completion_message.tool_calls,
-        };
-        
-        // Check for Python code in the content
-        const hasPythonCode = assistantMessage.content && 
-                             assistantMessage.content.includes('<|python_tag|>');
-        
-        // If Python code is detected but no tool calls, create a code_interpreter tool call
-        if (hasPythonCode && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
-          console.log('Python code detected in non-streaming response');
+        try {
+          const response = await apiService.createChatCompletion(request);
           
-          // Extract the Python code
-          const pythonCode = assistantMessage.content.replace('<|python_tag|>', '').trim();
-          
-          // Create a synthetic tool call for code_interpreter
-          const codeToolCall: ToolCall = {
-            id: `code-${Date.now()}`,
-            type: 'function',
-            function: {
-              name: 'code_interpreter',
-              arguments: JSON.stringify({ code: pythonCode })
-            }
+          // Add assistant message
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response.completion_message.content,
+            stop_reason: response.completion_message.stop_reason,
+            tool_calls: response.completion_message.tool_calls,
           };
           
-          // Add the tool call to the message
-          assistantMessage.tool_calls = [codeToolCall];
+          // Check for Python code in the content
+          const hasPythonCode = assistantMessage.content && 
+                               assistantMessage.content.includes('<|python_tag|>');
           
-          console.log('Created synthetic tool call for Python code:', codeToolCall);
+          // If Python code is detected but no tool calls, create a code_interpreter tool call
+          if (hasPythonCode && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
+            console.log('Python code detected in non-streaming response');
+            
+            // Extract the Python code
+            const pythonCode = assistantMessage.content.replace('<|python_tag|>', '').trim();
+            
+            // Create a synthetic tool call for code_interpreter
+            const codeToolCall: ToolCall = {
+              id: `code-${Date.now()}`,
+              type: 'function',
+              function: {
+                name: 'code_interpreter',
+                arguments: JSON.stringify({ code: pythonCode })
+              }
+            };
+            
+            // Add the tool call to the message
+            assistantMessage.tool_calls = [codeToolCall];
+            
+            console.log('Created synthetic tool call for Python code:', codeToolCall);
+          }
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Execute tool calls if present
+          if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+            setTimeout(async () => {
+              try {
+                // Execute each tool call
+                const toolResults = await Promise.all(
+                  assistantMessage.tool_calls!.map(async (toolCall) => {
+                    try {
+                      // Call the API to execute the tool
+                      const result = await apiService.executeToolCall(toolCall);
+                      return result;
+                    } catch (error) {
+                      console.error('Error executing tool call:', error);
+                      return {
+                        tool_call_id: toolCall.id,
+                        content: null,
+                        error: error instanceof Error ? error.message : 'Unknown error executing tool'
+                      };
+                    }
+                  })
+                );
+                
+                // Add tool results as messages
+                const toolMessages: Message[] = toolResults.map(result => ({
+                  role: 'tool',
+                  content: typeof result.content === 'string' 
+                    ? result.content 
+                    : JSON.stringify(result.content),
+                  tool_call_id: result.tool_call_id,
+                  error: result.error
+                }));
+                
+                // Add tool messages to the chat
+                setMessages(prev => [...prev, ...toolMessages]);
+                
+              } catch (error) {
+                console.error('Error handling tool calls:', error);
+              }
+            }, 500);
+          }
+          
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error in non-streaming response:', error);
+          setIsLoading(false);
         }
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        // Execute tool calls if present
-        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-          setTimeout(async () => {
-            try {
-              // Execute each tool call
-              const toolResults = await Promise.all(
-                assistantMessage.tool_calls!.map(async (toolCall) => {
-                  try {
-                    // Call the API to execute the tool
-                    const result = await apiService.executeToolCall(toolCall);
-                    return result;
-                  } catch (error) {
-                    console.error('Error executing tool call:', error);
-                    return {
-                      tool_call_id: toolCall.id,
-                      content: null,
-                      error: error instanceof Error ? error.message : 'Unknown error executing tool'
-                    };
-                  }
-                })
-              );
-              
-              // Add tool results as messages
-              const toolMessages: Message[] = toolResults.map(result => ({
-                role: 'tool',
-                content: typeof result.content === 'string' 
-                  ? result.content 
-                  : JSON.stringify(result.content),
-                tool_call_id: result.tool_call_id,
-                error: result.error
-              }));
-              
-              // Add tool messages to the chat
-              setMessages(prev => [...prev, ...toolMessages]);
-              
-            } catch (error) {
-              console.error('Error handling tool calls:', error);
-            }
-          }, 500);
-        }
-        
-        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -336,7 +352,7 @@ const ChatInterface: React.FC = () => {
         ...prev,
         {
           role: 'assistant',
-          content: 'Sorry, there was an error processing your request. Please try again.',
+          content: 'An error occurred while processing your request. Please try again.',
         },
       ]);
     }
@@ -395,132 +411,108 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Paper elevation={0} sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="h6">Chat with Llama</Typography>
-          <Box>
-            <Tooltip title="Chat Settings">
-              <IconButton onClick={() => setShowSettings(!showSettings)}>
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Clear Chat">
-              <IconButton onClick={handleClearChat} color="error">
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
-        
-        <Accordion expanded={showSettings} onChange={() => setShowSettings(!showSettings)}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Chat Settings</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Model</InputLabel>
-                <Select
-                  value={selectedModel}
-                  label="Model"
-                  onChange={handleModelChange}
-                >
-                  {models.map((model) => (
-                    <MenuItem key={model.identifier} value={model.identifier}>
-                      {model.identifier}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
-              <FormControl fullWidth size="small">
-                <InputLabel>Tools</InputLabel>
-                <Select
-                  multiple
-                  value={selectedTools}
-                  label="Tools"
-                  onChange={handleToolChange}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={value} size="small" />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {tools.map((tool) => (
-                    <MenuItem key={tool.identifier} value={tool.identifier}>
-                      {tool.identifier} - {tool.description}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
-              {selectedTools.length > 0 && (
-                <FormControl fullWidth size="small">
-                  <InputLabel>Tool Choice</InputLabel>
-                  <Select
-                    value={toolChoice}
-                    label="Tool Choice"
-                    onChange={handleToolChoiceChange}
-                  >
-                    <MenuItem value="auto">Auto</MenuItem>
-                    <MenuItem value="required">Required</MenuItem>
-                    <MenuItem value="none">None</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-              
-              <TextField
-                label="System Prompt"
-                multiline
-                rows={2}
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                fullWidth
-                size="small"
-                placeholder="Optional system instructions"
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Accordion expanded={showSettings} onChange={() => setShowSettings(!showSettings)}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Settings</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>Model</InputLabel>
+              <Select
+                value={selectedModel}
+                label="Model"
+                onChange={handleModelChange}
+                disabled={isLoading}
+              >
+                {models.map((model) => (
+                  <MenuItem key={model.identifier} value={model.identifier}>
+                    {model.identifier}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl fullWidth>
+              <InputLabel>Tools</InputLabel>
+              <Select
+                multiple
+                value={selectedTools}
+                label="Tools"
+                onChange={handleToolChange}
+                disabled={isLoading}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} />
+                    ))}
+                  </Box>
+                )}
+              >
+                {tools.map((tool) => (
+                  <MenuItem key={tool.identifier} value={tool.identifier}>
+                    {tool.identifier}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl fullWidth>
+              <InputLabel>Tool Choice</InputLabel>
+              <Select
+                value={toolChoice}
+                label="Tool Choice"
+                onChange={handleToolChoiceChange}
+                disabled={isLoading}
+              >
+                <MenuItem value="auto">Auto</MenuItem>
+                <MenuItem value="required">Required</MenuItem>
+                <MenuItem value="none">None</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <TextField
+              label="System Prompt"
+              multiline
+              rows={3}
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
+              disabled={isLoading}
+            />
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isStreaming}
+                    onChange={(e) => setIsStreaming(e.target.checked)}
+                    disabled={isLoading}
+                  />
+                }
+                label="Streaming"
               />
               
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={isStreaming}
-                      onChange={(e) => setIsStreaming(e.target.checked)}
-                    />
-                  }
-                  label="Streaming"
-                />
-                
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ mr: 1 }}>
-                    Temperature: {temperature}
-                  </Typography>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  />
-                </Box>
-              </Box>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
+              <Button
+                variant="outlined"
+                startIcon={<DeleteIcon />}
+                onClick={handleClearChat}
+                disabled={isLoading}
+              >
+                Clear Chat
+              </Button>
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
       
       <Paper
         elevation={0}
         sx={{
           p: 2,
-          mb: 2,
           flexGrow: 1,
           overflow: 'auto',
-          maxHeight: 'calc(100vh - 300px)',
+          maxHeight: 'calc(100vh - 200px)',
           bgcolor: 'background.default',
         }}
       >
