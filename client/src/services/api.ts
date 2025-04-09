@@ -21,6 +21,14 @@ const api = axios.create({
   },
 });
 
+// Create a separate instance for the Llama Stack API
+const llamaStackApi = axios.create({
+  baseURL: process.env.REACT_APP_LLAMA_STACK_API_URL || 'http://localhost:4001',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Update baseURL when localStorage changes
 window.addEventListener('storage', () => {
   api.defaults.baseURL = getApiBaseUrl();
@@ -253,22 +261,60 @@ export const apiService = {
       
       console.log(`Executing tool call: ${toolName}`, args);
       
-      // Try the agent API endpoint first (for agent-specific tools)
-      try {
-        // For web_search, use the agent's toolgroups endpoint
-        if (toolName === 'web_search') {
-          console.log('Executing web_search tool call with query:', args.query);
-          
-          // Call the websearch endpoint
-          const response = await api.post(`/v1/toolgroups/builtin::websearch/invoke`, {
+      // Special case for web_search - try direct Llama Stack API first
+      if (toolName === 'web_search') {
+        console.log('Executing web_search tool call with query:', args.query);
+        
+        try {
+          // Try the direct Llama Stack API endpoint that works in the tools testing interface
+          const response = await llamaStackApi.post(`/api/v1/tools/web_search`, {
             query: args.query
           });
+          
+          console.log('Web search response from direct Llama Stack API:', response.data);
           
           return {
             tool_call_id: toolCall.id,
             content: response.data.content || JSON.stringify(response.data),
             error: response.data.error_message
           };
+        } catch (directApiError) {
+          console.warn('Direct Llama Stack API failed:', directApiError);
+          // Continue to try other endpoints
+        }
+      }
+      
+      // Try the agent API endpoint next
+      try {
+        // For web_search, use the agent's tools endpoint
+        if (toolName === 'web_search') {
+          console.log('Trying agent API tools endpoint for web_search');
+          
+          try {
+            // Try the direct tool invocation endpoint
+            const response = await api.post(`/v1/tools/web_search`, {
+              query: args.query
+            });
+            
+            return {
+              tool_call_id: toolCall.id,
+              content: response.data.content || JSON.stringify(response.data),
+              error: response.data.error_message
+            };
+          } catch (directToolError) {
+            console.warn('Direct tool endpoint failed, trying alternative endpoint:', directToolError);
+            
+            // Try the alternative endpoint
+            const response = await api.post(`/v1/tools/web_search/invoke`, {
+              query: args.query
+            });
+            
+            return {
+              tool_call_id: toolCall.id,
+              content: response.data.content || JSON.stringify(response.data),
+              error: response.data.error_message
+            };
+          }
         }
         
         // Special handling for code_interpreter
@@ -322,8 +368,8 @@ export const apiService = {
         // Try fallback endpoints
         if (toolName === 'web_search') {
           try {
-            // Try the alternative endpoint format
-            const response = await api.post(`/v1/toolgroups/websearch/invoke`, {
+            // Try the agent-specific tool endpoint
+            const response = await api.post(`/v1/agents/tools/web_search`, {
               query: args.query
             });
             
@@ -332,9 +378,31 @@ export const apiService = {
               content: response.data.content || JSON.stringify(response.data),
               error: response.data.error_message
             };
-          } catch (fallbackError) {
-            console.error('Fallback endpoint also failed:', fallbackError);
-            throw apiError; // Re-throw the original error
+          } catch (fallbackError1) {
+            console.error('First fallback endpoint failed, trying another:', fallbackError1);
+            
+            try {
+              // Try the tool runtime endpoint
+              const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
+                tool_name: 'web_search',
+                kwargs: args
+              });
+              
+              return {
+                tool_call_id: toolCall.id,
+                content: response.data.content || JSON.stringify(response.data),
+                error: response.data.error_message
+              };
+            } catch (fallbackError2) {
+              console.error('All fallback endpoints failed:', fallbackError2);
+              
+              // Return a user-friendly error message
+              return {
+                tool_call_id: toolCall.id,
+                content: "I'm having trouble accessing the web search tool. Please try again later or contact support if the issue persists.",
+                error: "Failed to access web search tool: " + apiError.message
+              };
+            }
           }
         }
         
@@ -342,11 +410,27 @@ export const apiService = {
       }
     } catch (error: any) {
       console.error('Error executing tool call:', error);
-      return {
-        tool_call_id: toolCall.id,
-        content: null,
-        error: error.message || 'Failed to execute tool'
-      };
+      
+      // Provide a more user-friendly error message based on the tool type
+      if (toolName === 'web_search') {
+        return {
+          tool_call_id: toolCall.id,
+          content: "I'm having trouble searching the web right now. Please try again later or rephrase your question.",
+          error: error.message || 'Failed to execute web search'
+        };
+      } else if (toolName === 'code_interpreter') {
+        return {
+          tool_call_id: toolCall.id,
+          content: "I'm having trouble executing code right now. Please try again later.",
+          error: error.message || 'Failed to execute code'
+        };
+      } else {
+        return {
+          tool_call_id: toolCall.id,
+          content: null,
+          error: error.message || 'Failed to execute tool'
+        };
+      }
     }
   },
 
