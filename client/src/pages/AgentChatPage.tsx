@@ -41,7 +41,7 @@ import {
   NoteAdd as NoteAddIcon,
   Description as DescriptionIcon
 } from '@mui/icons-material';
-import { Agent, Message, TurnInfo, ToolCall, ToolResult, apiService } from '../services/api';
+import { Agent, Message, TurnInfo, ToolCall, ToolResult, AgentToolGroupWithArgs, apiService } from '../services/api';
 import ToolUsageDisplay from '../components/Chat/ToolUsageDisplay';
 import ChatMessage from '../components/Chat/ChatMessage';
 import { SSE } from 'sse.js';
