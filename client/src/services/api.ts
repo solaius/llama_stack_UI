@@ -21,14 +21,6 @@ const api = axios.create({
   },
 });
 
-// Create a separate instance for the Llama Stack API
-const llamaStackApi = axios.create({
-  baseURL: process.env.REACT_APP_LLAMA_STACK_API_URL || 'http://localhost:4001',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 // Update baseURL when localStorage changes
 window.addEventListener('storage', () => {
   api.defaults.baseURL = getApiBaseUrl();
@@ -261,7 +253,7 @@ export const apiService = {
       
       console.log(`Executing tool call: ${toolName}`, args);
       
-      // For web_search, use a mock response since the API endpoints are not working
+      // For web_search, use the actual API endpoint
       if (toolName === 'web_search') {
         // Clean up the query to remove any LLM-generated preambles
         let cleanQuery = args.query;
@@ -275,42 +267,18 @@ export const apiService = {
         
         console.log('Executing web_search tool call with query:', cleanQuery);
         
-        // Return a mock response with weather information for Pittsburgh
-        if (cleanQuery.toLowerCase().includes('weather') && 
-            (cleanQuery.toLowerCase().includes('pittsburgh') || cleanQuery.toLowerCase().includes('pa'))) {
-          return {
-            tool_call_id: toolCall.id,
-            content: JSON.stringify({
-              results: [
-                {
-                  title: "Weather in Pittsburgh, PA",
-                  url: "https://www.weatherapi.com/",
-                  content: "Current weather in Pittsburgh, PA: Temperature: 34°F (1.1°C), Condition: Partly cloudy, Wind: 4.5 mph NW, Humidity: 38%, Feels like: 29.9°F (-1.2°C)"
-                },
-                {
-                  title: "Pittsburgh, PA Weather Forecast | AccuWeather",
-                  url: "https://www.accuweather.com/en/us/pittsburgh/15219/weather-forecast/1310",
-                  content: "Pittsburgh, PA Weather Forecast, with current conditions, wind, air quality, and what to expect for the next 3 days."
-                }
-              ]
-            }),
-            error: undefined
-          };
-        }
+        // Call the actual API endpoint that works
+        const response = await api.post(`/v1/tool-runtime/invoke`, {
+          tool_name: "web_search",
+          kwargs: { query: cleanQuery }
+        });
         
-        // For other queries, return a generic search result
+        console.log('Web search API response:', response.data);
+        
         return {
           tool_call_id: toolCall.id,
-          content: JSON.stringify({
-            results: [
-              {
-                title: "Search results for: " + cleanQuery,
-                url: "https://www.example.com/search",
-                content: "Here are the search results for your query: " + cleanQuery
-              }
-            ]
-          }),
-          error: undefined
+          content: response.data.content,
+          error: response.data.error_message
         };
       }
       
@@ -324,12 +292,17 @@ export const apiService = {
         };
       }
       
-      // For all other tools, return a generic error
-      console.warn(`Tool ${toolName} is not directly supported`);
+      // For all other tools, try the standard tool-runtime/invoke endpoint
+      console.log(`Executing generic tool ${toolName} via tool-runtime/invoke`);
+      const response = await api.post(`/v1/tool-runtime/invoke`, {
+        tool_name: toolName,
+        kwargs: args
+      });
+      
       return {
         tool_call_id: toolCall.id,
-        content: `The tool "${toolName}" is not available or could not be executed.`,
-        error: "Tool not available or failed to execute"
+        content: response.data.content,
+        error: response.data.error_message
       };
     } catch (error: any) {
       console.error('Error executing tool call:', error);
