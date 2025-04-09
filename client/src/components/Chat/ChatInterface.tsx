@@ -157,9 +157,36 @@ const ChatInterface: React.FC = () => {
             assistantMessage.content += data.event.delta.text;
             setMessages(prev => [...prev.slice(0, -1), { ...assistantMessage }]);
           } else if (data.event.event_type === 'complete') {
+            // Check for Python code in the content
+            const hasPythonCode = data.completion_message?.content && 
+                                 data.completion_message.content.includes('<|python_tag|>');
+            
             // Complete the message and add any tool calls
             if (data.completion_message?.tool_calls) {
               assistantMessage.tool_calls = data.completion_message.tool_calls;
+            } 
+            // If Python code is detected but no tool calls, create a code_interpreter tool call
+            else if (hasPythonCode) {
+              console.log('Python code detected in completion message');
+              
+              // Extract the Python code
+              const pythonCode = data.completion_message.content.replace('<|python_tag|>', '').trim();
+              
+              // Create a synthetic tool call for code_interpreter
+              const codeToolCall: ToolCall = {
+                id: `code-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: 'code_interpreter',
+                  arguments: JSON.stringify({ code: pythonCode })
+                }
+              };
+              
+              // Add the tool call to the message
+              assistantMessage.tool_calls = [codeToolCall];
+              
+              console.log('Created synthetic tool call for Python code:', codeToolCall);
+            }
               
               // Execute tool calls if present
               setTimeout(async () => {
@@ -227,6 +254,33 @@ const ChatInterface: React.FC = () => {
           stop_reason: response.completion_message.stop_reason,
           tool_calls: response.completion_message.tool_calls,
         };
+        
+        // Check for Python code in the content
+        const hasPythonCode = assistantMessage.content && 
+                             assistantMessage.content.includes('<|python_tag|>');
+        
+        // If Python code is detected but no tool calls, create a code_interpreter tool call
+        if (hasPythonCode && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
+          console.log('Python code detected in non-streaming response');
+          
+          // Extract the Python code
+          const pythonCode = assistantMessage.content.replace('<|python_tag|>', '').trim();
+          
+          // Create a synthetic tool call for code_interpreter
+          const codeToolCall: ToolCall = {
+            id: `code-${Date.now()}`,
+            type: 'function',
+            function: {
+              name: 'code_interpreter',
+              arguments: JSON.stringify({ code: pythonCode })
+            }
+          };
+          
+          // Add the tool call to the message
+          assistantMessage.tool_calls = [codeToolCall];
+          
+          console.log('Created synthetic tool call for Python code:', codeToolCall);
+        }
         
         setMessages(prev => [...prev, assistantMessage]);
         

@@ -253,7 +253,38 @@ export const apiService = {
       
       console.log(`Executing tool call: ${toolName}`, args);
       
-      // Call the tool runtime endpoint
+      // Special handling for code_interpreter
+      if (toolName === 'code_interpreter') {
+        try {
+          console.log('Executing code_interpreter tool call with code:', args.code);
+          
+          // Call the code_interpreter endpoint
+          const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
+            tool_name: 'code_interpreter',
+            kwargs: {
+              code: args.code
+            }
+          });
+          
+          return {
+            tool_call_id: toolCall.id,
+            content: response.data.content || 'Code executed successfully',
+            error: response.data.error_message
+          };
+        } catch (codeError: any) {
+          console.error('Error executing code_interpreter:', codeError);
+          
+          // If the API call fails, provide a fallback response
+          // In a real implementation, you would handle this more gracefully
+          return {
+            tool_call_id: toolCall.id,
+            content: 'Code execution failed. The code interpreter tool may not be available.',
+            error: codeError.message
+          };
+        }
+      }
+      
+      // For all other tools, call the tool runtime endpoint
       const response = await api.post(`/v1/tool_runtime/invoke_tool`, {
         tool_name: toolName,
         kwargs: args

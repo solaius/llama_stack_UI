@@ -421,10 +421,36 @@ const AgentChatPage: React.FC = () => {
                 return [outputMessage];
               });
               
-              // Check if there are tool calls in the output message
-              if (outputMessage.tool_calls && outputMessage.tool_calls.length > 0) {
-                console.log('Tool calls detected in turn_complete:', outputMessage.tool_calls);
+              // Check for Python code in the content
+              const hasPythonCode = outputMessage.content && outputMessage.content.includes('<|python_tag|>');
+              
+              // Check if there are tool calls in the output message or Python code
+              if ((outputMessage.tool_calls && outputMessage.tool_calls.length > 0) || hasPythonCode) {
+                console.log('Tool calls or Python code detected in turn_complete');
                 toolCallsDetected = true;
+                
+                // If Python code is detected but no tool calls, create a code_interpreter tool call
+                if (hasPythonCode && (!outputMessage.tool_calls || outputMessage.tool_calls.length === 0)) {
+                  console.log('Converting Python code to code_interpreter tool call');
+                  
+                  // Extract the Python code
+                  const pythonCode = outputMessage.content.replace('<|python_tag|>', '').trim();
+                  
+                  // Create a synthetic tool call for code_interpreter
+                  const codeToolCall: ToolCall = {
+                    id: `code-${Date.now()}`,
+                    type: 'function',
+                    function: {
+                      name: 'code_interpreter',
+                      arguments: JSON.stringify({ code: pythonCode })
+                    }
+                  };
+                  
+                  // Add the tool call to the message
+                  outputMessage.tool_calls = [codeToolCall];
+                  
+                  console.log('Created synthetic tool call:', codeToolCall);
+                }
                 
                 // Execute the tool calls
                 setTimeout(async () => {
@@ -482,11 +508,35 @@ const AgentChatPage: React.FC = () => {
                 stop_reason: modelResponse.stop_reason || undefined
               };
               
-              // Add tool calls if present
+              // Check for Python code in the content
+              const hasPythonCode = modelResponse.content && modelResponse.content.includes('<|python_tag|>');
+              
+              // Add tool calls if present or create one for Python code
               if (modelResponse.tool_calls && modelResponse.tool_calls.length > 0) {
                 console.log('Tool calls received in step_complete:', modelResponse.tool_calls);
                 finalMessage.tool_calls = modelResponse.tool_calls;
                 toolCallsDetected = true;
+              } else if (hasPythonCode) {
+                console.log('Python code detected in step_complete');
+                
+                // Extract the Python code
+                const pythonCode = modelResponse.content.replace('<|python_tag|>', '').trim();
+                
+                // Create a synthetic tool call for code_interpreter
+                const codeToolCall: ToolCall = {
+                  id: `code-${Date.now()}`,
+                  type: 'function',
+                  function: {
+                    name: 'code_interpreter',
+                    arguments: JSON.stringify({ code: pythonCode })
+                  }
+                };
+                
+                // Add the tool call to the message
+                finalMessage.tool_calls = [codeToolCall];
+                toolCallsDetected = true;
+                
+                console.log('Created synthetic tool call for Python code:', codeToolCall);
               }
               
               // Update the state with the final message using immutable approach
@@ -633,9 +683,36 @@ const AgentChatPage: React.FC = () => {
           return [...newMessages]; // Return a new array to ensure React detects the change
         });
         
-        // Check if there are tool calls in the output message
-        if (turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) {
-          console.log('Tool calls detected in non-streaming response:', turnResponse.output_message.tool_calls);
+        // Check for Python code in the content
+        const hasPythonCode = turnResponse.output_message.content && 
+                             turnResponse.output_message.content.includes('<|python_tag|>');
+        
+        // Check if there are tool calls in the output message or Python code
+        if ((turnResponse.output_message.tool_calls && turnResponse.output_message.tool_calls.length > 0) || hasPythonCode) {
+          console.log('Tool calls or Python code detected in non-streaming response');
+          
+          // If Python code is detected but no tool calls, create a code_interpreter tool call
+          if (hasPythonCode && (!turnResponse.output_message.tool_calls || turnResponse.output_message.tool_calls.length === 0)) {
+            console.log('Converting Python code to code_interpreter tool call');
+            
+            // Extract the Python code
+            const pythonCode = turnResponse.output_message.content.replace('<|python_tag|>', '').trim();
+            
+            // Create a synthetic tool call for code_interpreter
+            const codeToolCall: ToolCall = {
+              id: `code-${Date.now()}`,
+              type: 'function',
+              function: {
+                name: 'code_interpreter',
+                arguments: JSON.stringify({ code: pythonCode })
+              }
+            };
+            
+            // Add the tool call to the message
+            turnResponse.output_message.tool_calls = [codeToolCall];
+            
+            console.log('Created synthetic tool call:', codeToolCall);
+          }
           
           // Execute the tool calls
           setTimeout(async () => {

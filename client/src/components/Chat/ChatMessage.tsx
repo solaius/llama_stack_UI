@@ -51,6 +51,35 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast = false, text
   const formatMessageContent = (content: string) => {
     if (!content) return null;
 
+    // Handle Python tag format from Llama Stack
+    if (content.includes('<|python_tag|>')) {
+      const pythonCode = content.replace('<|python_tag|>', '').trim();
+      return (
+        <Box sx={{ my: 1 }}>
+          <Chip
+            icon={<CodeIcon />}
+            label="Python Code"
+            color="primary"
+            variant="outlined"
+            size="small"
+            sx={{ mb: 1 }}
+          />
+          <SyntaxHighlighter
+            language="python"
+            style={theme.palette.mode === 'dark' ? dark : docco}
+            customStyle={{
+              borderRadius: '8px',
+              padding: '12px',
+              fontSize: '0.85rem',
+            }}
+            data-testid="syntax-highlighter"
+          >
+            {pythonCode}
+          </SyntaxHighlighter>
+        </Box>
+      );
+    }
+
     // Simple regex to detect code blocks with language specification
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
     const parts = [];
